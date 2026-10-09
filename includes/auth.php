@@ -169,13 +169,13 @@ function login_user(string $login, string $password, ?string $redirect_target = 
             $_SESSION['pending_verification_email'] = $user['email'];
             $_SESSION['pending_verification_role'] = $user['role_name'];
 
-            generate_verification_otp((int)$user['id'], 'whatsapp');
+            generate_verification_otp((int)$user['id'], 'email');
 
             return [
                 'success'  => true,
-                'message'  => 'Akun Anda belum diverifikasi. Masukkan kode OTP untuk mengaktifkan akun.',
+                'message'  => 'Akun Anda belum diverifikasi. Masukkan kode OTP yang dikirim ke Gmail Anda.',
                 'role'     => $user['role_name'],
-                'redirect' => '/verify.php?channel=whatsapp' . (!empty($redirect_target) ? '&redirect=' . urlencode($redirect_target) : '')
+                'redirect' => '/verify.php?channel=email' . (!empty($redirect_target) ? '&redirect=' . urlencode($redirect_target) : '')
             ];
         }
 
@@ -343,15 +343,15 @@ function register_user(array $data): array {
         $_SESSION['pending_verification_email'] = $email;
         $_SESSION['pending_verification_role'] = $role_name;
 
-        // Otomatis kirim kode verifikasi ke WhatsApp pengguna yang baru mendaftar
-        $otpRes = generate_verification_otp($user_id, 'whatsapp');
+        // Otomatis kirim kode verifikasi pertama ke Gmail pengguna yang baru mendaftar
+        $otpRes = generate_verification_otp($user_id, 'email');
 
         return [
             'success'  => true,
-            'message'  => 'Pendaftaran berhasil! Kode verifikasi telah dikirim ke WhatsApp Anda.',
+            'message'  => 'Pendaftaran berhasil! Kode verifikasi telah dikirim otomatis ke Gmail Anda.',
             'role'     => $role_name,
             'otp_sent' => true,
-            'redirect' => '/verify.php?channel=whatsapp' . (!empty($data['redirect']) ? '&redirect=' . urlencode($data['redirect']) : '')
+            'redirect' => '/verify.php?channel=email' . (!empty($data['redirect']) ? '&redirect=' . urlencode($data['redirect']) : '')
         ];
     } catch (Exception $e) {
         $db->rollBack();

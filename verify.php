@@ -14,9 +14,7 @@ require_once __DIR__ . '/includes/mailer.php';
 
 $error = '';
 $success = '';
-$otp_sent = false;
-$active_channel = $_POST['channel'] ?? $_GET['channel'] ?? '';
-$direct_link = '';
+$active_channel = $_POST['channel'] ?? $_GET['channel'] ?? 'email';
 $redirect_after = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
 
 // 1. Tangani pembatalan pendaftaran / ganti nomor
@@ -130,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $error = $verifyRes['message'];
                 $otp_sent = true;
-                $active_channel = $_POST['active_channel'] ?? 'whatsapp';
+                $active_channel = $_POST['active_channel'] ?? 'email';
             }
         }
     }
@@ -152,15 +150,15 @@ if ($active_verif) {
         $active_channel = $active_verif['channel'];
     }
 } else {
-    // Jika belum ada verifikasi sama sekali (atau sudah expired), buat otomatis via WhatsApp
-    $autoOtp = generate_verification_otp((int)$current['id'], 'whatsapp');
+    // Jika belum ada verifikasi sama sekali (atau sudah expired), buat otomatis via Gmail
+    $autoOtp = generate_verification_otp((int)$current['id'], 'email');
     if ($autoOtp['success']) {
         $otp_sent = true;
-        $active_channel = 'whatsapp';
+        $active_channel = 'email';
         $active_verif = [
             'code'       => $autoOtp['code'],
             'token'      => $autoOtp['token'],
-            'channel'    => 'whatsapp',
+            'channel'    => 'email',
             'created_at' => date('Y-m-d H:i:s'),
             'expires_at' => date('Y-m-d H:i:s', time() + 900)
         ];
