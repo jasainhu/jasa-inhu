@@ -21,8 +21,9 @@ $page_title = $page_title ?? 'Marketplace Jasa Lokal Kabupaten Indragiri Hulu';
     <title><?= e($page_title) ?> | <?= APP_NAME ?></title>
 
     <!-- Favicon & PWA App Manifest -->
-    <link rel="icon" type="image/png" href="<?= asset_url('images/logo.png') ?>">
-    <link rel="apple-touch-icon" href="<?= asset_url('images/logo.png') ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset_url('images/favicon-32x32.png') ?>">
+    <link rel="icon" type="image/png" sizes="48x48" href="<?= asset_url('images/favicon.png') ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset_url('images/apple-touch-icon.png') ?>">
     <link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
 
     <!-- OpenGraph Meta Tags (WhatsApp, Facebook, Twitter Preview) -->

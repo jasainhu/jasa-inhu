@@ -19,6 +19,11 @@ $page_title = $page_title ?? 'Admin Dashboard';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($page_title) ?> | Admin JASA INHU</title>
+ 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset_url('images/favicon-32x32.png') ?>">
+    <link rel="icon" type="image/png" sizes="48x48" href="<?= asset_url('images/favicon.png') ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset_url('images/apple-touch-icon.png') ?>">
 
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
