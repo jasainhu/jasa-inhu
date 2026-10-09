@@ -3,8 +3,12 @@
  * Konfigurasi Aplikasi JASA INHU
  */
 
-// Pastikan session sudah aktif
+require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../includes/session_handler.php';
+
+// Pastikan session sudah aktif dengan database session handler agar login awet dan tidak logout sendiri
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_save_handler(new DatabaseSessionHandler(), true);
     session_start();
 }
 

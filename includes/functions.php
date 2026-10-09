@@ -14,11 +14,22 @@ function e(?string $string): string {
 }
 
 /**
- * Generate atau ambil CSRF Token
+ * Generate atau ambil CSRF Token (Double-Submit Cookie Pattern untuk keandalan multi-server / Vercel)
  */
 function csrf_token(): string {
     if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        $token = !empty($_COOKIE['csrf_token']) ? $_COOKIE['csrf_token'] : bin2hex(random_bytes(32));
+        $_SESSION['csrf_token'] = $token;
+    }
+    if (empty($_COOKIE['csrf_token']) || $_COOKIE['csrf_token'] !== $_SESSION['csrf_token']) {
+        $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        @setcookie('csrf_token', $_SESSION['csrf_token'], [
+            'expires'  => time() + 86400 * 7,
+            'path'     => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+            'secure'   => $isSecure
+        ]);
     }
     return $_SESSION['csrf_token'];
 }
@@ -32,14 +43,27 @@ function csrf_field(): string {
 }
 
 /**
- * Validasi CSRF Token dari request POST
+ * Validasi CSRF Token dari request POST (Mendukung Session dan Cookie ganda)
  */
 function validate_csrf(): bool {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         return true;
     }
     $token = $_POST['csrf_token'] ?? '';
-    return !empty($token) && hash_equals($_SESSION['csrf_token'] ?? '', $token);
+    if (empty($token)) {
+        return false;
+    }
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+    $cookieToken = $_COOKIE['csrf_token'] ?? '';
+
+    if (!empty($sessionToken) && hash_equals($sessionToken, $token)) {
+        return true;
+    }
+    if (!empty($cookieToken) && hash_equals($cookieToken, $token)) {
+        $_SESSION['csrf_token'] = $cookieToken;
+        return true;
+    }
+    return false;
 }
 
 /**
