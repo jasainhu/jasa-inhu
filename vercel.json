@@ -16,6 +16,14 @@
       "dest": "/uploads/$1"
     },
     {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/sw.js",
+      "dest": "/sw.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/$1"
     },
