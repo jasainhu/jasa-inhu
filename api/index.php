@@ -17,6 +17,47 @@ if ($path === '/' || $path === '') {
     exit;
 }
 
+// 1.1 Service Worker PWA Handler
+if ($path === '/sw.js') {
+    header('Content-Type: application/javascript; charset=UTF-8');
+    header('Service-Worker-Allowed: /');
+    header('Cache-Control: no-cache, no-store, must-revalidate');
+    echo "// JASA INHU - Service Worker PWA\n";
+    echo "const CACHE_NAME = 'jasainhu-pwa-v1';\n";
+    echo "self.addEventListener('install', e => { self.skipWaiting(); });\n";
+    echo "self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });\n";
+    echo "self.addEventListener('fetch', e => {\n";
+    echo "  if (e.request.method !== 'GET') return;\n";
+    echo "  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));\n";
+    echo "});\n";
+    exit;
+}
+
+// 1.2 Manifest PWA Handler
+if ($path === '/manifest.json') {
+    header('Content-Type: application/manifest+json; charset=UTF-8');
+    header('Cache-Control: public, max-age=3600');
+    echo json_encode([
+        'name' => 'JASA INHU - Layanan Jasa Indragiri Hulu',
+        'short_name' => 'Jasa Inhu',
+        'description' => 'Platform digital jasa & tukang terpercaya di Kabupaten Indragiri Hulu, Riau',
+        'id' => '/',
+        'start_url' => '/',
+        'scope' => '/',
+        'display' => 'standalone',
+        'background_color' => '#ffffff',
+        'theme_color' => '#0d9488',
+        'orientation' => 'portrait',
+        'icons' => [
+            ['src' => '/assets/images/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => '/assets/images/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'],
+            ['src' => '/assets/images/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => '/assets/images/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable']
+        ]
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    exit;
+}
+
 $file = ltrim($path, '/');
 $fullPath = __DIR__ . '/../' . $file;
 
