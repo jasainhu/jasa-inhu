@@ -136,7 +136,7 @@ function login_user(string $login, string $password, ?string $redirect_target = 
         $db = get_db();
         // Pencarian bisa via Email atau Nomor HP (khas penggunaan lokal)
         $stmt = $db->prepare("
-            SELECT u.id, u.role_id, u.name, u.email, u.phone, u.password_hash, u.is_active,
+            SELECT u.id, u.role_id, u.name, u.email, u.phone, u.password_hash, u.is_active, u.email_verified_at,
                    r.name as role_name
             FROM users u
             JOIN roles r ON u.role_id = r.id
@@ -156,6 +156,27 @@ function login_user(string $login, string $password, ?string $redirect_target = 
 
         if (!password_verify($password, $user['password_hash'])) {
             return ['success' => false, 'message' => 'Kata sandi yang Anda masukkan salah.'];
+        }
+
+        // Cek apakah akun sudah diverifikasi OTP (kecuali admin)
+        if (empty($user['email_verified_at']) && strtolower($user['role_name']) !== 'admin') {
+            if (!headers_sent()) {
+                session_regenerate_id(true);
+            }
+            $_SESSION['pending_verification_user_id'] = (int)$user['id'];
+            $_SESSION['pending_verification_name'] = $user['name'];
+            $_SESSION['pending_verification_phone'] = $user['phone'];
+            $_SESSION['pending_verification_email'] = $user['email'];
+            $_SESSION['pending_verification_role'] = $user['role_name'];
+
+            generate_verification_otp((int)$user['id'], 'whatsapp');
+
+            return [
+                'success'  => true,
+                'message'  => 'Akun Anda belum diverifikasi. Masukkan kode OTP untuk mengaktifkan akun.',
+                'role'     => $user['role_name'],
+                'redirect' => '/verify.php?channel=whatsapp' . (!empty($redirect_target) ? '&redirect=' . urlencode($redirect_target) : '')
+            ];
         }
 
         // Regenerasi session ID untuk mencegah session fixation jika header belum terkirim
@@ -310,24 +331,27 @@ function register_user(array $data): array {
 
         $db->commit();
 
-        // Otomatis login setelah pendaftaran berhasil
         if (!headers_sent()) {
             session_regenerate_id(true);
         }
-        $_SESSION['user_id'] = $user_id;
-        $_SESSION['user_name'] = $name;
-        $_SESSION['user_email'] = $email;
-        $_SESSION['user_role'] = $role_name;
 
-        // Otomatis kirim kode verifikasi ke Gmail pengguna yang baru mendaftar
-        $otpRes = generate_verification_otp($user_id, 'email');
+        // JANGAN langsung berikan session login resmi ($_SESSION['user_id']).
+        // Simpan pending verification session agar wajib menyelesaikan OTP terlebih dahulu.
+        $_SESSION['pending_verification_user_id'] = $user_id;
+        $_SESSION['pending_verification_name'] = $name;
+        $_SESSION['pending_verification_phone'] = $phone;
+        $_SESSION['pending_verification_email'] = $email;
+        $_SESSION['pending_verification_role'] = $role_name;
+
+        // Otomatis kirim kode verifikasi ke WhatsApp pengguna yang baru mendaftar
+        $otpRes = generate_verification_otp($user_id, 'whatsapp');
 
         return [
             'success'  => true,
-            'message'  => 'Pendaftaran berhasil! Kode verifikasi telah dikirim otomatis ke Gmail Anda.',
+            'message'  => 'Pendaftaran berhasil! Kode verifikasi telah dikirim ke WhatsApp Anda.',
             'role'     => $role_name,
             'otp_sent' => true,
-            'redirect' => '/verify.php?channel=email' . (!empty($data['redirect']) ? '&redirect=' . urlencode($data['redirect']) : '')
+            'redirect' => '/verify.php?channel=whatsapp' . (!empty($data['redirect']) ? '&redirect=' . urlencode($data['redirect']) : '')
         ];
     } catch (Exception $e) {
         $db->rollBack();

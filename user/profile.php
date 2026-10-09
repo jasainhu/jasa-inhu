@@ -42,60 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $fileTmp = $_FILES['avatar']['tmp_name'];
-            $fileSize = $_FILES['avatar']['size'];
-            $fileExt = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if (!in_array($fileExt, $allowedExts)) {
-                echo json_encode(['success' => false, 'message' => 'Format foto profil harus JPG, PNG, atau WEBP.']);
-                exit;
-            }
-            if ($fileSize > 5 * 1024 * 1024) {
-                echo json_encode(['success' => false, 'message' => 'Ukuran foto profil maksimal 5 MB.']);
-                exit;
-            }
-
             try {
-                // Resize & kompresi avatar menjadi compact 200x200 JPEG Data URI agar 100% permanen di Cloud / Serverless
-                $avatarVal = null;
-                if (extension_loaded('gd')) {
-                    $img = match($fileExt) {
-                        'jpg', 'jpeg' => @imagecreatefromjpeg($fileTmp),
-                        'png' => @imagecreatefrompng($fileTmp),
-                        'webp' => @imagecreatefromwebp($fileTmp),
-                        default => null
-                    };
-
-                    if ($img) {
-                        $origW = imagesx($img);
-                        $origH = imagesy($img);
-                        $cropSize = min($origW, $origH);
-                        $cropX = (int)(($origW - $cropSize) / 2);
-                        $cropY = (int)(($origH - $cropSize) / 2);
-
-                        $thumb = imagecreatetruecolor(200, 200);
-                        imagecopyresampled($thumb, $img, 0, 0, $cropX, $cropY, 200, 200, $cropSize, $cropSize);
-
-                        ob_start();
-                        imagejpeg($thumb, null, 85);
-                        $rawJpeg = ob_get_clean();
-                        $avatarVal = 'data:image/jpeg;base64,' . base64_encode($rawJpeg);
-                        imagedestroy($thumb);
-                        imagedestroy($img);
-                    }
-                }
-
-                if (!$avatarVal) {
-                    $newFileName = 'avatar_' . $user['id'] . '_' . time() . '.' . $fileExt;
-                    $targetDir = __DIR__ . '/../uploads/avatars/';
-                    if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
-                    if (move_uploaded_file($fileTmp, $targetDir . $newFileName)) {
-                        $avatarVal = $newFileName;
-                    } else {
-                        throw new Exception('Gagal menyimpan foto ke server.');
-                    }
-                }
+                $avatarVal = save_avatar_upload($_FILES['avatar'], (int)$user['id']);
 
                 // Simpan ke database
                 $stmtCheck = $db->prepare("SELECT id FROM profiles WHERE user_id = ?");
@@ -140,31 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Handle upload foto avatar jika ada
                     $avatar_filename = $user['avatar'] ?? null;
                     if (!empty($_FILES['avatar']['name']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-                        $fileTmp = $_FILES['avatar']['tmp_name'];
-                        $fileSize = $_FILES['avatar']['size'];
-                        $fileExt = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-                        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-
-                        if (!in_array($fileExt, $allowedExts)) {
-                            throw new Exception('Format foto profil harus JPG, PNG, atau WEBP.');
-                        }
-                        if ($fileSize > 2 * 1024 * 1024) {
-                            throw new Exception('Ukuran foto profil maksimal 2 MB.');
-                        }
-
-                        $newFileName = 'avatar_' . $user['id'] . '_' . time() . '.' . $fileExt;
-                        $targetDir = __DIR__ . '/../uploads/avatars/';
-                        if (!is_dir($targetDir)) {
-                            mkdir($targetDir, 0755, true);
-                        }
-
-                        if (move_uploaded_file($fileTmp, $targetDir . $newFileName)) {
-                            // Hapus avatar lama jika file lokal
-                            if (!empty($avatar_filename) && file_exists($targetDir . $avatar_filename)) {
-                                @unlink($targetDir . $avatar_filename);
-                            }
-                            $avatar_filename = $newFileName;
-                        }
+                        $avatar_filename = save_avatar_upload($_FILES['avatar'], (int)$user['id']);
                     }
 
                     // Update data pengguna di tabel users
@@ -357,10 +281,17 @@ require_once __DIR__ . '/../includes/header.php';
                         <i class="fa-solid fa-id-badge text-teal"></i>
                         <span>ID: <?= format_user_id($user['id']) ?></span>
                     </span>
-                    <span class="shopee-badge-pill">
-                        <i class="fa-solid fa-shield-halved text-warning"></i>
-                        <span>Warga Terverifikasi Inhu</span>
-                    </span>
+                    <?php if (!empty($user['email_verified_at'])): ?>
+                        <span class="shopee-badge-pill" style="background: rgba(16, 185, 129, 0.15); color: #047857; border-color: rgba(16, 185, 129, 0.3);">
+                            <i class="fa-solid fa-shield-check text-success"></i>
+                            <span>Warga Terverifikasi Inhu</span>
+                        </span>
+                    <?php else: ?>
+                        <a href="<?= BASE_URL ?>/verify.php" class="shopee-badge-pill text-decoration-none" style="background: rgba(245, 158, 11, 0.15); color: #b45309; border-color: rgba(245, 158, 11, 0.35);" title="Klik untuk verifikasi via WhatsApp / Gmail">
+                            <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+                            <span>Belum Verifikasi &rsaquo;</span>
+                        </a>
+                    <?php endif; ?>
                     <button type="button" class="btn btn-xs py-0 px-2 rounded-pill bg-white text-teal fw-bold" style="font-size: 0.68rem;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                         Ubah Profil &rsaquo;
                     </button>

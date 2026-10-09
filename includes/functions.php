@@ -163,6 +163,11 @@ function render_flash(): void {
  */
 function redirect(string $path): void {
     $target = str_starts_with($path, 'http') ? $path : BASE_URL . '/' . ltrim($path, '/');
+    if (headers_sent()) {
+        echo "<script>window.location.href=" . json_encode($target) . ";</script>";
+        echo "<noscript><meta http-equiv='refresh' content='0;url=" . htmlspecialchars($target, ENT_QUOTES, 'UTF-8') . "'></noscript>";
+        exit;
+    }
     header("Location: {$target}");
     exit;
 }
@@ -186,6 +191,76 @@ function get_avatar_url(?string $avatar): ?string {
         return $avatar;
     }
     return BASE_URL . '/uploads/avatars/' . ltrim($avatar, '/');
+}
+
+/**
+ * Memproses dan mengoptimalkan upload foto avatar pengguna
+ * Menyimpan dalam format Base64 Data URI yang aman untuk lingkungan Serverless / Vercel (Read-Only FS)
+ * serta menghemat storage dan instan di semua node.
+ */
+function save_avatar_upload(array $file, int $userId): string {
+    if (empty($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('File foto profil tidak valid atau gagal diunggah.');
+    }
+
+    $fileTmp = $file['tmp_name'];
+    $fileSize = $file['size'];
+    $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    $fileExt = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+
+    if (!in_array($fileExt, $allowedExts)) {
+        throw new Exception('Format foto profil harus JPG, PNG, atau WEBP.');
+    }
+    if ($fileSize > 5 * 1024 * 1024) {
+        throw new Exception('Ukuran foto profil maksimal 5 MB.');
+    }
+
+    // Gunakan ekstensi GD jika tersedia untuk kompresi dan auto-crop ke 200x200
+    if (function_exists('imagecreatefromstring')) {
+        $rawContent = @file_get_contents($fileTmp);
+        if ($rawContent !== false) {
+            $img = @imagecreatefromstring($rawContent);
+            if ($img !== false) {
+                $origW = imagesx($img);
+                $origH = imagesy($img);
+                $cropSize = min($origW, $origH);
+                $cropX = (int)(($origW - $cropSize) / 2);
+                $cropY = (int)(($origH - $cropSize) / 2);
+
+                $targetSize = 200;
+                $thumb = imagecreatetruecolor($targetSize, $targetSize);
+                imagecopyresampled($thumb, $img, 0, 0, $cropX, $cropY, $targetSize, $targetSize, $cropSize, $cropSize);
+
+                ob_start();
+                imagejpeg($thumb, null, 85);
+                $compressedJpeg = ob_get_clean();
+                imagedestroy($thumb);
+                imagedestroy($img);
+
+                if (!empty($compressedJpeg)) {
+                    return 'data:image/jpeg;base64,' . base64_encode($compressedJpeg);
+                }
+            }
+        }
+    }
+
+    // Fallback jika GD tidak ada: langsung encode Base64 jika ukuran wajar (< 1.5MB)
+    $rawContent = @file_get_contents($fileTmp);
+    if ($rawContent !== false && strlen($rawContent) <= 1.5 * 1024 * 1024) {
+        $mime = ($fileExt === 'png') ? 'image/png' : (($fileExt === 'webp') ? 'image/webp' : 'image/jpeg');
+        return 'data:' . $mime . ';base64,' . base64_encode($rawContent);
+    }
+
+    // Fallback khusus lingkungan lokal jika writable
+    $targetDir = dirname(__DIR__) . '/uploads/avatars/';
+    if (@is_dir($targetDir) && @is_writable($targetDir)) {
+        $newFileName = 'avatar_' . $userId . '_' . time() . '.' . $fileExt;
+        if (@move_uploaded_file($fileTmp, $targetDir . $newFileName)) {
+            return $newFileName;
+        }
+    }
+
+    throw new Exception('Gagal memproses foto profil. Silakan pilih foto dengan resolusi lebih kecil.');
 }
 
 /**

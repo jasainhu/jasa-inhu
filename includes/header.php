@@ -257,9 +257,15 @@ if (is_logged_in() && !empty($current_user)) {
                                     <div class="text-muted text-truncate" style="font-size: 0.72rem;"><?= e($current_user['email']) ?></div>
                                     <div class="mt-1">
                                         <?php if ($current_user['role_name'] === 'pengguna'): ?>
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-2" style="font-size: 0.65rem;">
-                                                <i class="fa-solid fa-user-check me-1"></i> Warga Terverifikasi
-                                            </span>
+                                            <?php if (!empty($current_user['email_verified_at'])): ?>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-2" style="font-size: 0.65rem;">
+                                                    <i class="fa-solid fa-user-check me-1"></i> Warga Terverifikasi
+                                                </span>
+                                            <?php else: ?>
+                                                <a href="<?= BASE_URL ?>/verify.php" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-decoration-none py-0.5 px-2" style="font-size: 0.65rem;" title="Klik untuk verifikasi via WhatsApp atau Gmail">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Belum Verifikasi
+                                                </a>
+                                            <?php endif; ?>
                                         <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
                                             <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2" style="font-size: 0.65rem;">
                                                 <i class="fa-solid fa-wrench me-1"></i> Mitra Jasa Inhu
@@ -268,14 +274,6 @@ if (is_logged_in() && !empty($current_user)) {
                                             <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-0.5 px-2" style="font-size: 0.65rem;">
                                                 <i class="fa-solid fa-shield-halved me-1"></i> Administrator
                                             </span>
-                                        <?php endif; ?>
-
-                                        <?php if (empty($current_user['email_verified_at']) && $current_user['role_name'] !== 'admin'): ?>
-                                            <div class="mt-1">
-                                                <a href="<?= BASE_URL ?>/verify.php" class="badge bg-warning text-dark border border-warning text-decoration-none py-0.5 px-2" style="font-size: 0.65rem;" title="Klik untuk verifikasi via WhatsApp atau Gmail">
-                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Belum Verifikasi (Klik)
-                                                </a>
-                                            </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -534,9 +532,15 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                     <div class="text-muted text-truncate" style="font-size: 0.7rem;"><?= e($current_user['email']) ?></div>
                                     <div class="mt-1">
                                         <?php if ($current_user['role_name'] === 'pengguna'): ?>
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-2" style="font-size: 0.62rem;">
-                                                <i class="fa-solid fa-user-check me-1"></i> Warga Terverifikasi
-                                            </span>
+                                            <?php if (!empty($current_user['email_verified_at'])): ?>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-2" style="font-size: 0.62rem;">
+                                                    <i class="fa-solid fa-user-check me-1"></i> Warga Terverifikasi
+                                                </span>
+                                            <?php else: ?>
+                                                <a href="<?= BASE_URL ?>/verify.php" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-decoration-none py-0.5 px-2" style="font-size: 0.62rem;" title="Klik untuk verifikasi via WhatsApp atau Gmail">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Belum Verifikasi
+                                                </a>
+                                            <?php endif; ?>
                                         <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
                                             <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2" style="font-size: 0.62rem;">
                                                 <i class="fa-solid fa-wrench me-1"></i> Mitra Jasa Inhu

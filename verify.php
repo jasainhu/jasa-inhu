@@ -19,7 +19,18 @@ $active_channel = $_POST['channel'] ?? $_GET['channel'] ?? '';
 $direct_link = '';
 $redirect_after = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
 
-// 1. Tangani verifikasi langsung via link email (?token=...)
+// 1. Tangani pembatalan pendaftaran / ganti nomor
+if (isset($_GET['action']) && $_GET['action'] === 'cancel') {
+    unset($_SESSION['pending_verification_user_id']);
+    unset($_SESSION['pending_verification_name']);
+    unset($_SESSION['pending_verification_phone']);
+    unset($_SESSION['pending_verification_email']);
+    unset($_SESSION['pending_verification_role']);
+    set_flash('info', 'Silakan masukkan nomor atau data pendaftaran yang benar.');
+    redirect('/register.php');
+}
+
+// 2. Tangani verifikasi langsung via link email (?token=...)
 if (!empty($_GET['token'])) {
     $tokenRes = verify_user_token($_GET['token']);
     if ($tokenRes['success']) {
@@ -31,25 +42,51 @@ if (!empty($_GET['token'])) {
     }
 }
 
-// Pengguna wajib login untuk halaman ini
-if (!is_logged_in()) {
-    redirect('/login.php');
+// 3. Tentukan pengguna yang sedang diverifikasi (Bisa session login ATAU session pending)
+$is_pending = false;
+$current = null;
+
+if (is_logged_in()) {
+    $current = current_user();
+} elseif (!empty($_SESSION['pending_verification_user_id'])) {
+    $is_pending = true;
+    $db = get_db();
+    $stmt = $db->prepare("
+        SELECT u.id, u.role_id, u.name, u.email, u.phone, u.is_active, u.email_verified_at,
+               r.name as role_name, r.display_name as role_display
+        FROM users u
+        JOIN roles r ON u.role_id = r.id
+        WHERE u.id = ? AND u.is_active = 1
+        LIMIT 1
+    ");
+    $stmt->execute([(int)$_SESSION['pending_verification_user_id']]);
+    $current = $stmt->fetch() ?: null;
 }
 
-$current = current_user();
 if (!$current) {
     redirect('/login.php');
 }
 
-// Jika akun sudah terverifikasi sebelumnya, langsung arahkan ke dashboard / redirect
+// Jika akun sudah terverifikasi sebelumnya, berikan login jika pending lalu redirect
 if (!empty($current['email_verified_at'])) {
+    if ($is_pending) {
+        $_SESSION['user_id'] = (int)$current['id'];
+        $_SESSION['user_name'] = $current['name'];
+        $_SESSION['user_email'] = $current['email'];
+        $_SESSION['user_role'] = $current['role_name'];
+        unset($_SESSION['pending_verification_user_id']);
+        unset($_SESSION['pending_verification_name']);
+        unset($_SESSION['pending_verification_phone']);
+        unset($_SESSION['pending_verification_email']);
+        unset($_SESSION['pending_verification_role']);
+    }
     set_flash('info', 'Akun Anda sudah terverifikasi.');
     redirect(!empty($redirect_after) ? $redirect_after : get_post_login_url($current['role_name']));
 }
 
 $db = get_db();
 
-// 2. Tangani Form Kirim Ulang / Kirim OTP
+// 4. Tangani Form Kirim Ulang / Submit OTP
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validate_csrf()) {
         $error = 'Sesi keamanan berakhir. Silakan coba kembali.';
@@ -58,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Aksi A: Minta Kode OTP (WhatsApp atau Gmail)
         if ($action === 'request_otp') {
-            $selected_channel = ($_POST['channel'] === 'whatsapp') ? 'whatsapp' : 'email';
+            $selected_channel = ($_POST['channel'] === 'email') ? 'email' : 'whatsapp';
             $otpRes = generate_verification_otp((int)$current['id'], $selected_channel);
             
             if ($otpRes['success']) {
@@ -77,12 +114,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $verifyRes = verify_user_otp((int)$current['id'], $code);
 
             if ($verifyRes['success']) {
-                set_flash('success', 'Akun Anda berhasil diverifikasi! Selamat datang di JASA INHU.');
+                // Aktifkan login resmi HANYA setelah OTP berhasil diverifikasi!
+                $_SESSION['user_id'] = (int)$current['id'];
+                $_SESSION['user_name'] = $current['name'];
+                $_SESSION['user_email'] = $current['email'];
+                $_SESSION['user_role'] = $current['role_name'];
+                unset($_SESSION['pending_verification_user_id']);
+                unset($_SESSION['pending_verification_name']);
+                unset($_SESSION['pending_verification_phone']);
+                unset($_SESSION['pending_verification_email']);
+                unset($_SESSION['pending_verification_role']);
+
+                set_flash('success', 'Selamat, akun Anda berhasil diverifikasi! Selamat datang di JASA INHU.');
                 redirect(!empty($redirect_after) ? $redirect_after : get_post_login_url($current['role_name']));
             } else {
                 $error = $verifyRes['message'];
                 $otp_sent = true;
-                $active_channel = $_POST['active_channel'] ?? 'email';
+                $active_channel = $_POST['active_channel'] ?? 'whatsapp';
             }
         }
     }
@@ -104,18 +152,19 @@ if ($active_verif) {
         $active_channel = $active_verif['channel'];
     }
 } else {
-    // Jika belum ada verifikasi sama sekali (atau sudah expired), buat otomatis via Gmail
-    $autoOtp = generate_verification_otp((int)$current['id'], 'email');
+    // Jika belum ada verifikasi sama sekali (atau sudah expired), buat otomatis via WhatsApp
+    $autoOtp = generate_verification_otp((int)$current['id'], 'whatsapp');
     if ($autoOtp['success']) {
         $otp_sent = true;
-        $active_channel = 'email';
+        $active_channel = 'whatsapp';
         $active_verif = [
             'code'       => $autoOtp['code'],
             'token'      => $autoOtp['token'],
-            'channel'    => 'email',
+            'channel'    => 'whatsapp',
             'created_at' => date('Y-m-d H:i:s'),
             'expires_at' => date('Y-m-d H:i:s', time() + 900)
         ];
+        $direct_link = $autoOtp['direct_url'] ?? '';
     }
 }
 
@@ -329,6 +378,14 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endif; ?>
             </div>
         </div>
+
+        <?php if ($is_pending): ?>
+            <div class="text-center mt-3">
+                <a href="<?= BASE_URL ?>/verify.php?action=cancel" class="text-muted small text-decoration-none">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Salah input nomor HP? Batal & Daftar Ulang
+                </a>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
