@@ -161,6 +161,9 @@
 <!-- Global Tokopedia Style Login Modal -->
 <?php require_once __DIR__ . '/login_modal.php'; ?>
 
+<!-- Global Smart Mobile App Banner & Modal (Tokopedia/Shopee Style) -->
+<?php require_once __DIR__ . '/app_modal.php'; ?>
+
 <!-- Bootstrap 5 Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- SweetAlert2 Modern Popups -->

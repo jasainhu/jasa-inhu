@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "id.my.gafahrandi.jasainhu.twa",
+    "sha256_cert_fingerprints": ["9D:1A:3F:73:21:20:76:F4:53:0D:1F:5B:D6:F5:CF:03:AC:99:BA:84:DA:63:BA:93:92:4D:DE:11:99:8D:A0:63"]
+  }
+}]

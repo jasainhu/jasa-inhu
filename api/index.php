@@ -41,6 +41,19 @@ if ($path === '/download/jasainhu.apk' || $path === '/jasainhu.apk') {
     }
 }
 
+// 1.0.2 Digital Asset Links Handler (Hides URL bar in Android TWA APK)
+if ($path === '/.well-known/assetlinks.json') {
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: public, max-age=86400');
+    $assetLinksPath = __DIR__ . '/../.well-known/assetlinks.json';
+    if (file_exists($assetLinksPath)) {
+        readfile($assetLinksPath);
+    } else {
+        echo '[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"id.my.gafahrandi.jasainhu.twa","sha256_cert_fingerprints":["9D:1A:3F:73:21:20:76:F4:53:0D:1F:5B:D6:F5:CF:03:AC:99:BA:84:DA:63:BA:93:92:4D:DE:11:99:8D:A0:63"]}}]';
+    }
+    exit;
+}
+
 // 1.1 Service Worker PWA Handler
 if ($path === '/sw.js') {
     header('Content-Type: application/javascript; charset=UTF-8');

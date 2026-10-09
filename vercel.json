@@ -20,6 +20,10 @@
       "dest": "/download/$1"
     },
     {
+      "src": "/.well-known/(.*)",
+      "dest": "/.well-known/$1"
+    },
+    {
       "src": "/manifest.json",
       "dest": "/manifest.json"
     },
