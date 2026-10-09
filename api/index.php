@@ -28,6 +28,19 @@ if ($path === '/favicon.ico') {
     exit;
 }
 
+// 1.0.1 Direct APK Download Handler
+if ($path === '/download/jasainhu.apk' || $path === '/jasainhu.apk') {
+    $apkPath = __DIR__ . '/../download/jasainhu.apk';
+    if (file_exists($apkPath)) {
+        header('Content-Type: application/vnd.android.package-archive');
+        header('Content-Disposition: attachment; filename="JasaInhu.apk"');
+        header('Content-Length: ' . filesize($apkPath));
+        header('Cache-Control: public, max-age=86400');
+        readfile($apkPath);
+        exit;
+    }
+}
+
 // 1.1 Service Worker PWA Handler
 if ($path === '/sw.js') {
     header('Content-Type: application/javascript; charset=UTF-8');

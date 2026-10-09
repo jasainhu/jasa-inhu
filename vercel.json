@@ -16,6 +16,10 @@
       "dest": "/uploads/$1"
     },
     {
+      "src": "/download/(.*)",
+      "dest": "/download/$1"
+    },
+    {
       "src": "/manifest.json",
       "dest": "/manifest.json"
     },

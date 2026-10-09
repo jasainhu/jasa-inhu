@@ -58,6 +58,10 @@
                 <a href="<?= BASE_URL ?>/register.php" class="btn btn-sm btn-outline-light w-100 fw-semibold py-2">
                     <i class="fa-solid fa-briefcase me-1"></i> Daftar Jadi Mitra Jasa
                 </a>
+                <a href="<?= BASE_URL ?>/download.php" class="btn btn-sm w-100 fw-semibold py-2 mt-2 text-white d-flex align-items-center justify-content-center gap-2" style="background-color: #0d9488;">
+                    <i class="fa-brands fa-android"></i>
+                    <span>Download Aplikasi HP</span>
+                </a>
             </div>
         </div>
 

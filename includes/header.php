@@ -145,6 +145,13 @@ if (is_logged_in() && !empty($current_user)) {
         <!-- Bagian Kanan: Tombol Masuk / Daftar atau Akun Profil (Tokopedia Style) -->
         <div class="navbar-right-actions flex-shrink-0 ms-auto d-flex align-items-center">
 
+            <!-- Tombol Unduh Aplikasi Mobile (Android & iOS) -->
+            <a href="<?= BASE_URL ?>/download.php" class="btn btn-sm d-none d-xl-flex align-items-center gap-1.5 px-2.5 py-1.5 rounded-pill border border-success-subtle bg-success-subtle text-success-emphasis text-decoration-none fw-semibold me-2" style="font-size: 0.78rem;" title="Download Aplikasi JASA INHU (Android & iOS)">
+                <i class="fa-brands fa-android text-success"></i>
+                <i class="fa-brands fa-apple text-dark"></i>
+                <span>Download App</span>
+            </a>
+
             <?php if (is_logged_in() && $current_user): ?>
 
                 <!-- 1. Icon Pesanan Saya (Khusus Pengguna Warga) -->
