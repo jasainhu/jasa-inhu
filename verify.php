@@ -175,16 +175,18 @@ require_once __DIR__ . '/includes/header.php';
             <div class="p-4 bg-light rounded-4 border text-center mb-3">
                 <div class="mb-3">
                     <?php if ($active_channel === 'whatsapp'): ?>
-                        <span class="badge text-bg-success px-3 py-1.5 fs-6 mb-2">
-                            <i class="fa-brands fa-whatsapp me-1"></i> Jalur WhatsApp: <?= e($current['phone']) ?>
-                        </span>
+                        <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill bg-success text-white small fw-bold mb-2 shadow-xs" style="max-width: 100%;">
+                            <i class="fa-brands fa-whatsapp fs-6 flex-shrink-0"></i>
+                            <span class="text-truncate">Kode dikirim ke WA: <?= e($current['phone']) ?></span>
+                        </div>
                         <p class="text-muted small mb-0">
                             Masukkan 6 digit kode OTP yang terkirim ke WhatsApp Anda:
                         </p>
                     <?php else: ?>
-                        <span class="badge text-bg-danger px-3 py-1.5 fs-6 mb-2">
-                            <i class="fa-regular fa-envelope me-1"></i> Terkirim ke Gmail: <?= e($current['email']) ?>
-                        </span>
+                        <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill bg-danger text-white small fw-bold mb-2 shadow-xs" style="max-width: 100%;">
+                            <i class="fa-regular fa-envelope fs-6 flex-shrink-0"></i>
+                            <span class="text-truncate" style="max-width: 250px;">Terkirim ke: <?= e($current['email']) ?></span>
+                        </div>
                         <p class="text-muted small mb-0">
                             Kode verifikasi 6 digit telah diproses untuk email Anda:
                         </p>
@@ -276,9 +278,10 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- PILIHAN JALUR & KIRIM ULANG -->
-        <div class="p-3 bg-light rounded-3 border d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div>
+        <!-- PILIHAN JALUR & KIRIM ULANG (Wajib Verifikasi, Lewati Dihapus) -->
+        <div class="p-3 bg-light rounded-3 border text-center">
+            <div class="small text-muted mb-2 fw-semibold">Tidak menerima kode verifikasi?</div>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
                 <?php if ($active_channel === 'email'): ?>
                     <!-- Form Kirim Ulang Gmail -->
                     <form method="POST" action="<?= BASE_URL ?>/verify.php" class="d-inline">
@@ -292,12 +295,12 @@ require_once __DIR__ . '/includes/header.php';
                     </form>
 
                     <!-- Form Switch ke WhatsApp -->
-                    <form method="POST" action="<?= BASE_URL ?>/verify.php" class="d-inline ms-1">
+                    <form method="POST" action="<?= BASE_URL ?>/verify.php" class="d-inline">
                         <?= csrf_field() ?>
                         <input type="hidden" name="action" value="request_otp">
                         <input type="hidden" name="channel" value="whatsapp">
                         <input type="hidden" name="redirect" value="<?= e($redirect_after) ?>">
-                        <button type="submit" class="btn btn-sm btn-outline-success fw-semibold">
+                        <button type="submit" class="btn btn-sm btn-success text-white fw-semibold">
                             <i class="fa-brands fa-whatsapp me-1"></i> Alternatif: Kirim ke WhatsApp
                         </button>
                     </form>
@@ -314,7 +317,7 @@ require_once __DIR__ . '/includes/header.php';
                     </form>
 
                     <!-- Form Switch ke Gmail -->
-                    <form method="POST" action="<?= BASE_URL ?>/verify.php" class="d-inline ms-1">
+                    <form method="POST" action="<?= BASE_URL ?>/verify.php" class="d-inline">
                         <?= csrf_field() ?>
                         <input type="hidden" name="action" value="request_otp">
                         <input type="hidden" name="channel" value="email">
@@ -325,10 +328,6 @@ require_once __DIR__ . '/includes/header.php';
                     </form>
                 <?php endif; ?>
             </div>
-
-            <a href="<?= BASE_URL . (!empty($redirect_after) ? $redirect_after : get_post_login_url($current['role_name'])) ?>" class="text-decoration-none text-muted small fw-semibold">
-                Lewati Sementara &raquo;
-            </a>
         </div>
     </div>
 </div>

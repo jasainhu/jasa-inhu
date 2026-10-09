@@ -118,11 +118,18 @@ function set_flash(string $type, string $message): void {
 }
 
 /**
- * Ambil dan bersihkan flash message
+ * Ambil dan bersihkan flash message (Mendukung tipe spesifik atau seluruh array)
  */
-function get_flash(): ?array {
+function get_flash(?string $filterType = null): mixed {
     if (isset($_SESSION['flash'])) {
         $flash = $_SESSION['flash'];
+        if ($filterType !== null) {
+            if (($flash['type'] ?? '') === $filterType) {
+                unset($_SESSION['flash']);
+                return $flash['message'] ?? '';
+            }
+            return null;
+        }
         unset($_SESSION['flash']);
         return $flash;
     }
@@ -168,6 +175,17 @@ function asset_url(string $path): string {
         return '/assets/' . ltrim($path, '/');
     }
     return BASE_URL . '/assets/' . ltrim($path, '/');
+}
+
+/**
+ * Mendapatkan URL Avatar Pengguna (Mendukung Data URI Base64 & File Lokal)
+ */
+function get_avatar_url(?string $avatar): ?string {
+    if (empty($avatar)) return null;
+    if (str_starts_with($avatar, 'data:image/') || str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
+        return $avatar;
+    }
+    return BASE_URL . '/uploads/avatars/' . ltrim($avatar, '/');
 }
 
 /**

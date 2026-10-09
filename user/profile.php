@@ -15,15 +15,111 @@ require_login();
 $user = current_user();
 $db = get_db();
 $error = '';
-$success = get_flash('success') ?: '';
+$flashData = get_flash();
+$success = is_array($flashData) ? (($flashData['type'] ?? '') === 'success' ? ($flashData['message'] ?? '') : '') : (is_string($flashData) ? $flashData : '');
+if (is_array($flashData) && ($flashData['type'] ?? '') === 'danger') {
+    $error = $flashData['message'] ?? '';
+}
 $active_tab = $_GET['tab'] ?? 'profile';
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validate_csrf()) {
         $error = 'Sesi keamanan berakhir. Silakan muat ulang halaman.';
+        if (!empty($_POST['action']) && $_POST['action'] === 'upload_avatar_ajax') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $error]);
+            exit;
+        }
     } else {
         $action = $_POST['action'] ?? 'update_profile';
+
+        // Direct AJAX Avatar Upload (Sekali Klik Kamera / Foto di HP)
+        if ($action === 'upload_avatar_ajax') {
+            header('Content-Type: application/json');
+            if (empty($_FILES['avatar']['name']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+                echo json_encode(['success' => false, 'message' => 'Berkas foto tidak ditemukan atau gagal diunggah.']);
+                exit;
+            }
+
+            $fileTmp = $_FILES['avatar']['tmp_name'];
+            $fileSize = $_FILES['avatar']['size'];
+            $fileExt = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (!in_array($fileExt, $allowedExts)) {
+                echo json_encode(['success' => false, 'message' => 'Format foto profil harus JPG, PNG, atau WEBP.']);
+                exit;
+            }
+            if ($fileSize > 5 * 1024 * 1024) {
+                echo json_encode(['success' => false, 'message' => 'Ukuran foto profil maksimal 5 MB.']);
+                exit;
+            }
+
+            try {
+                // Resize & kompresi avatar menjadi compact 200x200 JPEG Data URI agar 100% permanen di Cloud / Serverless
+                $avatarVal = null;
+                if (extension_loaded('gd')) {
+                    $img = match($fileExt) {
+                        'jpg', 'jpeg' => @imagecreatefromjpeg($fileTmp),
+                        'png' => @imagecreatefrompng($fileTmp),
+                        'webp' => @imagecreatefromwebp($fileTmp),
+                        default => null
+                    };
+
+                    if ($img) {
+                        $origW = imagesx($img);
+                        $origH = imagesy($img);
+                        $cropSize = min($origW, $origH);
+                        $cropX = (int)(($origW - $cropSize) / 2);
+                        $cropY = (int)(($origH - $cropSize) / 2);
+
+                        $thumb = imagecreatetruecolor(200, 200);
+                        imagecopyresampled($thumb, $img, 0, 0, $cropX, $cropY, 200, 200, $cropSize, $cropSize);
+
+                        ob_start();
+                        imagejpeg($thumb, null, 85);
+                        $rawJpeg = ob_get_clean();
+                        $avatarVal = 'data:image/jpeg;base64,' . base64_encode($rawJpeg);
+                        imagedestroy($thumb);
+                        imagedestroy($img);
+                    }
+                }
+
+                if (!$avatarVal) {
+                    $newFileName = 'avatar_' . $user['id'] . '_' . time() . '.' . $fileExt;
+                    $targetDir = __DIR__ . '/../uploads/avatars/';
+                    if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
+                    if (move_uploaded_file($fileTmp, $targetDir . $newFileName)) {
+                        $avatarVal = $newFileName;
+                    } else {
+                        throw new Exception('Gagal menyimpan foto ke server.');
+                    }
+                }
+
+                // Simpan ke database
+                $stmtCheck = $db->prepare("SELECT id FROM profiles WHERE user_id = ?");
+                $stmtCheck->execute([$user['id']]);
+                if ($stmtCheck->fetch()) {
+                    $stmtUp = $db->prepare("UPDATE profiles SET avatar = ?, updated_at = NOW() WHERE user_id = ?");
+                    $stmtUp->execute([$avatarVal, $user['id']]);
+                } else {
+                    $stmtIn = $db->prepare("INSERT INTO profiles (user_id, avatar, created_at, updated_at) VALUES (?, ?, NOW(), NOW())");
+                    $stmtIn->execute([$user['id'], $avatarVal]);
+                }
+
+                $finalUrl = get_avatar_url($avatarVal);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Foto profil berhasil diperbarui!',
+                    'avatar_url' => $finalUrl
+                ]);
+                exit;
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                exit;
+            }
+        }
 
         if ($action === 'update_profile') {
             $name = trim($_POST['name'] ?? '');
@@ -231,18 +327,23 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- Baris Identitas Pengguna -->
         <div class="shopee-profile-user-row">
-            <div class="shopee-avatar-wrapper" data-bs-toggle="modal" data-bs-target="#editProfileModal" style="cursor: pointer;">
-                <?php if (!empty($user['avatar'])): ?>
-                    <img src="<?= BASE_URL ?>/uploads/avatars/<?= e($user['avatar']) ?>" alt="<?= e($user['name']) ?>" class="shopee-avatar-img">
-                <?php else: ?>
-                    <div class="shopee-avatar-initials">
-                        <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
-                    </div>
-                <?php endif; ?>
-                <span class="position-absolute bottom-0 end-0 bg-white text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 20px; height: 20px; font-size: 0.65rem;">
-                    <i class="fa-solid fa-camera text-teal"></i>
+            <div class="shopee-avatar-wrapper position-relative" onclick="document.getElementById('directAvatarInput').click()" style="cursor: pointer;" title="Ketuk untuk ganti foto profil">
+                <div id="shopeeAvatarContainer">
+                    <?php $avatarUrl = get_avatar_url($user['avatar'] ?? null); ?>
+                    <?php if (!empty($avatarUrl)): ?>
+                        <img src="<?= e($avatarUrl) ?>" alt="<?= e($user['name']) ?>" class="shopee-avatar-img">
+                    <?php else: ?>
+                        <div class="shopee-avatar-initials">
+                            <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <span class="position-absolute bottom-0 end-0 bg-white text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 24px; height: 24px; font-size: 0.75rem; border: 2px solid #0d9488;">
+                    <i class="fa-solid fa-camera text-teal" style="color: #0d9488;"></i>
                 </span>
             </div>
+            <!-- Input tersembunyi untuk langsung upload foto dari HP / Laptop -->
+            <input type="file" id="directAvatarInput" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="handleDirectAvatarUpload(this)">
 
             <div class="shopee-user-info-meta">
                 <div class="shopee-user-name text-truncate">
@@ -281,15 +382,15 @@ require_once __DIR__ . '/../includes/header.php';
     </a>
 
     <!-- Notifikasi Sukses / Gagal jika ada -->
-    <?php if ($success): ?>
+    <?php if (!empty($success)): ?>
         <div class="alert alert-success alert-dismissible fade show mx-3 my-2 rounded-3 shadow-xs small py-2 px-3" role="alert">
-            <i class="fa-solid fa-circle-check me-1.5"></i> <?= e($success) ?>
+            <i class="fa-solid fa-circle-check me-1.5"></i> <?= e(is_array($success) ? ($success['message'] ?? '') : $success) ?>
             <button type="button" class="btn-close py-2.5" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
-    <?php if ($error): ?>
+    <?php if (!empty($error)): ?>
         <div class="alert alert-danger alert-dismissible fade show mx-3 my-2 rounded-3 shadow-xs small py-2 px-3" role="alert">
-            <i class="fa-solid fa-triangle-exclamation me-1.5"></i> <?= e($error) ?>
+            <i class="fa-solid fa-triangle-exclamation me-1.5"></i> <?= e(is_array($error) ? ($error['message'] ?? '') : $error) ?>
             <button type="button" class="btn-close py-2.5" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -1098,6 +1199,72 @@ function previewAvatar(input, imgId, placeholderId) {
         };
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+// Upload Avatar Langsung Sekali Klik Kamera
+function handleDirectAvatarUpload(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    if (file.size > 5 * 1024 * 1024) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'File Terlalu Besar',
+            text: 'Ukuran foto maksimal 5 MB.'
+        });
+        input.value = '';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('action', 'upload_avatar_ajax');
+    formData.append('avatar', file);
+    formData.append('csrf_token', '<?= csrf_token() ?>');
+
+    Swal.fire({
+        title: 'Mengunggah Foto...',
+        text: 'Mohon tunggu sebentar',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            const container = document.getElementById('shopeeAvatarContainer');
+            if (container) {
+                container.innerHTML = `<img src="${res.avatar_url}" alt="Avatar" class="shopee-avatar-img">`;
+            }
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: res.message,
+                timer: 1600,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: res.message
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Terjadi gangguan jaringan saat mengunggah foto.'
+        });
+    })
+    .finally(() => {
+        input.value = '';
+    });
 }
 </script>
 
