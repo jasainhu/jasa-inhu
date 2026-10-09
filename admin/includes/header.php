@@ -21,9 +21,10 @@ $page_title = $page_title ?? 'Admin Dashboard';
     <title><?= e($page_title) ?> | Admin JASA INHU</title>
  
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset_url('images/favicon-32x32.png') ?>">
-    <link rel="icon" type="image/png" sizes="48x48" href="<?= asset_url('images/favicon.png') ?>">
-    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset_url('images/apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset_url('images/favicon-32x32.png') ?>?v=2">
+    <link rel="icon" type="image/png" sizes="48x48" href="<?= asset_url('images/favicon.png') ?>?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset_url('images/apple-touch-icon.png') ?>?v=2">
 
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">

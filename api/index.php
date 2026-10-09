@@ -17,6 +17,17 @@ if ($path === '/' || $path === '') {
     exit;
 }
 
+// 1.0 Favicon Handler
+if ($path === '/favicon.ico') {
+    header('Content-Type: image/png');
+    header('Cache-Control: public, max-age=86400');
+    $icoPath = __DIR__ . '/../assets/images/favicon-32x32.png';
+    if (file_exists($icoPath)) {
+        readfile($icoPath);
+    }
+    exit;
+}
+
 // 1.1 Service Worker PWA Handler
 if ($path === '/sw.js') {
     header('Content-Type: application/javascript; charset=UTF-8');
