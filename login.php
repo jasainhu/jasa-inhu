@@ -119,40 +119,10 @@ require_once __DIR__ . '/includes/header.php';
         <div class="text-center mt-3 pt-2 text-muted" style="font-size: 0.82rem;">
             Butuh bantuan? <a href="https://wa.me/6281234567890?text=Halo%20Admin%20JASA%20INHU,%20saya%20butuh%20bantuan" target="_blank" class="fw-bold text-decoration-none" style="color: #00AA5B;">Hubungi CS Jasa Inhu</a>
         </div>
-
-        <!-- Akun Demo Cepat (Quick Fill) -->
-        <div class="mt-4 p-3 bg-light rounded-3 border">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="fw-bold small text-dark" style="font-size: 0.75rem;"><i class="fa-solid fa-key text-warning me-1"></i> Uji Coba Cepat (Akun Demo 1-Klik):</span>
-            </div>
-            <div class="d-grid gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2" style="font-size: 0.8rem;" onclick="fillDemoAccount('admin@jasainhu.id', 'password123')">
-                    <span class="badge text-bg-danger me-1">Admin</span> admin@jasainhu.id
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2" style="font-size: 0.8rem;" onclick="fillDemoAccount('budi@gmail.com', 'password123')">
-                    <span class="badge text-bg-primary me-1">Pengguna</span> budi@gmail.com (Warga Pematang Reba)
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary text-start py-1 px-2" style="font-size: 0.8rem;" onclick="fillDemoAccount('ahmad.servis@jasainhu.id', 'password123')">
-                    <span class="badge text-bg-success me-1">Penyedia</span> ahmad.servis@jasainhu.id (Bengkel Motor Rengat)
-                </button>
-            </div>
-            <div class="text-muted text-center mt-2" style="font-size: 0.72rem;">
-                Semua akun demo menggunakan sandi: <code>password123</code>
-            </div>
-        </div>
     </div>
 </div>
 
 <script>
-function fillDemoAccount(email, password) {
-    const loginInput = document.getElementById('login_input');
-    const passInput = document.getElementById('password_input');
-    if (loginInput && passInput) {
-        loginInput.value = email;
-        passInput.value = password;
-        loginInput.focus();
-    }
-}
 
 function toggleLoginPagePassword() {
     const passInput = document.getElementById('password_input');

@@ -62,40 +62,12 @@ if (function_exists('is_logged_in') && is_logged_in()) {
 
             <!-- Bantuan Layanan (Tokopedia Care Style) -->
             <div class="text-center mt-3 pt-2 text-muted" style="font-size: 0.82rem;">
-                Butuh bantuan? <a href="https://wa.me/6281234567890?text=Halo%20Admin%20JASA%20INHU,%20saya%20butuh%20bantuan" target="_blank" class="fw-bold text-decoration-none" style="color: #00AA5B;">Hubungi CS Jasa Inhu</a>
-            </div>
-
-            <!-- Quick Demo Fill (Uji Coba 1-Klik) -->
-            <div class="mt-3 p-2 bg-light rounded-3 border">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="fw-bold text-dark" style="font-size: 0.72rem;"><i class="fa-solid fa-key text-warning me-1"></i> Akun Demo Cepat (1-Klik Isi):</span>
-                </div>
-                <div class="d-flex flex-wrap gap-1">
-                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" onclick="fillModalAccount('admin@jasainhu.id', 'password123')">
-                        <span class="badge text-bg-danger">Admin</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" onclick="fillModalAccount('budi@gmail.com', 'password123')">
-                        <span class="badge text-bg-primary">Warga</span> Budi
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" onclick="fillModalAccount('ahmad.servis@jasainhu.id', 'password123')">
-                        <span class="badge text-bg-success">Mitra</span> Ahmad
-                    </button>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function fillModalAccount(email, password) {
-    const loginInput = document.getElementById('modal_login_input');
-    const passInput = document.getElementById('modal_password_input');
-    if (loginInput && passInput) {
-        loginInput.value = email;
-        passInput.value = password;
-        loginInput.focus();
-    }
-}
 
 function toggleModalPassword() {
     const passInput = document.getElementById('modal_password_input');
