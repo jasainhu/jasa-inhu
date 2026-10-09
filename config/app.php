@@ -19,12 +19,20 @@ define('APP_VERSION', '1.0.0');
 
 // Deteksi Base URL secara dinamis
 function get_base_url(): string {
+    if (getenv('APP_URL')) {
+        return rtrim(getenv('APP_URL'), '/');
+    }
     if (isset($_SERVER['HTTP_HOST'])) {
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+            || (str_ends_with($_SERVER['HTTP_HOST'], '.vercel.app'));
+        
+        $protocol = $isHttps ? 'https://' : 'http://';
         $host = $_SERVER['HTTP_HOST'];
         
         // Deteksi subdirektori jika dijalankan di htdocs XAMPP (misal /JASA-INHU)
-        $script = $_SERVER['SCRIPT_NAME'];
+        $script = $_SERVER['SCRIPT_NAME'] ?? '';
         $dir = str_replace('\\', '/', dirname($script));
         
         // Bersihkan path subdirektori dari folder admin, user, provider, api, database jika ada

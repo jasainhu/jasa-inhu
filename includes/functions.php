@@ -140,6 +140,9 @@ function redirect(string $path): void {
  * Generate asset URL
  */
 function asset_url(string $path): string {
+    if (str_starts_with(BASE_URL, 'https://') || (isset($_SERVER['HTTP_HOST']) && str_ends_with($_SERVER['HTTP_HOST'], '.vercel.app'))) {
+        return '/assets/' . ltrim($path, '/');
+    }
     return BASE_URL . '/assets/' . ltrim($path, '/');
 }
 
