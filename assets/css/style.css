@@ -1,0 +1,3784 @@
+/* =========================================================
+   JASA INHU - Main Stylesheet
+   Modern, Clean, Mobile-First
+   Palette: Emerald Teal & Slate Navy
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary: #0d9488;
+    --primary-dark: #0f766e;
+    --primary-light: #ccfbf1;
+    --primary-subtle: #f0fdfa;
+    --secondary: #3b82f6;
+    --accent: #f59e0b;
+    --accent-light: #fef3c7;
+    --dark: #0f172a;
+    --dark-muted: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --bg-page: #f8fafc;
+    --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    --card-shadow-hover: 0 12px 30px -4px rgba(15, 23, 42, 0.12);
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--dark);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+/* Brand Teal Utilities */
+.text-teal {
+    color: var(--primary) !important;
+}
+
+.text-teal-dark {
+    color: var(--primary-dark) !important;
+}
+
+.bg-teal {
+    background-color: var(--primary) !important;
+}
+
+.bg-teal-subtle {
+    background-color: var(--primary-light) !important;
+    color: var(--primary-dark) !important;
+}
+
+.border-teal {
+    border-color: var(--primary) !important;
+}
+
+/* Navbar */
+.navbar-custom {
+    background-color: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.65rem 0;
+    transition: var(--transition);
+}
+
+.navbar-custom .container {
+    max-width: 1240px;
+    padding-left: 20px;
+    padding-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-logo-img {
+    height: 44px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    display: block;
+    transition: var(--transition);
+}
+
+@media (max-width: 768px) {
+    .navbar-logo-img {
+        height: 35px;
+        max-width: 155px;
+    }
+}
+
+.navbar-brand .brand-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.nav-link {
+    font-weight: 500;
+    color: var(--dark-muted) !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--primary) !important;
+    background-color: var(--primary-subtle);
+}
+
+/* =========================================================
+   HEADER SEARCH BAR & TOKOPEDIA NAVIGATION BAR
+   ========================================================= */
+.btn-tokopedia-cat {
+    color: var(--dark-muted);
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    transition: var(--transition);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-tokopedia-cat:hover, .btn-tokopedia-cat:focus, .show > .btn-tokopedia-cat {
+    color: var(--primary) !important;
+    background-color: var(--primary-subtle);
+}
+
+.tokopedia-cat-menu {
+    width: 480px;
+    max-width: 95vw;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.16);
+    animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (min-width: 992px) {
+    .dropdown:hover > .tokopedia-cat-menu {
+        display: block;
+    }
+}
+
+.tokopedia-cat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.tokopedia-cat-grid::-webkit-scrollbar {
+    width: 4px;
+}
+.tokopedia-cat-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.tokopedia-cat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--dark-muted);
+    transition: var(--transition);
+}
+
+.tokopedia-cat-item:hover {
+    background-color: var(--primary-subtle);
+    color: var(--primary);
+    transform: translateX(3px);
+}
+
+.tokopedia-cat-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.tokopedia-cat-item:hover .tokopedia-cat-icon {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.tokopedia-cat-title {
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* =========================================================
+   TOKOPEDIA MODERN INSET SEARCH BAR
+   ========================================================= */
+.header-search-wrap {
+    flex: 1 1 auto;
+    max-width: 680px;
+    min-width: 0;
+}
+
+.header-search-form .search-box-unified {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    padding: 3px 4px 3px 14px;
+    transition: var(--transition);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+.header-search-form .search-box-unified:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.header-search-form .search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--dark);
+    flex-grow: 1;
+    min-width: 140px;
+    padding: 6px 8px;
+}
+
+.header-search-form .search-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.header-search-form .district-dropdown-wrap {
+    display: flex;
+    align-items: center;
+    border-left: 1px solid var(--border-color);
+    padding-left: 8px;
+    margin-left: 2px;
+    gap: 2px;
+}
+
+.header-search-form .district-select {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dark-muted);
+    cursor: pointer;
+    padding: 6px 2px;
+    max-width: 120px;
+}
+
+.header-search-form .district-select:focus {
+    color: var(--primary);
+}
+
+.header-search-form .btn-search-pill {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.42rem 1.15rem;
+    border-radius: 9px;
+    transition: var(--transition);
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+    margin-left: 4px;
+}
+
+.header-search-form .btn-search-pill:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #115e59 100%);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);
+}
+
+/* Tokopedia Style Auth Buttons */
+.btn-tokopedia-masuk {
+    border: 1.5px solid var(--primary);
+    background-color: #ffffff;
+    color: var(--primary) !important;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.42rem 1.15rem;
+    border-radius: 8px;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.btn-tokopedia-masuk:hover {
+    background-color: var(--primary-subtle);
+    border-color: var(--primary-dark);
+    color: var(--primary-dark) !important;
+}
+
+.btn-tokopedia-daftar {
+    border: 1.5px solid var(--primary);
+    background-color: var(--primary);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.42rem 1.15rem;
+    border-radius: 8px;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+    white-space: nowrap;
+}
+
+.btn-tokopedia-daftar:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+}
+
+.header-divider {
+    width: 1px;
+    height: 24px;
+    background-color: var(--border-color);
+    margin: 0 4px;
+}
+
+.navbar-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding-right: 4px;
+    flex-shrink: 0;
+}
+
+/* Tokopedia Style Nav Action Icons & Profile */
+.btn-nav-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: #475569;
+    font-size: 1.15rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-nav-icon:hover, .btn-nav-icon:focus, .show > .btn-nav-icon {
+    background: #f1f5f9;
+    color: var(--primary);
+}
+
+.btn-nav-icon .nav-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+    background-color: #ef4444;
+    color: #ffffff;
+    border-radius: 999px;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.nav-vertical-divider {
+    width: 1px;
+    height: 22px;
+    background-color: #e2e8f0;
+    margin: 0 3px;
+}
+
+/* User Profile Navbar Button */
+.btn-nav-profile {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 8px 3px 4px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-nav-profile:hover, .btn-nav-profile:focus, .show > .btn-nav-profile {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.nav-profile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(13, 148, 136, 0.2);
+}
+
+.nav-profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nav-profile-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #1e293b;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+}
+
+/* Dropdown Menus */
+.dropdown-menu-profile {
+    min-width: 260px;
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.16);
+    border: 1px solid var(--border-color);
+    animation: fadeInDown 0.18s ease-out;
+}
+
+.dropdown-menu-profile .dropdown-item {
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #334155;
+    transition: var(--transition);
+}
+
+.dropdown-menu-profile .dropdown-item:hover {
+    background-color: var(--primary-subtle);
+    color: var(--primary);
+}
+
+.dropdown-menu-profile .dropdown-item.text-danger:hover {
+    background-color: #fef2f2;
+    color: #dc2626 !important;
+}
+
+.dropdown-menu-notif {
+    width: 360px;
+    max-width: 94vw;
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.18);
+    border: 1px solid var(--border-color);
+    animation: fadeInDown 0.18s ease-out;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    text-decoration: none;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+    color: inherit;
+}
+
+.notif-item:hover {
+    background: #f8fafc;
+}
+
+.notif-item.unread {
+    background: #f0fdfa;
+}
+
+.notif-item.unread:hover {
+    background: #e6fffa;
+}
+
+.notif-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #e0f2fe;
+    color: #0284c7;
+    font-size: 0.9rem;
+}
+
+.notif-item.unread .notif-icon-circle {
+    background: #ccfbf1;
+    color: #0d9488;
+}
+
+/* =========================================================
+   SHOPEE-STYLE ULTRA-SLIM MOBILE HEADER
+   Satu Baris Ringkas & Ramping ala Aplikasi E-Commerce Shopee
+   ========================================================= */
+.shopee-mobile-header {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    padding: 8px 12px 6px 12px;
+}
+
+.shopee-header-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 40px;
+}
+
+/* Tombol Panah Kembali (Back Arrow Mobile ala Shopee) */
+.shopee-back-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.shopee-back-btn:hover,
+.shopee-back-btn:active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    transform: scale(0.95);
+}
+
+/* Capsule Search Bar (Putih Melengkung Penuh) */
+.shopee-search-capsule {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 999px;
+    height: 38px;
+    padding: 0 8px 0 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    min-width: 0;
+}
+
+.shopee-search-capsule .search-icon {
+    color: #0d9488;
+    font-size: 0.95rem;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.shopee-search-capsule .search-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.82rem;
+    color: #1e293b;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+}
+
+.shopee-search-capsule .search-input::placeholder {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.shopee-search-capsule .btn-capsule-cat {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.95rem;
+    padding: 4px 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.15s ease;
+}
+
+.shopee-search-capsule .btn-capsule-cat:hover {
+    color: #0d9488;
+}
+
+/* Right Action Buttons: Cart, Chat, User/Login */
+.shopee-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.shopee-action-btn {
+    position: relative;
+    color: #ffffff !important;
+    font-size: 1.22rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+}
+
+.shopee-action-btn:active {
+    transform: scale(0.92);
+}
+
+.shopee-badge {
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 2px 4.5px;
+    border-radius: 999px;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    min-width: 17px;
+    text-align: center;
+}
+
+/* User Avatar & Login Pill */
+.shopee-user-avatar-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.shopee-user-avatar-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.shopee-action-btn.btn {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    line-height: 1;
+}
+
+.shopee-badge.bg-teal {
+    background-color: #0d9488 !important;
+}
+
+@media (max-width: 575.98px) {
+    .shopee-header-actions {
+        gap: 6px;
+    }
+    .shopee-action-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1.15rem;
+    }
+    .shopee-user-avatar-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.74rem;
+    }
+    .shopee-header-actions .dropdown-menu-notif {
+        position: absolute !important;
+        right: 0 !important;
+        left: auto !important;
+        width: 320px !important;
+        max-width: calc(100vw - 20px) !important;
+    }
+}
+
+.shopee-login-btn {
+    background: #ffffff;
+    color: #0d9488 !important;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.shopee-login-btn:active {
+    transform: scale(0.95);
+}
+
+.shopee-register-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 3px 11px;
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.shopee-register-btn:hover, .shopee-register-btn:active {
+    background: rgba(255, 255, 255, 0.35);
+    color: #ffffff !important;
+    transform: scale(0.95);
+}
+
+/* Sub-bar Lokasi Tipis (~24px) */
+.shopee-location-subbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 5px;
+    padding-bottom: 2px;
+    font-size: 0.73rem;
+    color: #ffffff;
+    gap: 8px;
+}
+
+.shopee-location-subbar .btn-location-trigger {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.73rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    cursor: pointer;
+    font-weight: 500;
+    max-width: 100%;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.shopee-location-subbar .location-label {
+    opacity: 0.85;
+    margin-right: 4px;
+}
+
+.shopee-location-subbar .location-val {
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.btn-subbar-tender {
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    color: #ffffff !important;
+    padding: 2.5px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-subbar-tender:hover,
+.btn-subbar-tender:active {
+    background: #ffffff;
+    color: #0d9488 !important;
+    border-color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-subbar-tender .tender-badge {
+    background: #f59e0b;
+    color: #0f172a;
+    font-size: 0.56rem;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1;
+    margin-left: 2px;
+}
+
+.shopee-quick-tags {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.shopee-quick-tags::-webkit-scrollbar {
+    display: none;
+}
+
+.shopee-tag-pill {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+
+.shopee-tag-pill:hover, .shopee-tag-pill:active {
+    background: rgba(255, 255, 255, 0.35);
+    color: #ffffff !important;
+}
+
+/* Hero Section */
+.hero-section {
+    background: radial-gradient(circle at 10% 20%, rgba(204, 251, 241, 0.5) 0%, rgba(248, 250, 252, 1) 90%);
+    padding: 4.5rem 0 3.5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-title {
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    letter-spacing: -0.025em;
+    color: var(--dark);
+    line-height: 1.15;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    max-width: 580px;
+}
+
+.hero-search-box {
+    background: #ffffff;
+    padding: 12px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 40px -10px rgba(13, 148, 136, 0.18), 0 2px 10px rgba(0,0,0,0.03);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.hero-search-box .form-control,
+.hero-search-box .form-select {
+    border: 1px solid transparent;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.hero-search-box .form-control:focus,
+.hero-search-box .form-select:focus {
+    background: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+}
+
+.btn-primary-custom {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    padding: 0.75rem 1.4rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    transition: var(--transition);
+}
+
+.btn-primary-custom:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #115e59 100%);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.45);
+}
+
+.btn-outline-custom {
+    border: 1.5px solid var(--border-color);
+    background: #ffffff;
+    color: var(--dark);
+    font-weight: 600;
+    padding: 0.75rem 1.4rem;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.btn-outline-custom:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-subtle);
+}
+
+.btn-teal {
+    background-color: var(--primary);
+    color: #ffffff !important;
+    border: 1px solid var(--primary);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-teal:hover, .btn-teal:focus {
+    background-color: var(--primary-dark);
+    color: #ffffff !important;
+    border-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-outline-teal {
+    background-color: transparent;
+    color: var(--primary) !important;
+    border: 1.5px solid var(--primary);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-outline-teal:hover, .btn-outline-teal:focus {
+    background-color: var(--primary);
+    color: #ffffff !important;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+/* Category Grid & Cards */
+.category-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 0.75rem;
+    text-align: center;
+    transition: var(--transition);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--dark);
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+}
+
+.category-icon-wrapper {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: var(--primary-subtle);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.category-card:hover .category-icon-wrapper {
+    background: var(--primary);
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+.category-card .category-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Provider Cards */
+.provider-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.4rem;
+    transition: var(--transition);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--card-shadow);
+}
+
+.provider-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: rgba(13, 148, 136, 0.4);
+}
+
+.provider-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.badge-verified {
+    background-color: #dcfce7;
+    color: #15803d;
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.rating-badge {
+    background: #fffbeb;
+    color: #b45309;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid #fef3c7;
+}
+
+/* Step / How It Works Cards */
+.step-card {
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    height: 100%;
+    transition: var(--transition);
+    position: relative;
+}
+
+.step-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.step-number {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-subtle);
+    color: var(--primary-dark);
+    font-size: 1.25rem;
+    font-weight: 800;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.2rem;
+    border: 2px solid var(--primary-light);
+}
+
+/* Dashboard Styles */
+.dashboard-sidebar {
+    background: #ffffff;
+    border-right: 1px solid var(--border-color);
+    min-height: calc(100vh - 65px);
+    padding: 1.5rem 1rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    color: var(--dark-muted);
+    font-weight: 500;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    transition: var(--transition);
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+    background: var(--primary-subtle);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.sidebar-link i {
+    width: 20px;
+    font-size: 1.1rem;
+}
+
+.stat-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.4rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+/* Auth Cards */
+.auth-wrapper {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+}
+
+.auth-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.08);
+    width: 100%;
+    max-width: 520px;
+    padding: 2.5rem 2rem;
+}
+
+.auth-card-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.role-pill-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.role-pill-btn {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    background: transparent;
+    color: var(--dark-muted);
+}
+
+.role-pill-btn.active {
+    background: #ffffff;
+    color: var(--primary-dark);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Footer */
+.footer-custom {
+    background: #0f172a;
+    color: #94a3b8;
+    padding: 4rem 0 2rem 0;
+    margin-top: 5rem;
+}
+
+.footer-custom a {
+    color: #cbd5e1;
+}
+
+.footer-custom a:hover {
+    color: #ffffff;
+}
+
+/* Mobile Bottom Navigation Bar (Tokopedia/Shopee Style) */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(62px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(226, 232, 240, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 1040;
+    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 0.70rem;
+    font-weight: 600;
+    text-decoration: none;
+    flex: 1;
+    height: 100%;
+    position: relative;
+    transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.mobile-nav-item i {
+    font-size: 1.25rem;
+    margin-bottom: 2px;
+    transition: transform 0.2s ease;
+}
+
+.mobile-nav-item:active {
+    transform: scale(0.92);
+}
+
+.mobile-nav-item:hover, .mobile-nav-item.active {
+    color: #0d9488;
+}
+
+.mobile-nav-item.active i {
+    transform: translateY(-2px);
+    color: #0d9488;
+}
+
+.mobile-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: max(4px, env(safe-area-inset-bottom, 0px));
+    width: 18px;
+    height: 3px;
+    background: #0d9488;
+    border-radius: 999px;
+}
+
+/* Popular Search Chip Pills */
+.search-chip-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    padding: 0.38rem 0.9rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.search-chip-pill:hover {
+    background: #ccfbf1;
+    border-color: #5eead4;
+    color: #0f766e;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.15);
+}
+
+.search-keywords-suggest a {
+    color: #64748b;
+    font-size: 0.72rem;
+    transition: color 0.15s ease;
+}
+
+.search-keywords-suggest a:hover {
+    color: #0d9488;
+    text-decoration: underline;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991px) {
+    body {
+        padding-bottom: 70px; /* Ruang untuk bottom bar di smartphone & tablet */
+    }
+}
+
+    .hero-section {
+        padding: 2.25rem 0 1.75rem 0;
+    }
+    
+    .category-card {
+        padding: 0.85rem 0.5rem;
+    }
+
+    .category-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        font-size: 1.15rem;
+    }
+
+    .auth-card {
+        padding: 1.75rem 1.25rem;
+    }
+}
+
+/* Banner Promo & Pengumuman Carousel (Admin Managed) */
+.banner-carousel-section {
+    position: relative;
+    z-index: 5;
+}
+
+.banner-img-link {
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #f8fafc;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.banner-img-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.banner-slide-wrapper {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.banner-slide-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    border-radius: var(--radius-lg);
+}
+
+.banner-slide-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.90) 0%, rgba(15, 23, 42, 0.65) 50%, rgba(15, 23, 42, 0.15) 100%);
+    border-radius: var(--radius-lg);
+    z-index: 2;
+}
+
+.banner-slide-card {
+    height: 280px;
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.banner-subtitle-line {
+    min-height: 38px;
+    max-width: 620px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .banner-slide-wrapper,
+    .banner-slide-card {
+        height: auto;
+        min-height: 220px;
+    }
+}
+
+/* Modal Scrollable Fix (Buttons never hidden off-screen) */
+.modal-dialog-scrollable .modal-content {
+    max-height: 90vh;
+}
+.modal-dialog-scrollable .modal-body {
+    overflow-y: auto;
+}
+
+.banner-card-icon-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Custom Carousel Controls (Sleek Floating Circle Buttons) */
+#heroBannerCarousel .carousel-control-prev,
+#heroBannerCarousel .carousel-control-next {
+    width: 60px;
+    opacity: 0.9;
+    z-index: 10;
+}
+
+#heroBannerCarousel .carousel-control-prev:hover,
+#heroBannerCarousel .carousel-control-next:hover {
+    opacity: 1;
+}
+
+.carousel-nav-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.carousel-nav-btn:hover {
+    transform: scale(1.1);
+    background: #ffffff;
+    color: var(--primary);
+}
+
+/* Carousel Indicators (Pill Style) */
+#heroBannerCarousel .carousel-indicators {
+    margin-bottom: 0.75rem;
+}
+
+#heroBannerCarousel .carousel-indicators [data-bs-target] {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: none;
+    margin: 0 3px;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#heroBannerCarousel .carousel-indicators .active {
+    width: 24px;
+    border-radius: 4px;
+    background-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .banner-slide-card {
+        min-height: 175px;
+        padding: 1.25rem 1rem !important;
+    }
+    .banner-slide-card h3 {
+        font-size: 1.15rem;
+    }
+    .carousel-nav-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+}
+
+/* =========================================================
+   MODERN UI COMPONENTS: QUICK SERVICES & DISTRICT PILLS
+   ========================================================= */
+
+/* Quick Services Grid */
+.quick-service-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+@media (min-width: 992px) {
+    .quick-service-grid {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 18px;
+    }
+}
+
+.quick-service-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--dark);
+    transition: var(--transition);
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: var(--radius-md);
+}
+
+.quick-service-item:hover {
+    transform: translateY(-4px);
+}
+
+.quick-service-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.55rem;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    transition: var(--transition);
+}
+
+.quick-service-item:hover .quick-service-icon {
+    transform: scale(1.08);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+}
+
+.quick-service-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--dark-muted);
+    transition: var(--transition);
+}
+
+.quick-service-item:hover .quick-service-name {
+    color: var(--primary);
+}
+
+/* Category Color Variations */
+.icon-motor     { background: #fffbeb; color: #d97706; }
+.icon-ac        { background: #e0f2fe; color: #0284c7; }
+.icon-bangunan  { background: #ffedd5; color: #ea580c; }
+.icon-kebun     { background: #dcfce7; color: #15803d; }
+.icon-pickup    { background: #f1f5f9; color: #334155; }
+.icon-listrik   { background: #fef9c3; color: #ca8a04; }
+.icon-hp        { background: #f3e8ff; color: #9333ea; }
+.icon-las       { background: #ffe4e6; color: #e11d48; }
+.icon-tenda     { background: #ede9fe; color: #6d28d9; }
+.icon-semua     { background: #ccfbf1; color: #0d9488; }
+
+/* District Filter Pill Bar */
+.district-pill-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 6px 2px 14px 2px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.district-pill-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.district-pill {
+    white-space: nowrap;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--dark-muted);
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.district-pill:hover {
+    background: var(--primary-subtle);
+    color: var(--primary);
+    border-color: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+.district-pill.active {
+    background: var(--primary);
+    color: #ffffff !important;
+    border-color: var(--primary);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
+}
+
+@media (max-width: 767.98px) {
+    .district-pill-bar {
+        padding: 4px 1px 8px 1px;
+        gap: 6px;
+    }
+    .district-pill {
+        padding: 5px 13px;
+        font-size: 0.76rem;
+        border-radius: 20px;
+    }
+}
+
+/* WhatsApp Button */
+.btn-whatsapp {
+    background-color: #25d366;
+    color: #ffffff !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: 0 3px 10px rgba(37, 211, 102, 0.25);
+    text-decoration: none;
+}
+
+.btn-whatsapp:hover {
+    background-color: #1eb956;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+}
+
+/* Action Path Cards */
+.path-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    transition: var(--transition);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+}
+
+.path-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--primary);
+}
+
+.path-card-primary {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);
+    border-color: #99f6e4;
+}
+
+.status-badge-online {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid #bbf7d0;
+}
+
+/* Tokopedia Green Input Focus & Modal Polish */
+.form-control:focus, .form-select:focus {
+    border-color: #00AA5B !important;
+    box-shadow: 0 0 0 3px rgba(0, 170, 91, 0.15) !important;
+}
+
+.modal-content {
+    border-radius: 18px !important;
+}
+
+/* Modern Provider Cards & Empty State */
+.provider-card-modern {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.provider-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
+}
+
+.provider-cover-wrap {
+    height: 165px;
+    width: 100%;
+    overflow: hidden;
+    background: #e2e8f0;
+}
+
+.provider-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+}
+
+.provider-card-modern:hover .provider-cover-img {
+    transform: scale(1.04);
+}
+
+.provider-cover-fallback {
+    width: 100%;
+    height: 100%;
+}
+
+.empty-state-icon-circle {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: #f0fdfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ccfbf1;
+}
+
+/* =========================================================
+   SHOPEE STYLE HERO & 10-ICON SHORTCUT HUB
+   ========================================================= */
+.shopee-hero-section {
+    background: #f8fafc;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Main Carousel Banner Responsive Aspect Ratio (Teks Jelas & Tidak Terpotong) */
+.hero-carousel-inner {
+    border-radius: 14px;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 2.7 / 1;
+    background: #f1f5f9;
+}
+
+.hero-carousel-inner .carousel-item {
+    width: 100%;
+    height: 100%;
+}
+
+.banner-slide-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.banner-img-responsive {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    display: block;
+}
+
+.shopee-side-banners-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    gap: 10px;
+}
+
+.shopee-side-banner {
+    flex: 1 1 0;
+    min-height: 0;
+    height: 100%;
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-decoration: none;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.shopee-side-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.shopee-side-banner-emergency {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #b91c1c 100%);
+    color: #ffffff;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.shopee-side-banner-partner {
+    background: linear-gradient(135deg, #042f2e 0%, #0d9488 100%);
+    color: #ffffff;
+    border: 1px solid rgba(13, 148, 136, 0.4);
+}
+
+.shopee-side-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+/* Mobile & Tablet sizing (Berdampingan Presisi & Teks Sangat Jelas) */
+@media (max-width: 991.98px) {
+    .hero-carousel-inner {
+        aspect-ratio: 2.15 / 1;
+        border-radius: 10px;
+    }
+    .shopee-side-banners-col {
+        gap: 6px;
+    }
+    .shopee-side-banner {
+        border-radius: 10px;
+        padding: 0.5rem 0.65rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .hero-carousel-inner {
+        aspect-ratio: 2.05 / 1;
+        border-radius: 8px;
+    }
+    .shopee-side-banners-col {
+        gap: 5px;
+    }
+    .shopee-side-banner {
+        border-radius: 8px;
+        padding: 0.35rem 0.45rem;
+    }
+}
+
+/* 10-Icon Shortcut Hub */
+.shopee-hub-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+    border: 1px solid #f1f5f9;
+    padding: 1.25rem 0.75rem;
+    margin-top: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.shopee-hub-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.shopee-hub-grid::-webkit-scrollbar {
+    display: none;
+}
+
+@media (min-width: 992px) {
+    .shopee-hub-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 8px;
+        overflow-x: visible;
+        padding-bottom: 0;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .shopee-hub-card {
+        padding: 0.65rem 0.5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.85rem;
+        border-radius: 14px;
+    }
+
+    .shopee-hub-item {
+        flex: 0 0 68px;
+        width: 68px;
+        padding: 4px 2px;
+    }
+
+    .shopee-hub-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        font-size: 1.15rem;
+        margin-bottom: 4px;
+    }
+
+    .shopee-hub-label {
+        font-size: 0.66rem;
+        line-height: 1.15;
+    }
+}
+
+.shopee-hub-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #1e293b;
+    padding: 6px 2px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.shopee-hub-item:hover {
+    transform: translateY(-3px);
+}
+
+.shopee-hub-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-bottom: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+}
+
+.shopee-hub-item:hover .shopee-hub-icon {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.shopee-hub-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #334155;
+    white-space: pre-line;
+}
+
+.shopee-hub-item:hover .shopee-hub-label {
+    color: #0d9488;
+}
+
+/* Realtime Job Board / Activity Ticker (Shopee Flash Sale Equivalent) */
+.live-job-board-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.live-job-board-header {
+    background: linear-gradient(90deg, #f0fdfa 0%, #ffffff 100%);
+    border-bottom: 1px solid #ccfbf1;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.live-pulse-dot {
+    width: 9px;
+    height: 9px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+    animation: livePulse 1.8s infinite;
+}
+
+@keyframes livePulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.job-ticker-item {
+    border-right: 1px solid #f1f5f9;
+    padding: 0.85rem 1rem;
+    transition: background 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.job-ticker-item:hover {
+    background: #f8fafc;
+}
+
+.job-ticker-item:last-child {
+    border-right: none;
+}
+
+/* =========================================================
+   MOBILE BOTTOM NAVIGATION BAR (Tokopedia / Shopee Style)
+   ========================================================= */
+@media (max-width: 991.98px) {
+    body {
+        padding-bottom: 72px !important;
+    }
+}
+
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 1040;
+    padding: 0 4px calc(env(safe-area-inset-bottom, 0px) + 2px) 4px;
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.07);
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: #64748b;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    padding: 4px 0;
+}
+
+.mobile-nav-item i {
+    font-size: 1.15rem;
+    margin-bottom: 3px;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.mobile-nav-item span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.01em;
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item:active {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.mobile-nav-item:active i {
+    transform: scale(0.92);
+}
+
+.mobile-nav-item.active {
+    color: var(--primary);
+}
+
+.mobile-nav-item.active i {
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.mobile-nav-item.active::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    width: 20px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+/* =========================================================
+   PROVIDER DETAIL MOBILE STICKY BOTTOM ACTION BAR
+   ========================================================= */
+.provider-mobile-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(226, 232, 240, 0.95);
+    z-index: 1045;
+    padding: 6px 4px calc(env(safe-area-inset-bottom, 0px) + 6px) 4px;
+    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+}
+
+.btn-mobile-action-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 8px;
+    color: #475569;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1.1;
+    min-width: 44px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    transition: all 0.15s ease;
+}
+
+.btn-mobile-action-icon i {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+}
+
+.btn-mobile-action-icon:active {
+    transform: scale(0.92);
+    background: #e2e8f0;
+}
+
+.btn-mobile-action-icon:hover {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   SEARCH TAGS & POPULAR CHIPS (Tokopedia / Shopee Style)
+   ========================================================= */
+.header-search-tags {
+    font-size: 0.75rem;
+    line-height: 1.2;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.search-tag-link {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    font-size: 0.74rem;
+}
+
+.search-tag-link:hover {
+    color: var(--primary);
+    background-color: #f0fdfa;
+    text-decoration: none;
+}
+
+.mobile-search-tags {
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 6px;
+}
+
+.mobile-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.mobile-tag-chip:hover,
+.mobile-tag-chip:active {
+    background: #ccfbf1;
+    border-color: #0d9488;
+    color: #0f766e;
+    text-decoration: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Popular Search Strip on Homepage */
+.popular-search-strip {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.popular-search-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.popular-chips-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.popular-chip-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 50px;
+    color: #334155;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.popular-chip-pill i {
+    font-size: 0.8rem;
+    color: #0d9488;
+    transition: transform 0.2s ease;
+}
+
+.popular-chip-pill:hover {
+    background: #f0fdfa;
+    border-color: #0d9488;
+    color: #0f766e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+    text-decoration: none;
+}
+
+.popular-chip-pill:hover i {
+    transform: scale(1.15);
+}
+
+.popular-chip-pill.hot {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #e11d48;
+}
+
+.popular-chip-pill.hot i {
+    color: #e11d48;
+}
+
+.popular-chip-pill.hot:hover {
+    background: #ffe4e6;
+    border-color: #fb7185;
+    color: #be123c;
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.15);
+}
+
+/* =========================================================
+   ORDER STEPPER & RATING MODAL (TOKOPEDIA STYLE)
+   ========================================================= */
+.order-stepper-wrap {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+}
+
+.stepper-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.stepper-step {
+    flex: 1;
+    position: relative;
+    z-index: 2;
+}
+
+.stepper-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.stepper-step.active .stepper-icon {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.stepper-step.active.completed .stepper-icon {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.stepper-step.current .stepper-icon {
+    background: #f59e0b;
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+}
+
+.stepper-label {
+    font-size: 0.78rem;
+    color: #475569;
+    margin-top: 4px;
+    line-height: 1.25;
+}
+
+.stepper-step.active .stepper-label {
+    color: var(--primary);
+}
+
+.stepper-step.active.completed .stepper-label {
+    color: #047857;
+}
+
+.stepper-step.current .stepper-label {
+    color: #d97706;
+}
+
+.stepper-line {
+    flex: 1;
+    height: 3px;
+    background: #e2e8f0;
+    margin-top: 18px;
+    position: relative;
+    z-index: 1;
+    transition: background 0.3s ease;
+}
+
+.stepper-line.active {
+    background: #10b981;
+}
+
+@media (max-width: 576px) {
+    .stepper-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+    .stepper-line {
+        margin-top: 14px;
+    }
+    .stepper-label {
+        font-size: 0.68rem;
+    }
+    .stepper-time {
+        display: none;
+    }
+}
+
+/* =========================================================
+   ORDER TRACKER ACTIVITY TIMELINE (VERTICAL FEED)
+   ========================================================= */
+.order-activity-timeline {
+    position: relative;
+    padding-left: 28px;
+}
+
+.order-activity-timeline::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 11px;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.order-timeline-item {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.order-timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.order-timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    color: #ffffff;
+    background: #94a3b8;
+    border: 3px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    z-index: 2;
+}
+
+.order-timeline-dot.dot-created { background: #3b82f6; }
+.order-timeline-dot.dot-accepted { background: #0d9488; }
+.order-timeline-dot.dot-on_the_way { background: #f59e0b; }
+.order-timeline-dot.dot-working { background: #06b6d4; }
+.order-timeline-dot.dot-completed { background: #10b981; }
+.order-timeline-dot.dot-cancelled { background: #ef4444; }
+
+.order-timeline-content {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    transition: all 0.2s ease;
+}
+
+.order-timeline-content:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+
+/* Star Rating Interactive Selector */
+.star-rating-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 2.2rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.star-rating-selector .star-item {
+    color: #cbd5e1;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.star-rating-selector .star-item:hover,
+.star-rating-selector .star-item.active {
+    color: #f59e0b;
+    transform: scale(1.15);
+}
+
+/* Floating WhatsApp CS Button */
+.floating-wa-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1030;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: #ffffff !important;
+    text-decoration: none;
+    border-radius: 50px;
+    padding: 12px 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-wa-btn i {
+    font-size: 1.4rem;
+}
+
+.floating-wa-btn:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 28px rgba(37, 211, 102, 0.55);
+    color: #ffffff !important;
+}
+
+@media (max-width: 991.98px) {
+    .floating-wa-btn {
+        bottom: 80px; /* Di atas mobile bottom navigation */
+        right: 14px;
+        padding: 10px 14px;
+        font-size: 0.8rem;
+    }
+    .floating-wa-btn i {
+        font-size: 1.25rem;
+    }
+}
+
+/* =========================================================
+   MOBILE FIRST OPTIMIZATIONS (HP & TABLET UX)
+   ========================================================= */
+
+/* Hero Banner Carousel Responsive Height */
+.hero-carousel-inner {
+    height: 275px;
+}
+
+@media (max-width: 767.98px) {
+    .hero-carousel-inner {
+        height: 180px !important;
+    }
+    .banner-slide-card, .banner-slide-overlay {
+        padding: 1rem !important;
+    }
+    .banner-slide-card h4, .banner-slide-overlay h4 {
+        font-size: 1.05rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .banner-slide-card p, .banner-slide-overlay p {
+        display: none !important;
+    }
+    .banner-slide-card .badge, .banner-slide-overlay .badge {
+        font-size: 0.65rem !important;
+        margin-bottom: 0.35rem !important;
+        padding: 2px 8px !important;
+    }
+    .banner-slide-card .btn, .banner-slide-overlay .btn {
+        padding: 3px 10px !important;
+        font-size: 0.72rem !important;
+    }
+
+    /* Prevent unwanted auto-zoom in mobile Safari / Chrome on input focus */
+    input.search-input,
+    .form-control,
+    .form-select {
+        font-size: 16px !important;
+    }
+}
+
+/* Shopee Shortcut Hub on Mobile */
+@media (max-width: 575.98px) {
+    .shopee-hub-card {
+        padding: 0.85rem 0.25rem !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 1rem !important;
+        border-radius: 14px !important;
+    }
+    .shopee-hub-grid {
+        gap: 8px 1px !important;
+    }
+    .shopee-hub-icon {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 1.15rem !important;
+        border-radius: 12px !important;
+        margin-bottom: 4px !important;
+    }
+    .shopee-hub-label {
+        font-size: 0.65rem !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.01em;
+    }
+
+    /* Compact Provider Cards for Phone (Shopee 2-Column Grid) */
+    .provider-card-modern .provider-cover-wrap {
+        height: 115px !important;
+    }
+    .provider-card-modern .p-3 {
+        padding: 0.55rem !important;
+    }
+    .provider-card-modern h5 {
+        font-size: 0.82rem !important;
+        line-height: 1.25 !important;
+        margin-bottom: 3px !important;
+    }
+
+    /* Padding bottom untuk halaman detail mitra agar tidak tertutup sticky bar */
+    .container:has(.provider-mobile-bottom-bar),
+    body:has(.provider-mobile-bottom-bar) {
+        padding-bottom: 80px !important;
+    }
+}
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Smooth Horizontal Scroll for Mobile Chips */
+.mobile-search-tags,
+.district-scroll-container,
+.no-scrollbar {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Tap Target Ergonomics */
+button, a, input, select {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================================================
+   GRAND FEATURE TILES (TOKOPEDIA / SHOPEE HIGH IMPACT CARDS)
+   ========================================================= */
+.grand-tile-card {
+    border-radius: 16px;
+    padding: 1rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 145px;
+    position: relative;
+    overflow: hidden;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+}
+
+.grand-tile-card:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+    color: #ffffff !important;
+}
+
+.grand-tile-card:active {
+    transform: scale(0.97);
+}
+
+.grand-tile-emergency {
+    background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+    border: 1px solid rgba(254, 202, 202, 0.3);
+}
+
+.grand-tile-ac {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border: 1px solid rgba(186, 230, 253, 0.3);
+}
+
+.grand-tile-las {
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    border: 1px solid rgba(224, 231, 255, 0.3);
+}
+
+.grand-tile-sawit {
+    background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+    border: 1px solid rgba(254, 243, 199, 0.3);
+}
+
+.grand-tile-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.grand-tile-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+}
+
+.grand-tile-title {
+    font-weight: 800;
+    font-size: 0.88rem;
+    line-height: 1.25;
+    margin-bottom: 2px;
+    color: #ffffff;
+}
+
+.grand-tile-desc {
+    font-size: 0.68rem;
+    opacity: 0.9;
+    line-height: 1.3;
+    margin-bottom: 6px;
+    color: #f1f5f9;
+}
+
+.grand-tile-cta {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ffffff;
+    opacity: 0.95;
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* =========================================================
+   BEFORE - AFTER SHOWCASE CARDS (PROOF OF WORK)
+   ========================================================= */
+.before-after-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.before-after-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1) !important;
+}
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Responsive Chat Container on Mobile */
+@media (max-width: 767.98px) {
+    .chat-container-wrapper {
+        height: calc(100vh - 160px) !important;
+        min-height: 480px !important;
+        border-radius: 16px !important;
+    }
+}
+
+/* User Order List & Tabs (Shopee / Tokopedia Style) */
+.status-tabs-nav {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.status-tabs-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.status-tab-pill {
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-tab-pill:hover {
+    color: #0d9488;
+    background: #f0fdfa;
+    border-color: #ccfbf1;
+}
+
+.status-tab-pill.active {
+    color: #ffffff !important;
+    background: #0d9488 !important;
+    border-color: #0d9488 !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+}
+
+.user-order-item {
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.user-order-item:hover {
+    background-color: #f8fafc;
+}
+
+.user-order-item.active-teal-item {
+    background-color: #f0fdfa !important;
+    border-left: 4px solid #0d9488 !important;
+}
+
+/* =========================================================
+   SHOPEE/AIRBNB STYLE BOTTOM SHEET FILTER MODAL
+   ========================================================= */
+@media (max-width: 767.98px) {
+    .modal-bottom-sheet .modal-dialog {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        max-width: 100%;
+        transform: translate(0, 100%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-bottom-sheet.show .modal-dialog {
+        transform: none;
+    }
+    .modal-bottom-sheet .modal-content {
+        border-radius: 24px 24px 0 0 !important;
+        border: none;
+        max-height: 85vh;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+    }
+    .modal-bottom-sheet .modal-body {
+        max-height: calc(85vh - 130px);
+        overflow-y: auto;
+    }
+}
+
+.filter-sheet-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #334155;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.filter-sheet-chip:hover {
+    border-color: #0d9488;
+    color: #0d9488;
+}
+
+.filter-sheet-chip.active {
+    background: #0d9488;
+    color: #ffffff;
+    border-color: #0d9488;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+}
+
+.btn-teal {
+    background-color: #0d9488 !important;
+    border-color: #0d9488 !important;
+    color: #ffffff !important;
+}
+.btn-teal:hover, .btn-teal:focus, .btn-teal:active {
+    background-color: #0f766e !important;
+    border-color: #0f766e !important;
+    color: #ffffff !important;
+}
+
+.btn-outline-teal {
+    background-color: transparent !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    transition: all 0.15s ease;
+}
+.btn-outline-teal:hover {
+    border-color: #0d9488 !important;
+    color: #0d9488 !important;
+    background-color: #f0fdfa !important;
+}
+.btn-check:checked + .btn-outline-teal {
+    background-color: #0d9488 !important;
+    border-color: #0d9488 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3) !important;
+}
+
+.filter-sheet-drag-handle {
+    width: 44px;
+    height: 4px;
+    background: #cbd5e1;
+    border-radius: 999px;
+    margin: 8px auto 4px auto;
+}
+
+.active-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background-color: #f0fdfa;
+    border: 1px solid #99f6e4;
+    color: #0f766e;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+.active-filter-badge:hover {
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+}
+
+/* ============================================================
+   SHOPEE-STYLE ACCOUNT HUB & SETTINGS (DESKTOP & MOBILE)
+   ============================================================ */
+
+/* --- Mobile Hub Layout (Photo 3 Inspiration) --- */
+.shopee-mobile-hub {
+    background: #f1f5f9;
+    min-height: calc(100vh - 70px);
+    padding-bottom: 85px;
+}
+
+.shopee-profile-hero {
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 45%, #14b8a6 100%);
+    color: #ffffff;
+    padding: 1.25rem 1rem 2rem 1rem;
+    position: relative;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.2);
+}
+
+.shopee-hero-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 0.75rem;
+}
+
+.shopee-hero-icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    text-decoration: none;
+    border: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.shopee-hero-icon-btn:hover,
+.shopee-hero-icon-btn:active {
+    background: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.shopee-hero-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0d9488;
+    padding: 0 3px;
+}
+
+.shopee-profile-user-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.shopee-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.shopee-avatar-img {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    background: #ffffff;
+}
+
+.shopee-avatar-initials {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #0d9488;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.shopee-user-info-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.shopee-user-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 2px;
+    line-height: 1.25;
+}
+
+.shopee-user-sub {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 4px;
+}
+
+.shopee-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Shopee VIP / Promo Inhu Banner */
+.shopee-vip-banner {
+    margin: -1rem 1rem 0.85rem 1rem;
+    position: relative;
+    z-index: 10;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.12);
+    color: #92400e;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.shopee-vip-banner:hover {
+    transform: translateY(-1px);
+    color: #78350f;
+}
+
+/* Card Sections on Mobile */
+.shopee-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.95rem 1rem;
+    margin: 0 0.85rem 0.75rem 0.85rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.shopee-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.shopee-card-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.shopee-card-more {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #64748b;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s ease;
+}
+
+.shopee-card-more:hover {
+    color: #0d9488;
+}
+
+/* 4-Item Order Status Grid */
+.shopee-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    text-align: center;
+}
+
+.shopee-status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #334155;
+    position: relative;
+    padding: 0.35rem 0.15rem;
+    border-radius: 10px;
+    transition: background-color 0.15s ease;
+}
+
+.shopee-status-item:hover,
+.shopee-status-item:active {
+    background-color: #f8fafc;
+    color: #0d9488;
+}
+
+.shopee-status-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #f0fdfa;
+    color: #0d9488;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 6px;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.shopee-status-item:hover .shopee-status-icon-box {
+    transform: translateY(-2px);
+    background: #0d9488;
+    color: #ffffff;
+}
+
+.shopee-status-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    padding: 0 3px;
+}
+
+.shopee-status-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    max-width: 72px;
+}
+
+/* 2x2 or 4-Item Wallet & Promo Grid */
+.shopee-wallet-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    text-align: center;
+}
+
+.shopee-wallet-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.65rem 0.35rem;
+    text-decoration: none;
+    color: #1e293b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.shopee-wallet-item:hover {
+    background: #ffffff;
+    border-color: #0d9488;
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.1);
+    transform: translateY(-1px);
+}
+
+.shopee-wallet-val {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #0d9488;
+    margin-bottom: 2px;
+}
+
+.shopee-wallet-lbl {
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* 2x2 Activity Grid */
+.shopee-activity-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.shopee-activity-tile {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: #1e293b;
+    transition: all 0.15s ease;
+}
+
+.shopee-activity-tile:hover {
+    background: #ffffff;
+    border-color: #0d9488;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.08);
+}
+
+.shopee-activity-tile-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.shopee-activity-icon {
+    font-size: 1.15rem;
+    color: #0d9488;
+    flex-shrink: 0;
+}
+
+.shopee-activity-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+/* Clean List Group on Mobile (Shopee Style) */
+.shopee-list-group {
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 0 0.85rem 0.75rem 0.85rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.shopee-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    color: #1e293b;
+    text-decoration: none;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: background-color 0.15s ease;
+}
+
+.shopee-list-item:last-child {
+    border-bottom: none;
+}
+
+.shopee-list-item:hover,
+.shopee-list-item:active {
+    background-color: #f8fafc;
+    color: #0d9488;
+}
+
+.shopee-list-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.shopee-list-icon {
+    width: 22px;
+    text-align: center;
+    font-size: 1rem;
+    color: #64748b;
+}
+
+.shopee-list-item:hover .shopee-list-icon {
+    color: #0d9488;
+}
+
+.shopee-list-chevron {
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
+
+/* --- Mobile Settings Modal / Offcanvas (Photo 2 Inspiration) --- */
+.shopee-settings-section-title {
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    padding: 0.85rem 1rem 0.35rem 1rem;
+}
+
+.shopee-btn-logout-mobile {
+    display: block;
+    width: calc(100% - 2rem);
+    margin: 1.5rem 1rem 2rem 1rem;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    border: 1.5px solid #ef4444;
+    color: #ef4444;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.shopee-btn-logout-mobile:hover,
+.shopee-btn-logout-mobile:active {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* --- Desktop 2-Column Layout (Photo 1 Inspiration) --- */
+@media (min-width: 992px) {
+    .shopee-desktop-container {
+        max-width: 1140px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .shopee-desktop-sidebar {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .shopee-sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        margin-bottom: 1rem;
+    }
+
+    .shopee-sidebar-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+    }
+
+    .shopee-sidebar-avatar-init {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #f0fdfa;
+        color: #0d9488;
+        font-weight: 800;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ccfbf1;
+    }
+
+    .shopee-sidebar-name {
+        font-weight: 800;
+        color: #1e293b;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+
+    .shopee-sidebar-edit-link {
+        font-size: 0.76rem;
+        color: #64748b;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .shopee-sidebar-edit-link:hover {
+        color: #0d9488;
+    }
+
+    .shopee-nav-header {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.55rem 0.75rem;
+        border-radius: 8px;
+        margin-top: 0.35rem;
+    }
+
+    .shopee-nav-sub-item {
+        display: block;
+        padding: 0.45rem 0.75rem 0.45rem 2.25rem;
+        font-size: 0.82rem;
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+    }
+
+    .shopee-nav-sub-item:hover {
+        color: #0d9488;
+        background: #f0fdfa;
+    }
+
+    .shopee-nav-sub-item.active {
+        color: #0d9488;
+        font-weight: 800;
+        background: #f0fdfa;
+    }
+
+    .shopee-nav-single {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.82rem;
+        color: #334155;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+    }
+
+    .shopee-nav-single:hover {
+        color: #0d9488;
+        background: #f0fdfa;
+    }
+
+    .shopee-nav-single.active {
+        color: #0d9488;
+        background: #f0fdfa;
+        font-weight: 800;
+    }
+
+    /* Desktop Form Box */
+    .shopee-desktop-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .shopee-desktop-card-head {
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        margin-bottom: 2rem;
+    }
+
+    .shopee-desktop-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+
+    .shopee-desktop-subtitle {
+        font-size: 0.82rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .shopee-form-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .shopee-form-label {
+        width: 140px;
+        flex-shrink: 0;
+        text-align: right;
+        padding-right: 1.25rem;
+        font-size: 0.84rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .shopee-form-control-wrap {
+        flex: 1;
+        max-width: 440px;
+    }
+
+    .shopee-desktop-avatar-col {
+        border-left: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-left: 2rem;
+    }
+
+    .shopee-desktop-avatar-preview {
+        width: 105px;
+        height: 105px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+
+    .shopee-desktop-avatar-init {
+        width: 105px;
+        height: 105px;
+        border-radius: 50%;
+        background: #f0fdfa;
+        color: #0d9488;
+        font-size: 2.25rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ccfbf1;
+        margin-bottom: 1rem;
+    }
+}
+
+/* ========================================================
+   MODERN SWEETALERT2 POPUP STYLING (JASA INHU BRANDED)
+   ======================================================== */
+div.swal2-container {
+    z-index: 99999 !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    background-color: rgba(15, 23, 42, 0.65) !important;
+}
+
+div.swal2-popup {
+    border-radius: 24px !important;
+    padding: 2.25rem 2rem 2rem 2rem !important;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35) !important;
+    font-family: inherit !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    background: #ffffff !important;
+    max-width: 440px !important;
+}
+
+.swal2-title {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    padding: 0.5rem 0 0.25rem 0 !important;
+    line-height: 1.4 !important;
+}
+
+.swal2-html-container {
+    font-size: 0.9rem !important;
+    color: #64748b !important;
+    line-height: 1.6 !important;
+    margin: 0.5rem 0 1.5rem 0 !important;
+}
+
+.swal2-icon {
+    margin: 0.25rem auto 1rem auto !important;
+    transform: scale(0.9);
+    border-width: 3px !important;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: #0d9488 !important;
+    color: #0d9488 !important;
+}
+
+.swal2-icon.swal2-info {
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+}
+
+.swal2-actions {
+    gap: 12px !important;
+    margin-top: 0.5rem !important;
+    width: 100% !important;
+    justify-content: center !important;
+}
+
+.swal2-actions button {
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    padding: 0.65rem 1.4rem !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: none !important;
+    min-width: 110px !important;
+}
+
+.swal2-actions button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+}
+
+.swal2-actions button:active {
+    transform: translateY(0) !important;
+}
+
+.swal2-confirm {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.swal2-confirm.swal2-btn-danger,
+.swal2-btn-danger {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+.swal2-cancel {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+.swal2-cancel:hover {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+@media (max-width: 576px) {
+    div.swal2-popup {
+        width: 90% !important;
+        padding: 1.75rem 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    .swal2-actions {
+        flex-direction: column-reverse !important;
+        gap: 8px !important;
+    }
+    .swal2-actions button {
+        width: 100% !important;
+    }
+}
+

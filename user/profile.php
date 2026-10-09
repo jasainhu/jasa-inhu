@@ -1,0 +1,1104 @@
+<?php
+/**
+ * Profil & Menu Akun Pengguna: JASA INHU (Gaya Shopee Hub Desktop & Mobile)
+ */
+
+$page_title = 'Akun Saya';
+
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
+
+require_login();
+
+$user = current_user();
+$db = get_db();
+$error = '';
+$success = get_flash('success') ?: '';
+$active_tab = $_GET['tab'] ?? 'profile';
+
+// Handle POST actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validate_csrf()) {
+        $error = 'Sesi keamanan berakhir. Silakan muat ulang halaman.';
+    } else {
+        $action = $_POST['action'] ?? 'update_profile';
+
+        if ($action === 'update_profile') {
+            $name = trim($_POST['name'] ?? '');
+            $phone = trim($_POST['phone'] ?? '');
+            $gender = !empty($_POST['gender']) && in_array($_POST['gender'], ['male', 'female', 'other']) ? $_POST['gender'] : null;
+            $birth_date = !empty($_POST['birth_date']) ? trim($_POST['birth_date']) : null;
+            if ($birth_date && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)) {
+                $birth_date = null;
+            }
+            $bio = trim($_POST['bio'] ?? '');
+
+            if (empty($name) || empty($phone)) {
+                $error = 'Nama lengkap dan nomor telepon/WhatsApp wajib diisi.';
+            } else {
+                try {
+                    $db->beginTransaction();
+
+                    // Handle upload foto avatar jika ada
+                    $avatar_filename = $user['avatar'] ?? null;
+                    if (!empty($_FILES['avatar']['name']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+                        $fileTmp = $_FILES['avatar']['tmp_name'];
+                        $fileSize = $_FILES['avatar']['size'];
+                        $fileExt = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+                        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+                        if (!in_array($fileExt, $allowedExts)) {
+                            throw new Exception('Format foto profil harus JPG, PNG, atau WEBP.');
+                        }
+                        if ($fileSize > 2 * 1024 * 1024) {
+                            throw new Exception('Ukuran foto profil maksimal 2 MB.');
+                        }
+
+                        $newFileName = 'avatar_' . $user['id'] . '_' . time() . '.' . $fileExt;
+                        $targetDir = __DIR__ . '/../uploads/avatars/';
+                        if (!is_dir($targetDir)) {
+                            mkdir($targetDir, 0755, true);
+                        }
+
+                        if (move_uploaded_file($fileTmp, $targetDir . $newFileName)) {
+                            // Hapus avatar lama jika file lokal
+                            if (!empty($avatar_filename) && file_exists($targetDir . $avatar_filename)) {
+                                @unlink($targetDir . $avatar_filename);
+                            }
+                            $avatar_filename = $newFileName;
+                        }
+                    }
+
+                    // Update data pengguna di tabel users
+                    $stmtU = $db->prepare("UPDATE users SET name = ?, phone = ?, updated_at = NOW() WHERE id = ?");
+                    $stmtU->execute([$name, $phone, $user['id']]);
+
+                    // Update profil pengguna di tabel profiles (pertahankan address & district_id yang sudah ada)
+                    $stmtCheckP = $db->prepare("SELECT id FROM profiles WHERE user_id = ?");
+                    $stmtCheckP->execute([$user['id']]);
+                    if ($stmtCheckP->fetch()) {
+                        $stmtP = $db->prepare("
+                            UPDATE profiles 
+                            SET bio = ?, avatar = ?, gender = ?, birth_date = ?, updated_at = NOW()
+                            WHERE user_id = ?
+                        ");
+                        $stmtP->execute([$bio, $avatar_filename, $gender, $birth_date, $user['id']]);
+                    } else {
+                        $stmtP = $db->prepare("
+                            INSERT INTO profiles (user_id, bio, avatar, gender, birth_date, created_at, updated_at)
+                            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+                        ");
+                        $stmtP->execute([$user['id'], $bio, $avatar_filename, $gender, $birth_date]);
+                    }
+
+                    $db->commit();
+                    set_flash('success', 'Profil Anda berhasil diperbarui!');
+                    redirect('/user/profile.php?tab=profile');
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    $error = 'Gagal menyimpan profil: ' . $e->getMessage();
+                }
+            }
+        } elseif ($action === 'update_address') {
+            $district_id = !empty($_POST['district_id']) ? (int)$_POST['district_id'] : null;
+            $village_id = !empty($_POST['village_id']) ? (int)$_POST['village_id'] : null;
+            $address = trim($_POST['address'] ?? '');
+
+            if (empty($district_id)) {
+                $error = 'Silakan pilih kecamatan domisili Anda di Kabupaten Indragiri Hulu.';
+            } else {
+                try {
+                    $stmtCheckP = $db->prepare("SELECT id FROM profiles WHERE user_id = ?");
+                    $stmtCheckP->execute([$user['id']]);
+                    if ($stmtCheckP->fetch()) {
+                        $stmtP = $db->prepare("
+                            UPDATE profiles 
+                            SET district_id = ?, village_id = ?, address = ?, updated_at = NOW()
+                            WHERE user_id = ?
+                        ");
+                        $stmtP->execute([$district_id, $village_id, $address, $user['id']]);
+                    } else {
+                        $stmtP = $db->prepare("
+                            INSERT INTO profiles (user_id, district_id, village_id, address, created_at, updated_at)
+                            VALUES (?, ?, ?, ?, NOW(), NOW())
+                        ");
+                        $stmtP->execute([$user['id'], $district_id, $village_id, $address]);
+                    }
+
+                    set_flash('success', 'Alamat domisili Anda berhasil diperbarui!');
+                    redirect('/user/profile.php?tab=address');
+                } catch (Exception $e) {
+                    $error = 'Gagal menyimpan alamat: ' . $e->getMessage();
+                }
+            }
+        } elseif ($action === 'change_password') {
+            $old_password = $_POST['old_password'] ?? '';
+            $new_password = $_POST['new_password'] ?? '';
+            $confirm_password = $_POST['confirm_password'] ?? '';
+
+            if (empty($old_password) || empty($new_password)) {
+                $error = 'Kata sandi lama dan baru wajib diisi.';
+            } elseif (strlen($new_password) < 6) {
+                $error = 'Kata sandi baru minimal 6 karakter.';
+            } elseif ($new_password !== $confirm_password) {
+                $error = 'Konfirmasi kata sandi baru tidak cocok.';
+            } else {
+                // Ambil password hash saat ini
+                $stmtPass = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
+                $stmtPass->execute([$user['id']]);
+                $currHash = $stmtPass->fetchColumn();
+
+                if (!password_verify($old_password, $currHash)) {
+                    $error = 'Kata sandi lama yang Anda masukkan salah.';
+                } else {
+                    $newHash = password_hash($new_password, PASSWORD_DEFAULT);
+                    $stmtUpPass = $db->prepare("UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?");
+                    $stmtUpPass->execute([$newHash, $user['id']]);
+
+                    set_flash('success', 'Kata sandi akun Anda berhasil diperbarui!');
+                    redirect('/user/profile.php?tab=password');
+                }
+            }
+        }
+    }
+}
+
+// Refresh data user
+$user = current_user();
+
+// Hitung data ringkasan pesanan & aktivitas secara real-time
+$stmtStats = $db->prepare("
+    SELECT 
+        SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as count_open,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as count_in_progress,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as count_completed,
+        COUNT(*) as total_orders
+    FROM service_requests
+    WHERE user_id = ?
+");
+$stmtStats->execute([$user['id']]);
+$orderStats = $stmtStats->fetch() ?: [];
+
+$count_open = (int)($orderStats['count_open'] ?? 0);
+$count_in_progress = (int)($orderStats['count_in_progress'] ?? 0);
+$count_completed = (int)($orderStats['count_completed'] ?? 0);
+$total_orders = (int)($orderStats['total_orders'] ?? 0);
+
+// Hitung pesanan selesai yang butuh review/ulasan
+$stmtUnreviewed = $db->prepare("
+    SELECT COUNT(*) 
+    FROM service_requests sr
+    WHERE sr.user_id = ? AND sr.status = 'completed'
+      AND sr.id NOT IN (SELECT request_id FROM reviews WHERE user_id = ?)
+");
+$stmtUnreviewed->execute([$user['id'], $user['id']]);
+$count_review_needed = (int)$stmtUnreviewed->fetchColumn();
+
+// Hitung pesan unread
+$stmtChats = $db->prepare("
+    SELECT COUNT(*) FROM chat_messages 
+    WHERE receiver_id = ? AND is_read = 0
+");
+$stmtChats->execute([$user['id']]);
+$unread_chats = (int)$stmtChats->fetchColumn();
+
+// Ambil daftar kecamatan di Inhu
+$districts = get_all_districts();
+
+require_once __DIR__ . '/../includes/header.php';
+?>
+
+<!-- ==============================================================
+     TAMPILAN MOBILE (KHUSUS SMARTPHONE / HANDPHONE - GAYA SHOPEE)
+     ============================================================== -->
+<div class="shopee-mobile-hub d-lg-none">
+    <!-- 1. Profile Hero Banner Atas -->
+    <div class="shopee-profile-hero">
+        <!-- Action bar atas (Ikon Pengaturan Roda Gigi & Obrolan) -->
+        <div class="shopee-hero-actions">
+            <button type="button" class="shopee-hero-icon-btn" data-bs-toggle="offcanvas" data-bs-target="#settingsOffcanvas" title="Pengaturan Akun">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+            <a href="<?= BASE_URL ?>/chat.php" class="shopee-hero-icon-btn" title="Pesan Obrolan">
+                <i class="fa-solid fa-comments"></i>
+                <?php if ($unread_chats > 0): ?>
+                    <span class="shopee-hero-badge"><?= $unread_chats ?></span>
+                <?php endif; ?>
+            </a>
+        </div>
+
+        <!-- Baris Identitas Pengguna -->
+        <div class="shopee-profile-user-row">
+            <div class="shopee-avatar-wrapper" data-bs-toggle="modal" data-bs-target="#editProfileModal" style="cursor: pointer;">
+                <?php if (!empty($user['avatar'])): ?>
+                    <img src="<?= BASE_URL ?>/uploads/avatars/<?= e($user['avatar']) ?>" alt="<?= e($user['name']) ?>" class="shopee-avatar-img">
+                <?php else: ?>
+                    <div class="shopee-avatar-initials">
+                        <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
+                    </div>
+                <?php endif; ?>
+                <span class="position-absolute bottom-0 end-0 bg-white text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 20px; height: 20px; font-size: 0.65rem;">
+                    <i class="fa-solid fa-camera text-teal"></i>
+                </span>
+            </div>
+
+            <div class="shopee-user-info-meta">
+                <div class="shopee-user-name text-truncate">
+                    <?= e($user['name']) ?>
+                </div>
+                <div class="shopee-user-sub text-truncate">
+                    <?= !empty($user['phone']) ? e($user['phone']) : e($user['email']) ?>
+                </div>
+                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                    <span class="shopee-badge-pill">
+                        <i class="fa-solid fa-id-badge text-teal"></i>
+                        <span>ID: <?= format_user_id($user['id']) ?></span>
+                    </span>
+                    <span class="shopee-badge-pill">
+                        <i class="fa-solid fa-shield-halved text-warning"></i>
+                        <span>Warga Terverifikasi Inhu</span>
+                    </span>
+                    <button type="button" class="btn btn-xs py-0 px-2 rounded-pill bg-white text-teal fw-bold" style="font-size: 0.68rem;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        Ubah Profil &rsaquo;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Banner Promo / VIP Warga Inhu -->
+    <a href="<?= BASE_URL ?>/#promo" class="shopee-vip-banner">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-crown text-warning fs-5"></i>
+            <div>
+                <div class="fw-bold small mb-0" style="font-size: 0.78rem;">Program Warga Aktif Inhu</div>
+                <div class="small opacity-80" style="font-size: 0.7rem;">Cari tukang terdekat & konsultasi langsung via WA</div>
+            </div>
+        </div>
+        <i class="fa-solid fa-chevron-right fs-6"></i>
+    </a>
+
+    <!-- Notifikasi Sukses / Gagal jika ada -->
+    <?php if ($success): ?>
+        <div class="alert alert-success alert-dismissible fade show mx-3 my-2 rounded-3 shadow-xs small py-2 px-3" role="alert">
+            <i class="fa-solid fa-circle-check me-1.5"></i> <?= e($success) ?>
+            <button type="button" class="btn-close py-2.5" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    <?php if ($error): ?>
+        <div class="alert alert-danger alert-dismissible fade show mx-3 my-2 rounded-3 shadow-xs small py-2 px-3" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-1.5"></i> <?= e($error) ?>
+            <button type="button" class="btn-close py-2.5" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- 3. Kartu Pesanan Jasa Saya (4 Status Grid) -->
+    <div class="shopee-card">
+        <div class="shopee-card-head">
+            <h6 class="shopee-card-title">
+                <i class="fa-solid fa-clipboard-list text-teal"></i>
+                <span>Pesanan Jasa Saya</span>
+            </h6>
+            <a href="<?= BASE_URL ?>/user/requests.php" class="shopee-card-more">
+                <span>Lihat Riwayat Pesanan</span>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
+            </a>
+        </div>
+
+        <div class="shopee-status-grid">
+            <a href="<?= BASE_URL ?>/user/requests.php?status=open" class="shopee-status-item">
+                <div class="shopee-status-icon-box">
+                    <i class="fa-regular fa-clock"></i>
+                    <?php if ($count_open > 0): ?>
+                        <span class="shopee-status-badge"><?= $count_open ?></span>
+                    <?php endif; ?>
+                </div>
+                <span class="shopee-status-label">Menunggu Respon</span>
+            </a>
+
+            <a href="<?= BASE_URL ?>/user/requests.php?status=in_progress" class="shopee-status-item">
+                <div class="shopee-status-icon-box">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                    <?php if ($count_in_progress > 0): ?>
+                        <span class="shopee-status-badge"><?= $count_in_progress ?></span>
+                    <?php endif; ?>
+                </div>
+                <span class="shopee-status-label">Sedang Dikerjakan</span>
+            </a>
+
+            <a href="<?= BASE_URL ?>/user/requests.php?status=completed" class="shopee-status-item">
+                <div class="shopee-status-icon-box">
+                    <i class="fa-regular fa-star"></i>
+                    <?php if ($count_review_needed > 0): ?>
+                        <span class="shopee-status-badge"><?= $count_review_needed ?></span>
+                    <?php endif; ?>
+                </div>
+                <span class="shopee-status-label">Beri Ulasan</span>
+            </a>
+
+            <a href="<?= BASE_URL ?>/user/requests.php" class="shopee-status-item">
+                <div class="shopee-status-icon-box">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <span class="shopee-status-label">Semua Pesanan</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 4. Kartu Dompet & Promo Jasa -->
+    <div class="shopee-card">
+        <div class="shopee-card-head">
+            <h6 class="shopee-card-title">
+                <i class="fa-solid fa-wallet text-warning"></i>
+                <span>Promo & Fasilitas Warga</span>
+            </h6>
+            <span class="badge text-bg-light border text-secondary" style="font-size: 0.7rem;">Inhu Special</span>
+        </div>
+
+        <div class="shopee-wallet-grid">
+            <a href="<?= BASE_URL ?>/#promo" class="shopee-wallet-item">
+                <span class="shopee-wallet-val text-danger">
+                    <i class="fa-solid fa-ticket"></i> 1 Kupon
+                </span>
+                <span class="shopee-wallet-lbl">Promo Aktif</span>
+            </a>
+
+            <a href="<?= BASE_URL ?>/user/requests.php" class="shopee-wallet-item">
+                <span class="shopee-wallet-val text-success">
+                    <i class="fa-solid fa-coins"></i> <?= $count_completed * 10 ?> Poin
+                </span>
+                <span class="shopee-wallet-lbl">Loyalitas Warga</span>
+            </a>
+
+            <a href="<?= BASE_URL ?>/chat.php" class="shopee-wallet-item">
+                <span class="shopee-wallet-val text-teal">
+                    <i class="fa-solid fa-comments"></i> <?= $unread_chats ?>
+                </span>
+                <span class="shopee-wallet-lbl">Obrolan Aktif</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 5. Kartu Aktivitas Layanan Saya -->
+    <div class="shopee-card">
+        <div class="shopee-card-head">
+            <h6 class="shopee-card-title">
+                <i class="fa-solid fa-shapes text-primary"></i>
+                <span>Aktivitas Saya</span>
+            </h6>
+        </div>
+
+        <div class="shopee-activity-grid">
+            <a href="<?= BASE_URL ?>/search.php" class="shopee-activity-tile">
+                <div class="shopee-activity-tile-left">
+                    <i class="fa-solid fa-magnifying-glass shopee-activity-icon text-teal"></i>
+                    <div>
+                        <div class="shopee-activity-name">Cari Layanan</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">Temukan mitra jasa</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
+            </a>
+
+            <a href="<?= BASE_URL ?>/chat.php" class="shopee-activity-tile">
+                <div class="shopee-activity-tile-left">
+                    <i class="fa-solid fa-comments shopee-activity-icon text-info"></i>
+                    <div>
+                        <div class="shopee-activity-name">Obrolan / Chat</div>
+                        <div class="text-muted" style="font-size: 0.68rem;"><?= $unread_chats ?> belum dibaca</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
+            </a>
+
+            <a href="<?= BASE_URL ?>/#mitra-unggulan" class="shopee-activity-tile">
+                <div class="shopee-activity-tile-left">
+                    <i class="fa-solid fa-heart shopee-activity-icon text-danger"></i>
+                    <div>
+                        <div class="shopee-activity-name">Mitra Favorit</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">Tukang langganan</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
+            </a>
+
+            <a href="<?= BASE_URL ?>/user/requests.php?status=completed" class="shopee-activity-tile">
+                <div class="shopee-activity-tile-left">
+                    <i class="fa-solid fa-star shopee-activity-icon text-warning"></i>
+                    <div>
+                        <div class="shopee-activity-name">Ulasan Saya</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">Feedback layanan</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- 6. Banner Ajakan Gabung Mitra (Jika Pengguna Belum Jadi Mitra) -->
+    <?php if ($user['role_name'] === 'pengguna'): ?>
+        <div class="mx-3 mb-3">
+            <div class="p-3 rounded-4 border bg-white shadow-xs d-flex align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0.5 text-dark" style="font-size: 0.82rem;">Punya Keahlian Tukang / Jasa?</h6>
+                        <div class="text-muted" style="font-size: 0.72rem;">Daftar gratis & dapatkan pelanggan dari sekitar Anda.</div>
+                    </div>
+                </div>
+                <a href="<?= BASE_URL ?>/register.php" class="btn btn-teal btn-sm fw-bold px-3 py-1.5 rounded-3 text-nowrap" style="font-size: 0.75rem;">
+                    Buka Usaha
+                </a>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- 7. Menu Bantuan & Regulasi -->
+    <div class="shopee-list-group">
+        <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank" class="shopee-list-item">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-headset shopee-list-icon text-info"></i>
+                <span>Pusat Bantuan CS (WhatsApp Admin)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+        </a>
+        <a href="<?= BASE_URL ?>/terms.php" class="shopee-list-item">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-file-contract shopee-list-icon text-secondary"></i>
+                <span>Syarat & Ketentuan Layanan</span>
+            </div>
+            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+        </a>
+        <a href="<?= BASE_URL ?>/privacy.php" class="shopee-list-item">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-user-shield shopee-list-icon text-secondary"></i>
+                <span>Kebijakan Privasi</span>
+            </div>
+            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+        </a>
+    </div>
+
+    <!-- Tombol Buka Pengaturan Cepat di Mobile -->
+    <div class="px-3 pt-1 pb-4">
+        <button type="button" class="btn btn-outline-secondary btn-sm w-100 py-2 rounded-3 fw-bold bg-white" data-bs-toggle="offcanvas" data-bs-target="#settingsOffcanvas">
+            <i class="fa-solid fa-gear me-1"></i> Buka Pengaturan Akun & Keamanan
+        </button>
+    </div>
+</div>
+
+<!-- ==============================================================
+     TAMPILAN DESKTOP (LAYAR KOMPUTER / LAPTOP - GAYA SHOPEE FOTO 1)
+     ============================================================== -->
+<div class="container d-none d-lg-block shopee-desktop-container">
+    <?php if ($success): ?>
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-xs mb-3" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> <?= e($success) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    <?php if ($error): ?>
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-xs mb-3" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> <?= e($error) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <div class="row g-4">
+        <!-- SIDEBAR KIRI: Navigasi Akun Shopee-Style (Foto 1) -->
+        <div class="col-lg-3">
+            <div class="shopee-desktop-sidebar">
+                <!-- User Info Header -->
+                <div class="shopee-sidebar-user">
+                    <?php if (!empty($user['avatar'])): ?>
+                        <img src="<?= BASE_URL ?>/uploads/avatars/<?= e($user['avatar']) ?>" alt="<?= e($user['name']) ?>" class="shopee-sidebar-avatar">
+                    <?php else: ?>
+                        <div class="shopee-sidebar-avatar-init">
+                            <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
+                        </div>
+                    <?php endif; ?>
+                    <div class="text-truncate">
+                        <div class="shopee-sidebar-name text-truncate"><?= e($user['name']) ?></div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">ID: <span class="fw-bold text-teal"><?= format_user_id($user['id']) ?></span></div>
+                        <a href="?tab=profile" class="shopee-sidebar-edit-link">
+                            <i class="fa-solid fa-pencil" style="font-size: 0.7rem;"></i> Ubah Profil
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Menu Item: Akun Saya -->
+                <div class="shopee-nav-header">
+                    <i class="fa-regular fa-user text-primary"></i>
+                    <span>Akun Saya</span>
+                </div>
+                <nav class="nav flex-column mb-2">
+                    <a href="?tab=profile" class="shopee-nav-sub-item <?= $active_tab === 'profile' ? 'active' : '' ?>">
+                        Profil Saya
+                    </a>
+                    <a href="?tab=address" class="shopee-nav-sub-item <?= $active_tab === 'address' ? 'active' : '' ?>">
+                        Alamat Domisili
+                    </a>
+                    <a href="?tab=password" class="shopee-nav-sub-item <?= $active_tab === 'password' ? 'active' : '' ?>">
+                        Ubah Password
+                    </a>
+                </nav>
+
+                <!-- Menu Item: Pesanan Saya -->
+                <a href="<?= BASE_URL ?>/user/requests.php" class="shopee-nav-single">
+                    <i class="fa-solid fa-clipboard-list text-teal"></i>
+                    <span>Pesanan Saya</span>
+                    <?php if ($count_open + $count_in_progress > 0): ?>
+                        <span class="badge rounded-pill bg-danger ms-auto"><?= $count_open + $count_in_progress ?></span>
+                    <?php endif; ?>
+                </a>
+
+                <!-- Menu Item: Tender Kilat (Disembunyikan Sementara) -->
+                <?php if (false): ?>
+                <a href="<?= BASE_URL ?>/tender.php" class="shopee-nav-single">
+                    <i class="fa-solid fa-bullhorn text-warning"></i>
+                    <span>Tender Jasa Saya</span>
+                </a>
+                <?php endif; ?>
+
+                <!-- Menu Item: Obrolan -->
+                <a href="<?= BASE_URL ?>/chat.php" class="shopee-nav-single">
+                    <i class="fa-solid fa-comments text-info"></i>
+                    <span>Obrolan / Chat</span>
+                    <?php if ($unread_chats > 0): ?>
+                        <span class="badge rounded-pill bg-danger ms-auto"><?= $unread_chats ?></span>
+                    <?php endif; ?>
+                </a>
+
+                <!-- Menu Item: Pusat Bantuan -->
+                <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank" class="shopee-nav-single">
+                    <i class="fa-solid fa-headset text-success"></i>
+                    <span>Pusat Bantuan CS</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- KONTEN KANAN: Formulir Profil / Password (Foto 1) -->
+        <div class="col-lg-9">
+            <div class="shopee-desktop-card">
+                <?php if ($active_tab === 'password'): ?>
+                    <!-- Form Ubah Password -->
+                    <div class="shopee-desktop-card-head">
+                        <h4 class="shopee-desktop-title">Ubah Kata Sandi</h4>
+                        <p class="shopee-desktop-subtitle">Untuk keamanan akun Anda, mohon jangan bagikan kata sandi Anda kepada orang lain.</p>
+                    </div>
+
+                    <form method="POST" action="<?= BASE_URL ?>/user/profile.php?tab=password" style="max-width: 580px;">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="change_password">
+
+                        <div class="shopee-form-row">
+                            <label class="shopee-form-label">Kata Sandi Saat Ini</label>
+                            <div class="shopee-form-control-wrap">
+                                <input type="password" name="old_password" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="shopee-form-row">
+                            <label class="shopee-form-label">Kata Sandi Baru</label>
+                            <div class="shopee-form-control-wrap">
+                                <input type="password" name="new_password" class="form-control" minlength="6" required>
+                                <div class="form-text" style="font-size: 0.72rem;">Minimal 6 karakter.</div>
+                            </div>
+                        </div>
+
+                        <div class="shopee-form-row">
+                            <label class="shopee-form-label">Konfirmasi Kata Sandi</label>
+                            <div class="shopee-form-control-wrap">
+                                <input type="password" name="confirm_password" class="form-control" minlength="6" required>
+                            </div>
+                        </div>
+
+                        <div class="shopee-form-row mt-4">
+                            <div class="shopee-form-label"></div>
+                            <div class="shopee-form-control-wrap">
+                                <button type="submit" class="btn btn-teal px-4 py-2 fw-bold shadow-xs">
+                                    Konfirmasi Perubahan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                <?php elseif ($active_tab === 'address'): ?>
+                    <!-- Form Alamat Domisili (Tab Alamat Domisili) -->
+                    <div class="shopee-desktop-card-head">
+                        <h4 class="shopee-desktop-title">Alamat Domisili Saya</h4>
+                        <p class="shopee-desktop-subtitle">Kelola alamat domisili dan kecamatan Anda di Kabupaten Indragiri Hulu untuk memudahkan pencarian jasa dan kedatangan mitra tukang.</p>
+                    </div>
+
+                    <?php if (!empty($user['district_id']) || !empty($user['address'])): ?>
+                        <!-- Kartu Info Alamat Domisili Saat Ini -->
+                        <div class="p-3 mb-4 rounded-3 border bg-light d-flex align-items-start justify-content-between">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="width: 40px; height: 40px;">
+                                    <i class="fa-solid fa-location-dot fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="fw-bold text-dark"><?= e($user['name']) ?></span>
+                                        <span class="text-secondary small">(<?= e($user['phone']) ?>)</span>
+                                        <span class="badge bg-teal text-white py-0.5 px-2" style="font-size: 0.68rem;">Alamat Utama Domisili</span>
+                                    </div>
+                                    <div class="text-dark fw-semibold small mb-1">
+                                        <?= !empty($user['district_name']) ? 'Kecamatan ' . e($user['district_name']) : '<span class="text-danger">Belum memilih kecamatan</span>' ?>, Kab. Indragiri Hulu, Riau
+                                    </div>
+                                    <div class="text-muted small">
+                                        <?= !empty($user['address']) ? e($user['address']) : '<span class="fst-italic text-muted">Belum ada rincian jalan / patokan detail.</span>' ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <form method="POST" action="<?= BASE_URL ?>/user/profile.php?tab=address" style="max-width: 650px;">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="update_address">
+
+                        <div class="shopee-form-row">
+                            <label class="shopee-form-label">Kecamatan di Inhu <span class="text-danger">*</span></label>
+                            <div class="shopee-form-control-wrap">
+                                <select name="district_id" class="form-select" required>
+                                    <option value="">-- Pilih Kecamatan di Inhu --</option>
+                                    <?php foreach ($districts as $d): ?>
+                                        <option value="<?= $d['id'] ?>" <?= ($user['district_id'] == $d['id']) ? 'selected' : '' ?>>
+                                            Kecamatan <?= e($d['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="form-text text-muted" style="font-size: 0.72rem;">Wajib dipilih agar sistem mencocokkan tukang / penyedia jasa terdekat di sekitar Anda.</div>
+                            </div>
+                        </div>
+
+                        <div class="shopee-form-row">
+                            <label class="shopee-form-label">Alamat / Patokan</label>
+                            <div class="shopee-form-control-wrap">
+                                <textarea name="address" rows="3" class="form-control" placeholder="Contoh: Jl. Lintas Timur, RT 02 / RW 01, Gang Kenanga No. 12 (Patokan: simpang classic / depan masjid)"><?= e($user['address'] ?? '') ?></textarea>
+                                <div class="form-text text-muted" style="font-size: 0.72rem;">Sertakan nomor rumah, nama gang, atau patokan yang mudah ditemukan oleh penyedia jasa.</div>
+                            </div>
+                        </div>
+
+                        <div class="shopee-form-row mt-4">
+                            <div class="shopee-form-label"></div>
+                            <div class="shopee-form-control-wrap">
+                                <button type="submit" class="btn btn-teal px-4 py-2 fw-bold shadow-xs">
+                                    Simpan Alamat Domisili
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                <?php else: ?>
+                    <!-- Form Profil Saya (Matches Foto 1) -->
+                    <div class="shopee-desktop-card-head">
+                        <h4 class="shopee-desktop-title">Profil Saya</h4>
+                        <p class="shopee-desktop-subtitle">Kelola informasi profil Anda untuk mengontrol, melindungi dan mengamankan akun</p>
+                    </div>
+
+                    <form method="POST" action="<?= BASE_URL ?>/user/profile.php" enctype="multipart/form-data">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="update_profile">
+
+                        <div class="row">
+                            <!-- Kolom Kiri Form Fields -->
+                            <div class="col-lg-8">
+                                <div class="shopee-form-row">
+                                    <div class="shopee-form-label">Username / Akun</div>
+                                    <div class="shopee-form-control-wrap">
+                                        <div class="fw-semibold text-dark pt-1"><?= e($user['name']) ?></div>
+                                    </div>
+                                </div>
+
+                                <div class="shopee-form-row">
+                                    <label class="shopee-form-label">Nama Lengkap</label>
+                                    <div class="shopee-form-control-wrap">
+                                        <input type="text" name="name" class="form-control" value="<?= e($user['name']) ?>" required>
+                                    </div>
+                                </div>
+
+                                <div class="shopee-form-row">
+                                    <div class="shopee-form-label">Email</div>
+                                    <div class="shopee-form-control-wrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-secondary"><?= e($user['email']) ?></span>
+                                            <span class="badge text-bg-success px-2 py-0.5" style="font-size: 0.7rem;">
+                                                <i class="fa-solid fa-circle-check me-0.5"></i> Terverifikasi
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="shopee-form-row">
+                                    <label class="shopee-form-label">Nomor WhatsApp</label>
+                                    <div class="shopee-form-control-wrap">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light text-success fw-bold"><i class="fa-brands fa-whatsapp"></i></span>
+                                            <input type="text" name="phone" class="form-control" value="<?= e($user['phone']) ?>" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="shopee-form-row">
+                                    <label class="shopee-form-label">Jenis Kelamin</label>
+                                    <div class="shopee-form-control-wrap">
+                                        <div class="d-flex align-items-center gap-4 pt-1 flex-wrap">
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male" <?= ($user['gender'] ?? '') === 'male' ? 'checked' : '' ?>>
+                                                <label class="form-check-label text-nowrap" for="genderMale" style="cursor: pointer;">
+                                                    Laki-laki
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" <?= ($user['gender'] ?? '') === 'female' ? 'checked' : '' ?>>
+                                                <label class="form-check-label text-nowrap" for="genderFemale" style="cursor: pointer;">
+                                                    Perempuan
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="radio" name="gender" id="genderOther" value="other" <?= ($user['gender'] ?? '') === 'other' ? 'checked' : '' ?>>
+                                                <label class="form-check-label text-muted text-nowrap" for="genderOther" style="cursor: pointer;">
+                                                    Lainnya
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="shopee-form-row">
+                                    <label class="shopee-form-label">Tanggal Lahir</label>
+                                    <div class="shopee-form-control-wrap">
+                                        <div class="input-group" style="max-width: 260px;">
+                                            <span class="input-group-text bg-light text-secondary"><i class="fa-regular fa-calendar"></i></span>
+                                            <input type="date" name="birth_date" class="form-control" value="<?= e($user['birth_date'] ?? '') ?>" max="<?= date('Y-m-d') ?>">
+                                        </div>
+                                        <div class="form-text text-muted" style="font-size: 0.72rem;">Opsional. Digunakan untuk verifikasi usia & penyesuaian layanan.</div>
+                                    </div>
+                                </div>
+
+
+                                <div class="shopee-form-row">
+                                    <label class="shopee-form-label">Bio / Catatan</label>
+                                    <div class="shopee-form-control-wrap">
+                                        <textarea name="bio" rows="2" class="form-control" placeholder="Catatan singkat tentang profil Anda..."><?= e($user['bio'] ?? '') ?></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="shopee-form-row mt-4">
+                                    <div class="shopee-form-label"></div>
+                                    <div class="shopee-form-control-wrap">
+                                        <button type="submit" class="btn btn-teal px-4 py-2 fw-bold shadow-xs">
+                                            Simpan Perubahan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kolom Kanan Upload Avatar (Foto 1) -->
+                            <div class="col-lg-4 shopee-desktop-avatar-col">
+                                <?php if (!empty($user['avatar'])): ?>
+                                    <img id="desktopAvatarPreview" src="<?= BASE_URL ?>/uploads/avatars/<?= e($user['avatar']) ?>" alt="Avatar" class="shopee-desktop-avatar-preview">
+                                <?php else: ?>
+                                    <div id="desktopAvatarPlaceholder" class="shopee-desktop-avatar-init">
+                                        <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
+                                    </div>
+                                    <img id="desktopAvatarPreview" src="" alt="Avatar" class="shopee-desktop-avatar-preview d-none">
+                                <?php endif; ?>
+
+                                <label for="inputDesktopAvatar" class="btn btn-outline-secondary btn-sm px-3 py-1.5 fw-semibold mb-2" style="cursor: pointer;">
+                                    Pilih Gambar
+                                </label>
+                                <input type="file" id="inputDesktopAvatar" name="avatar" class="d-none" accept="image/*" onchange="previewAvatar(this, 'desktopAvatarPreview', 'desktopAvatarPlaceholder')">
+
+                                <div class="text-muted text-center small" style="font-size: 0.75rem; max-width: 170px;">
+                                    Ukuran gambar: maks. 2 MB<br>Format: .JPEG, .PNG, .WEBP
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================
+     MODAL EDIT PROFIL CEPAT (UNTUK MOBILE SAAT KLIK UBAH PROFIL)
+     ============================================================== -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h6 class="modal-title fw-bold text-dark mb-0">Ubah Profil & Alamat</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="<?= BASE_URL ?>/user/profile.php" enctype="multipart/form-data">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="update_profile">
+
+                <div class="modal-body p-4">
+                    <!-- Preview Foto Avatar -->
+                    <div class="text-center mb-3">
+                        <div class="d-inline-block position-relative">
+                            <?php if (!empty($user['avatar'])): ?>
+                                <img id="mobileAvatarPreview" src="<?= BASE_URL ?>/uploads/avatars/<?= e($user['avatar']) ?>" alt="Avatar" class="rounded-circle border shadow-xs" style="width: 80px; height: 80px; object-fit: cover;">
+                            <?php else: ?>
+                                <div id="mobileAvatarPlaceholder" class="rounded-circle bg-teal text-white fw-bold d-flex align-items-center justify-content-center shadow-xs mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                                    <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
+                                </div>
+                                <img id="mobileAvatarPreview" src="" alt="Avatar" class="rounded-circle border shadow-xs d-none" style="width: 80px; height: 80px; object-fit: cover;">
+                            <?php endif; ?>
+
+                            <label for="inputMobileAvatar" class="btn btn-sm btn-dark position-absolute bottom-0 end-0 rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; cursor: pointer;">
+                                <i class="fa-solid fa-camera" style="font-size: 0.75rem;"></i>
+                            </label>
+                            <input type="file" id="inputMobileAvatar" name="avatar" class="d-none" accept="image/*" onchange="previewAvatar(this, 'mobileAvatarPreview', 'mobileAvatarPlaceholder')">
+                        </div>
+                        <div class="text-muted small mt-1" style="font-size: 0.72rem;">Sentuh ikon kamera untuk ganti foto</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nama Lengkap</label>
+                        <input type="text" name="name" class="form-control" value="<?= e($user['name']) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nomor WhatsApp</label>
+                        <input type="text" name="phone" class="form-control" value="<?= e($user['phone']) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Jenis Kelamin</label>
+                        <div class="d-flex align-items-center gap-3 pt-1 flex-wrap">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="gender" id="mGenderMale" value="male" <?= ($user['gender'] ?? '') === 'male' ? 'checked' : '' ?>>
+                                <label class="form-check-label small text-nowrap" for="mGenderMale" style="cursor: pointer;">
+                                    Laki-laki
+                                </label>
+                            </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="gender" id="mGenderFemale" value="female" <?= ($user['gender'] ?? '') === 'female' ? 'checked' : '' ?>>
+                                <label class="form-check-label small text-nowrap" for="mGenderFemale" style="cursor: pointer;">
+                                    Perempuan
+                                </label>
+                            </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="gender" id="mGenderOther" value="other" <?= ($user['gender'] ?? '') === 'other' ? 'checked' : '' ?>>
+                                <label class="form-check-label small text-muted text-nowrap" for="mGenderOther" style="cursor: pointer;">
+                                    Lainnya
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tanggal Lahir</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary"><i class="fa-regular fa-calendar"></i></span>
+                            <input type="date" name="birth_date" class="form-control" value="<?= e($user['birth_date'] ?? '') ?>" max="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="form-text text-muted" style="font-size: 0.72rem;">Opsional. Digunakan untuk verifikasi usia.</div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Bio / Catatan</label>
+                        <textarea name="bio" rows="2" class="form-control" placeholder="Deskripsi singkat profil Anda..."><?= e($user['bio'] ?? '') ?></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top py-2.5 px-4 bg-light">
+                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Simpan Profil</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================
+     MODAL EDIT ALAMAT DOMISILI (UNTUK MOBILE)
+     ============================================================== -->
+<div class="modal fade" id="editAddressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h6 class="modal-title fw-bold text-dark mb-0">Alamat Domisili Saya</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="<?= BASE_URL ?>/user/profile.php?tab=address">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="update_address">
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Kecamatan di Inhu <span class="text-danger">*</span></label>
+                        <select name="district_id" class="form-select" required>
+                            <option value="">-- Pilih Kecamatan di Inhu --</option>
+                            <?php foreach ($districts as $d): ?>
+                                <option value="<?= $d['id'] ?>" <?= ($user['district_id'] == $d['id']) ? 'selected' : '' ?>>
+                                    Kecamatan <?= e($d['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text text-muted" style="font-size: 0.72rem;">Wajib dipilih agar sistem mencocokkan tukang terdekat di wilayah Anda.</div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Alamat / Patokan</label>
+                        <textarea name="address" rows="3" class="form-control" placeholder="Jl. Lintas Timur, Gang Kenanga, Patokan dekat..."><?= e($user['address'] ?? '') ?></textarea>
+                        <div class="form-text text-muted" style="font-size: 0.72rem;">Sertakan nomor rumah, nama gang, atau patokan terdekat.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top py-2.5 px-4 bg-light">
+                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Simpan Alamat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================
+     OFFCANVAS: PENGATURAN AKUN MOBILE (GAYA SHOPEE FOTO 2)
+     ============================================================== -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="settingsOffcanvas" aria-labelledby="settingsOffcanvasLabel" style="max-width: 420px; width: 100%;">
+    <div class="offcanvas-header border-bottom py-3 px-3 bg-white">
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-light border-0 rounded-circle d-flex align-items-center justify-content-center" data-bs-dismiss="offcanvas" style="width: 32px; height: 32px;">
+                <i class="fa-solid fa-arrow-left text-dark"></i>
+            </button>
+            <h6 class="offcanvas-title fw-bold text-dark mb-0" id="settingsOffcanvasLabel">Pengaturan Akun</h6>
+        </div>
+        <a href="<?= BASE_URL ?>/chat.php" class="btn btn-sm btn-light border-0 rounded-circle text-muted" title="Pesan">
+            <i class="fa-solid fa-comments"></i>
+        </a>
+    </div>
+
+    <div class="offcanvas-body p-0 bg-light">
+        <!-- Section: Akun Saya -->
+        <div class="shopee-settings-section-title">Akun Saya</div>
+        <div class="list-group list-group-flush border-top border-bottom bg-white mb-2">
+            <a href="javascript:void(0)" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none" data-bs-toggle="modal" data-bs-target="#changePassModal">
+                <span class="small fw-semibold">Keamanan & Ubah Kata Sandi</span>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+            </a>
+            <a href="javascript:void(0)" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none" data-bs-toggle="modal" data-bs-target="#editAddressModal">
+                <div>
+                    <span class="small fw-semibold d-block">Alamat Saya (Inhu)</span>
+                    <span class="text-muted" style="font-size: 0.72rem;"><?= e($user['district_name'] ? 'Kec. ' . $user['district_name'] : 'Kabupaten Indragiri Hulu') ?></span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+            </a>
+            <div class="list-group-item d-flex align-items-center justify-content-between py-3 px-3">
+                <span class="small fw-semibold">Status Verifikasi</span>
+                <span class="badge text-bg-success px-2 py-1" style="font-size: 0.7rem;">
+                    <i class="fa-solid fa-shield-halved me-1"></i> Aktif & Terverifikasi
+                </span>
+            </div>
+        </div>
+
+        <!-- Section: Pengaturan -->
+        <div class="shopee-settings-section-title">Pengaturan Platform</div>
+        <div class="list-group list-group-flush border-top border-bottom bg-white mb-2">
+            <a href="<?= BASE_URL ?>/chat.php" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none">
+                <span class="small fw-semibold">Pengaturan Obrolan & Pesan</span>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+            </a>
+            <a href="<?= BASE_URL ?>/user/requests.php" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none">
+                <span class="small fw-semibold">Pengaturan Pesanan Jasa</span>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+            </a>
+            <div class="list-group-item d-flex align-items-center justify-content-between py-3 px-3">
+                <span class="small fw-semibold">Bahasa / Language</span>
+                <span class="text-muted small" style="font-size: 0.78rem;">Bahasa Indonesia</span>
+            </div>
+        </div>
+
+        <!-- Section: Bantuan & Regulasi -->
+        <div class="shopee-settings-section-title">Bantuan & Ketentuan</div>
+        <div class="list-group list-group-flush border-top border-bottom bg-white mb-3">
+            <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none">
+                <span class="small fw-semibold">Pusat Bantuan CS (WhatsApp Admin)</span>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+            </a>
+            <a href="<?= BASE_URL ?>/terms.php" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none">
+                <span class="small fw-semibold">Peraturan & Syarat Layanan</span>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+            </a>
+            <a href="<?= BASE_URL ?>/privacy.php" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none">
+                <span class="small fw-semibold">Kebijakan Privasi</span>
+                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+            </a>
+        </div>
+
+        <!-- Tombol Keluar dari Akun (Logout) Khusus Mobile (Foto 2) -->
+        <a href="<?= BASE_URL ?>/logout.php" class="shopee-btn-logout-mobile">
+            <i class="fa-solid fa-arrow-right-from-bracket me-1.5"></i> Ganti Akun / Keluar
+        </a>
+    </div>
+</div>
+
+<!-- Modal Ubah Kata Sandi Mobile -->
+<div class="modal fade" id="changePassModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h6 class="modal-title fw-bold text-dark mb-0">Ubah Kata Sandi Akun</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="<?= BASE_URL ?>/user/profile.php">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="change_password">
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Kata Sandi Saat Ini</label>
+                        <input type="password" name="old_password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Kata Sandi Baru</label>
+                        <input type="password" name="new_password" class="form-control" minlength="6" required>
+                        <div class="form-text" style="font-size: 0.72rem;">Minimal 6 karakter.</div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Ulangi Kata Sandi Baru</label>
+                        <input type="password" name="confirm_password" class="form-control" minlength="6" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top py-2.5 px-4 bg-light">
+                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Perbarui Kata Sandi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewAvatar(input, imgId, placeholderId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById(imgId);
+            const placeholder = document.getElementById(placeholderId);
+            if (img) {
+                img.src = e.target.result;
+                img.classList.remove('d-none');
+            }
+            if (placeholder) {
+                placeholder.classList.add('d-none');
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

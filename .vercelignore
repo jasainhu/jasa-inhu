@@ -1,0 +1,7 @@
+.git
+.agents
+.gemini
+scratch/
+tests/
+*.bat
+*.log

@@ -1,0 +1,6 @@
+scratch/
+tests/
+*.log
+*.bat
+.agents/
+.gemini/
