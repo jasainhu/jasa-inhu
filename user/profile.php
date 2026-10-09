@@ -379,7 +379,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <!-- 4. Kartu Dompet & Promo Jasa -->
+    <!-- 4. Kartu Dompet & Promo Jasa (Fasilitas Khusus Warga Inhu) -->
     <div class="shopee-card">
         <div class="shopee-card-head">
             <h6 class="shopee-card-title">
@@ -390,30 +390,33 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div class="shopee-wallet-grid">
-            <a href="<?= BASE_URL ?>/#promo" class="shopee-wallet-item">
+            <!-- 1. Voucher & Kupon Promo (Buka Modal Kupon) -->
+            <a href="javascript:void(0)" class="shopee-wallet-item text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalKuponPromo">
                 <span class="shopee-wallet-val text-danger">
-                    <i class="fa-solid fa-ticket"></i> 1 Kupon
+                    <i class="fa-solid fa-ticket"></i> 2 Kupon
                 </span>
-                <span class="shopee-wallet-lbl">Promo Aktif</span>
+                <span class="shopee-wallet-lbl">Kupon Promo</span>
             </a>
 
-            <a href="<?= BASE_URL ?>/user/requests.php" class="shopee-wallet-item">
+            <!-- 2. Poin Loyalitas Warga (Buka Modal Poin Reward) -->
+            <a href="javascript:void(0)" class="shopee-wallet-item text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalPoinLoyalitas">
                 <span class="shopee-wallet-val text-success">
                     <i class="fa-solid fa-coins"></i> <?= $count_completed * 10 ?> Poin
                 </span>
-                <span class="shopee-wallet-lbl">Loyalitas Warga</span>
+                <span class="shopee-wallet-lbl">Poin Loyalitas</span>
             </a>
 
-            <a href="<?= BASE_URL ?>/chat.php" class="shopee-wallet-item">
+            <!-- 3. Pusat Bantuan CS WhatsApp Resmi -->
+            <a href="<?= format_wa_url(get_setting('whatsapp_number', '085378230761'), 'Halo Admin CS JASA INHU, saya membutuhkan bantuan layanan.') ?>" target="_blank" class="shopee-wallet-item text-decoration-none">
                 <span class="shopee-wallet-val text-teal">
-                    <i class="fa-solid fa-comments"></i> <?= $unread_chats ?>
+                    <i class="fa-brands fa-whatsapp"></i> CS Siaga
                 </span>
-                <span class="shopee-wallet-lbl">Obrolan Aktif</span>
+                <span class="shopee-wallet-lbl">Bantuan 24/7</span>
             </a>
         </div>
     </div>
 
-    <!-- 5. Kartu Aktivitas Layanan Saya -->
+    <!-- 5. Kartu Aktivitas Layanan Saya (4 Menu Utama Tanpa Duplikasi) -->
     <div class="shopee-card">
         <div class="shopee-card-head">
             <h6 class="shopee-card-title">
@@ -423,45 +426,49 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div class="shopee-activity-grid">
-            <a href="<?= BASE_URL ?>/search.php" class="shopee-activity-tile">
+            <!-- Menu 1: Cari Layanan Jasa -->
+            <a href="<?= BASE_URL ?>/search.php" class="shopee-activity-tile text-decoration-none">
                 <div class="shopee-activity-tile-left">
                     <i class="fa-solid fa-magnifying-glass shopee-activity-icon text-teal"></i>
                     <div>
-                        <div class="shopee-activity-name">Cari Layanan</div>
-                        <div class="text-muted" style="font-size: 0.68rem;">Temukan mitra jasa</div>
+                        <div class="shopee-activity-name">Cari Layanan Jasa</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">Temukan tukang & teknisi terdekat</div>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
             </a>
 
-            <a href="<?= BASE_URL ?>/chat.php" class="shopee-activity-tile">
+            <!-- Menu 2: Obrolan dengan Mitra Jasa -->
+            <a href="<?= BASE_URL ?>/chat.php" class="shopee-activity-tile text-decoration-none">
                 <div class="shopee-activity-tile-left">
                     <i class="fa-solid fa-comments shopee-activity-icon text-info"></i>
                     <div>
                         <div class="shopee-activity-name">Obrolan / Chat</div>
-                        <div class="text-muted" style="font-size: 0.68rem;"><?= $unread_chats ?> belum dibaca</div>
+                        <div class="text-muted" style="font-size: 0.68rem;"><?= $unread_chats > 0 ? $unread_chats . ' pesan baru' : 'Konsultasi dengan mitra' ?></div>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
             </a>
 
-            <a href="<?= BASE_URL ?>/#mitra-unggulan" class="shopee-activity-tile">
+            <!-- Menu 3: Pasang Tender / Lelang Proyek Jasa -->
+            <a href="<?= BASE_URL ?>/tender.php" class="shopee-activity-tile text-decoration-none">
                 <div class="shopee-activity-tile-left">
-                    <i class="fa-solid fa-heart shopee-activity-icon text-danger"></i>
+                    <i class="fa-solid fa-bullhorn shopee-activity-icon text-warning"></i>
                     <div>
-                        <div class="shopee-activity-name">Mitra Favorit</div>
-                        <div class="text-muted" style="font-size: 0.68rem;">Tukang langganan</div>
+                        <div class="shopee-activity-name">Pasang Tender Jasa</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">Lelang proyek & borongan kerja</div>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
             </a>
 
-            <a href="<?= BASE_URL ?>/user/requests.php?status=completed" class="shopee-activity-tile">
+            <!-- Menu 4: Alamat Domisili & Kecamatan Inhu (Buka Modal Alamat) -->
+            <a href="javascript:void(0)" class="shopee-activity-tile text-decoration-none" data-bs-toggle="modal" data-bs-target="#editAddressModal">
                 <div class="shopee-activity-tile-left">
-                    <i class="fa-solid fa-star shopee-activity-icon text-warning"></i>
+                    <i class="fa-solid fa-location-dot shopee-activity-icon text-danger"></i>
                     <div>
-                        <div class="shopee-activity-name">Ulasan Saya</div>
-                        <div class="text-muted" style="font-size: 0.68rem;">Feedback layanan</div>
+                        <div class="shopee-activity-name">Alamat Domisili</div>
+                        <div class="text-muted text-truncate" style="font-size: 0.68rem; max-width: 140px;"><?= !empty($user['district_name']) ? 'Kec. ' . e($user['district_name']) : 'Atur lokasi rumah' ?></div>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
@@ -993,6 +1000,114 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </form>
         </div>
+</div>
+
+<!-- ==============================================================
+     MODAL KUPON & VOUCHER PROMO WARGA INHU
+     ============================================================== -->
+<div class="modal fade" id="modalKuponPromo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4 bg-white">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="fa-solid fa-ticket fs-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold text-dark mb-0">Voucher & Kupon Hemat Inhu</h6>
+                        <div class="text-muted" style="font-size: 0.72rem;">Gunakan saat pesan jasa untuk dapat potongan harga</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3 bg-light">
+                <!-- Voucher 1 -->
+                <div class="p-3 bg-white rounded-3 border shadow-xs mb-3 position-relative overflow-hidden" style="border-left: 5px solid #0d9488 !important;">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <div>
+                            <span class="badge bg-teal-subtle text-teal fw-bold px-2 py-0.5 mb-1" style="font-size: 0.65rem;">DISKON KHUSUS WARGA</span>
+                            <h6 class="fw-bold mb-0 text-dark">Potongan Rp 15.000</h6>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem;">Semua Jasa Servis & Tukang di Kabupaten Inhu</p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-teal fw-bold px-2.5 py-1" style="font-size: 0.75rem;" onclick="copyCouponCode('WARGAINHU15', this)">
+                            <i class="fa-regular fa-copy me-1"></i> Salin
+                        </button>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top small text-muted" style="font-size: 0.72rem;">
+                        <span>Kode: <strong class="text-dark font-monospace">WARGAINHU15</strong></span>
+                        <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Siap Digunakan</span>
+                    </div>
+                </div>
+
+                <!-- Voucher 2 -->
+                <div class="p-3 bg-white rounded-3 border shadow-xs position-relative overflow-hidden" style="border-left: 5px solid #f59e0b !important;">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <div>
+                            <span class="badge bg-warning-subtle text-warning-emphasis fw-bold px-2 py-0.5 mb-1" style="font-size: 0.65rem;">BEBAS BIAYA KUNJUNGAN</span>
+                            <h6 class="fw-bold mb-0 text-dark">Gratis Biaya Transport</h6>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem;">Untuk teknisi di kecamatan tempat tinggal Anda</p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-warning text-dark fw-bold px-2.5 py-1" style="font-size: 0.75rem;" onclick="copyCouponCode('BEBASONGKIR', this)">
+                            <i class="fa-regular fa-copy me-1"></i> Salin
+                        </button>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top small text-muted" style="font-size: 0.72rem;">
+                        <span>Kode: <strong class="text-dark font-monospace">BEBASONGKIR</strong></span>
+                        <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Siap Digunakan</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 bg-white justify-content-between">
+                <span class="text-muted small" style="font-size: 0.75rem;">Salin kode voucher saat order jasa</span>
+                <a href="<?= BASE_URL ?>/search.php" class="btn btn-sm btn-teal fw-bold px-3">
+                    <i class="fa-solid fa-magnifying-glass me-1"></i> Cari Jasa Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================
+     MODAL POIN LOYALITAS WARGA INHU
+     ============================================================== -->
+<div class="modal fade" id="modalPoinLoyalitas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4 bg-white">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="fa-solid fa-coins fs-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold text-dark mb-0">Poin Loyalitas Warga</h6>
+                        <div class="text-muted" style="font-size: 0.72rem;">Reward setiap Anda memesan jasa di JASA INHU</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="p-4 rounded-4 text-white mb-3 shadow-xs" style="background: linear-gradient(135deg, #0d9488 0%, #047857 100%);">
+                    <div class="small opacity-80 mb-1" style="font-size: 0.8rem;">Saldo Poin Anda Saat Ini</div>
+                    <div class="display-6 fw-bold mb-1"><?= $count_completed * 10 ?> <span class="fs-5">Poin</span></div>
+                    <div class="small opacity-90" style="font-size: 0.75rem;">Dari total <?= $count_completed ?> pesanan jasa yang diselesaikan</div>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 text-start mb-3 border">
+                    <h6 class="fw-bold text-dark small mb-2"><i class="fa-solid fa-gift text-teal me-1.5"></i> Keuntungan Poin Loyalitas:</h6>
+                    <ul class="list-unstyled mb-0 small text-muted" style="font-size: 0.78rem; line-height: 1.6;">
+                        <li><i class="fa-solid fa-check text-success me-1.5"></i> Dapatkan <strong>+10 Poin</strong> otomatis setiap 1 pesanan selesai.</li>
+                        <li><i class="fa-solid fa-check text-success me-1.5"></i> Kumpulkan <strong>50 Poin</strong>: Potongan Biaya Pesanan Rp 25.000.</li>
+                        <li><i class="fa-solid fa-check text-success me-1.5"></i> Kumpulkan <strong>100 Poin</strong>: Kaos Eksklusif Warga Inhu.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 bg-white justify-content-between">
+                <button type="button" class="btn btn-sm btn-light border text-muted" data-bs-dismiss="modal">Tutup</button>
+                <a href="<?= BASE_URL ?>/search.php" class="btn btn-sm btn-teal fw-bold px-3">
+                    <i class="fa-solid fa-screwdriver-wrench me-1"></i> Pesan Jasa & Tambah Poin
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1196,6 +1311,32 @@ function handleDirectAvatarUpload(input) {
     .finally(() => {
         input.value = '';
     });
+}
+
+// Salin Kode Voucher Kupon Promo
+function copyCouponCode(code, btn) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check text-success me-1"></i> Tersalin!';
+            btn.classList.add('btn-success', 'text-white');
+            btn.classList.remove('btn-outline-teal', 'btn-outline-warning');
+            setTimeout(() => {
+                btn.innerHTML = orig;
+                btn.classList.remove('btn-success', 'text-white');
+                if (code === 'WARGAINHU15') btn.classList.add('btn-outline-teal');
+                else btn.classList.add('btn-outline-warning');
+            }, 2000);
+        });
+    } else {
+        const dummy = document.createElement('textarea');
+        document.body.appendChild(dummy);
+        dummy.value = code;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert('Kode voucher ' + code + ' berhasil disalin!');
+    }
 }
 </script>
 
