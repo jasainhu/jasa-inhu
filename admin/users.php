@@ -355,7 +355,7 @@ require_once __DIR__ . '/includes/header.php';
                     <th style="width: 42px;" class="text-center">
                         <input type="checkbox" class="form-check-input" id="checkAllUsers" title="Pilih Semua di Halaman Ini" onchange="toggleSelectAll(this)">
                     </th>
-                    <th>ID</th>
+                    <th style="width: 55px;" class="text-center">No.</th>
                     <th>Nama & Email</th>
                     <th>Peran</th>
                     <th>Nomor WhatsApp / HP</th>
@@ -366,7 +366,7 @@ require_once __DIR__ . '/includes/header.php';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($users as $u): ?>
+                <?php $no = 1; foreach ($users as $u): ?>
                     <tr id="userRow_<?= $u['id'] ?>">
                         <td class="text-center">
                             <?php if ($u['id'] !== (int)$_SESSION['user_id']): ?>
@@ -375,9 +375,14 @@ require_once __DIR__ . '/includes/header.php';
                                 <span class="text-muted" title="Akun Admin Anda Sendiri (Terkunci)"><i class="fa-solid fa-lock text-muted" style="font-size: 0.8rem;"></i></span>
                             <?php endif; ?>
                         </td>
-                        <td class="fw-bold text-teal"><?= format_user_id($u['id']) ?></td>
+                        <td class="text-center fw-bold text-secondary"><?= $no++ ?></td>
                         <td>
-                            <div class="fw-bold text-dark"><?= e($u['name']) ?></div>
+                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                <span class="fw-bold text-dark"><?= e($u['name']) ?></span>
+                                <span class="badge bg-light text-teal border py-0.5 px-1.5" style="font-size: 0.68rem;" title="ID Database: <?= $u['id'] ?>">
+                                    <?= format_user_id($u['id']) ?>
+                                </span>
+                            </div>
                             <?php if ($u['business_name']): ?>
                                 <div class="text-teal fw-semibold" style="font-size: 0.75rem;">
                                     <i class="fa-solid fa-store me-1"></i> <?= e($u['business_name']) ?>
