@@ -1414,68 +1414,59 @@ require_once __DIR__ . '/../includes/header.php';
      MODAL BUKA JASA MANDIRI / UPGRADE JADI MITRA PENYEDIA
      ============================================================== -->
 <div class="modal fade" id="upgradeProviderModal" tabindex="-1" aria-labelledby="upgradeProviderModalLabel" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable my-2 mx-auto" style="max-width: 520px; max-height: calc(100dvh - 30px);">
-        <form method="POST" action="<?= BASE_URL ?>/user/profile.php" id="formUpgradeProvider" class="modal-content rounded-4 border-0 shadow overflow-hidden" style="max-height: calc(100dvh - 30px); height: 100%; display: flex; flex-direction: column;">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable my-2 mx-auto" style="max-width: 440px; max-height: calc(100dvh - 24px);">
+        <form method="POST" action="<?= BASE_URL ?>/user/profile.php" id="formUpgradeProvider" class="modal-content rounded-4 border-0 shadow overflow-hidden" style="max-height: calc(100dvh - 24px); height: 100%; display: flex; flex-direction: column;">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="upgrade_to_provider">
 
-            <div class="modal-header border-bottom py-3 px-4 bg-white flex-shrink-0">
-                <div class="d-flex align-items-center gap-2.5">
-                    <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center shadow-xs" style="width: 38px; height: 38px;">
-                        <i class="fa-solid fa-store fs-6"></i>
+            <div class="modal-header border-bottom py-2.5 px-3 bg-white flex-shrink-0">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 32px; height: 32px;">
+                        <i class="fa-solid fa-store" style="font-size: 0.82rem;"></i>
                     </div>
                     <div>
-                        <h6 class="modal-title fw-bold text-dark mb-0" id="upgradeProviderModalLabel">Buka Jasa Mandiri</h6>
-                        <div class="text-muted" style="font-size: 0.72rem;">Daftar Jadi Mitra Penyedia Jasa di JASA INHU</div>
+                        <h6 class="modal-title fw-bold text-dark mb-0" id="upgradeProviderModalLabel" style="font-size: 0.88rem;">Buka Jasa Mandiri</h6>
+                        <div class="text-muted" style="font-size: 0.68rem;">Daftar Jadi Mitra Penyedia Jasa di JASA INHU</div>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" style="font-size: 0.7rem;" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body p-4" style="flex: 1 1 auto; overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
-                <!-- Banner Keuntungan Mitra -->
-                <div class="p-3 rounded-3 mb-3 border" style="background: linear-gradient(135deg, #f0fdfa 0%, #e6fffa 100%); border-color: #99f6e4 !important;">
-                    <div class="d-flex align-items-start gap-2">
-                        <i class="fa-solid fa-gift text-teal fs-5 mt-0.5"></i>
-                        <div>
-                            <div class="fw-bold text-dark small mb-1">Keuntungan Langsung Mitra Baru:</div>
-                            <ul class="list-unstyled mb-1.5 small text-muted" style="font-size: 0.75rem; line-height: 1.5;">
-                                <li><i class="fa-solid fa-check text-success me-1"></i> <strong>Tanpa Buat Akun Baru</strong>: Nomor WhatsApp & profil Anda tetap sama.</li>
-                                <li><i class="fa-solid fa-check text-success me-1"></i> <strong>Bonus Saldo Sambutan</strong>: Langsung dapat kuota pesanan awal gratis.</li>
-                                <li><i class="fa-solid fa-check text-success me-1"></i> Tampil di pencarian se-Kabupaten Indragiri Hulu.</li>
-                            </ul>
-                            <div class="text-teal fw-semibold" style="font-size: 0.72rem;">
-                                <i class="fa-solid fa-circle-arrow-right me-1"></i> Setelah klik simpan, Anda langsung dibawa ke <strong>Dashboard Khusus Mitra</strong> untuk kelola pesanan & dompet.
-                            </div>
-                        </div>
+            <div class="modal-body px-3 py-2.5" style="flex: 1 1 auto; overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
+                <!-- Banner Mini Keuntungan Mitra -->
+                <div class="px-2.5 py-2 rounded-3 mb-2.5 d-flex align-items-center gap-2 border" style="background: linear-gradient(135deg, #f0fdfa 0%, #e6fffa 100%); border-color: #99f6e4 !important;">
+                    <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 24px; height: 24px; font-size: 0.72rem;">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                    <div style="font-size: 0.72rem; line-height: 1.35; color: #0f766e;">
+                        <span class="fw-bold">Keuntungan Mitra Baru:</span> Akun & nomor WA tetap sama, langsung dapat bonus kuota pesanan awal gratis.
                     </div>
                 </div>
 
                 <!-- 1. Nama Usaha / Merek Jasa -->
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Nama Usaha / Merek Layanan Jasa <span class="text-danger">*</span></label>
-                    <input type="text" name="business_name" class="form-control" placeholder="Contoh: Bengkel AC Berkah / Tukang <?= e($user['name']) ?>" value="<?= e($user['name']) ?>" required>
-                    <div class="form-text text-muted" style="font-size: 0.72rem;">Bisa menggunakan nama Anda atau merek nama usaha Anda.</div>
+                <div class="mb-2">
+                    <label class="form-label mb-1 fw-bold text-dark" style="font-size: 0.75rem;">Nama Usaha / Merek Layanan Jasa <span class="text-danger">*</span></label>
+                    <input type="text" name="business_name" class="form-control form-control-sm rounded-3 py-1.5 px-2.5" style="font-size: 0.82rem;" placeholder="Contoh: Bengkel AC Berkah / Tukang <?= e($user['name']) ?>" value="<?= e($user['name']) ?>" required>
+                    <div class="text-muted" style="font-size: 0.67rem; margin-top: 2px;">Bisa nama pribadi atau merek usaha Anda.</div>
                 </div>
 
                 <!-- 2. Kategori Keahlian Utama -->
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Kategori Keahlian Utama <span class="text-danger">*</span></label>
-                    <select name="category_id" class="form-select" required>
-                        <option value="">-- Pilih Kategori Jasa Anda --</option>
+                <div class="mb-2">
+                    <label class="form-label mb-1 fw-bold text-dark" style="font-size: 0.75rem;">Kategori Keahlian Utama <span class="text-danger">*</span></label>
+                    <select name="category_id" class="form-select form-select-sm rounded-3 py-1.5 px-2.5" style="font-size: 0.82rem;" required>
+                        <option value="">-- Pilih Kategori Jasa --</option>
                         <?php foreach ($categories as $cat): ?>
                             <option value="<?= $cat['id'] ?>">
                                 <?= e($cat['name']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <div class="form-text text-muted" style="font-size: 0.72rem;">Kategori utama keahlian yang ingin Anda tawarkan ke warga.</div>
                 </div>
 
                 <!-- 3. Kecamatan Operasional -->
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Kecamatan Domisili / Wilayah Layanan <span class="text-danger">*</span></label>
-                    <select name="district_id" class="form-select" required>
+                <div class="mb-2">
+                    <label class="form-label mb-1 fw-bold text-dark" style="font-size: 0.75rem;">Kecamatan Domisili / Layanan <span class="text-danger">*</span></label>
+                    <select name="district_id" class="form-select form-select-sm rounded-3 py-1.5 px-2.5" style="font-size: 0.82rem;" required>
                         <option value="">-- Pilih Kecamatan di Inhu --</option>
                         <?php foreach ($districts as $d): ?>
                             <option value="<?= $d['id'] ?>" <?= ($user['district_id'] == $d['id']) ? 'selected' : '' ?>>
@@ -1486,21 +1477,21 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <!-- 4. Alamat / Lokasi -->
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Alamat / Patokan Usaha</label>
-                    <textarea name="address" rows="2" class="form-control" placeholder="Contoh: Jl. Narasinga, Rengat (dekat Pasar)"><?= e($user['address'] ?? '') ?></textarea>
+                <div class="mb-2">
+                    <label class="form-label mb-1 fw-bold text-dark" style="font-size: 0.75rem;">Alamat / Patokan Usaha</label>
+                    <textarea name="address" rows="2" class="form-control form-control-sm rounded-3 py-1.5 px-2.5" style="font-size: 0.82rem;" placeholder="Contoh: Jl. Narasinga, Rengat (dekat Pasar)"><?= e($user['address'] ?? '') ?></textarea>
                 </div>
 
                 <!-- 5. Deskripsi Layanan -->
-                <div class="mb-2">
-                    <label class="form-label small fw-bold">Deskripsi Singkat Keahlian & Layanan</label>
-                    <textarea name="description" rows="3" class="form-control" placeholder="Jelaskan keahlian Anda, jam buka layanan, pengalaman kerja, atau garansi jika ada..."></textarea>
+                <div class="mb-1">
+                    <label class="form-label mb-1 fw-bold text-dark" style="font-size: 0.75rem;">Deskripsi Singkat Keahlian</label>
+                    <textarea name="description" rows="2" class="form-control form-control-sm rounded-3 py-1.5 px-2.5" style="font-size: 0.82rem;" placeholder="Jelaskan keahlian Anda, jam buka layanan, pengalaman kerja..."></textarea>
                 </div>
             </div>
 
-            <div class="modal-footer border-top py-2.5 px-4 bg-light justify-content-between flex-shrink-0">
-                <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-teal btn-sm fw-bold px-3 shadow-xs" id="btnSubmitUpgrade">
+            <div class="modal-footer border-top py-2 px-3 bg-light justify-content-between flex-shrink-0">
+                <button type="button" class="btn btn-light btn-sm fw-semibold rounded-3 py-1 px-3" style="font-size: 0.78rem;" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-teal btn-sm fw-bold px-3 py-1.5 rounded-3 shadow-xs" style="font-size: 0.8rem;" id="btnSubmitUpgrade">
                     <i class="fa-solid fa-store me-1"></i> Aktifkan Jasa & Masuk Dashboard &rsaquo;
                 </button>
             </div>
