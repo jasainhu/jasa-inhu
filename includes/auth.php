@@ -248,14 +248,23 @@ function register_user(array $data): array {
     $db = get_db();
 
     // Cek duplikasi email atau telepon
-    $stmt = $db->prepare("SELECT id, email, phone FROM users WHERE email = ? OR phone = ? LIMIT 1");
+    $stmt = $db->prepare("SELECT id, email, phone, email_verified_at FROM users WHERE email = ? OR phone = ? LIMIT 1");
     $stmt->execute([$email, $phone]);
     $existing = $stmt->fetch();
+
+    $existing_unverified_id = null;
     if ($existing) {
-        if ($existing['email'] === $email) {
-            return ['success' => false, 'message' => 'Alamat email ini sudah terdaftar. Silakan masuk.'];
+        // Jika akun SUDAH terverifikasi resmi, tolak duplikasi
+        if (!empty($existing['email_verified_at'])) {
+            if ($existing['email'] === $email) {
+                return ['success' => false, 'message' => 'Alamat email ini sudah terdaftar. Silakan masuk.'];
+            }
+            return ['success' => false, 'message' => 'Nomor HP ini sudah terdaftar. Gunakan nomor lain.'];
         }
-        return ['success' => false, 'message' => 'Nomor HP ini sudah terdaftar. Gunakan nomor lain.'];
+
+        // Jika akun SEBELUMNYA BELUM terverifikasi OTP (misal salah ketik email saat registrasi):
+        // Kita perbarui (reuse) akun unverified tersebut dengan data baru yang dimasukkan pengguna
+        $existing_unverified_id = (int)$existing['id'];
     }
 
     // Ambil ID role dari database
@@ -274,60 +283,103 @@ function register_user(array $data): array {
     try {
         $db->beginTransaction();
 
-        // 1. Simpan ke users
-        $stmtInsertUser = $db->prepare("
-            INSERT INTO users (role_id, name, email, phone, password_hash, is_active, created_at)
-            VALUES (?, ?, ?, ?, ?, 1, NOW())
-        ");
-        $stmtInsertUser->execute([$role_id, $name, $email, $phone, $password_hash]);
-        $user_id = (int)$db->lastInsertId();
+        if ($existing_unverified_id) {
+            // Update akun yang belum terverifikasi
+            $user_id = $existing_unverified_id;
+            $stmtUpdateUser = $db->prepare("
+                UPDATE users 
+                SET role_id = ?, name = ?, email = ?, phone = ?, password_hash = ?, is_active = 1, updated_at = NOW()
+                WHERE id = ?
+            ");
+            $stmtUpdateUser->execute([$role_id, $name, $email, $phone, $password_hash, $user_id]);
 
-        // 2. Simpan ke profiles
-        $stmtInsertProfile = $db->prepare("
-            INSERT INTO profiles (user_id, address, district_id, village_id, created_at)
-            VALUES (?, ?, ?, ?, NOW())
-        ");
-        $stmtInsertProfile->execute([$user_id, $address, $district_id, $village_id]);
+            // Update profiles
+            $stmtUpdateProfile = $db->prepare("
+                UPDATE profiles 
+                SET address = ?, district_id = ?, village_id = ?, updated_at = NOW()
+                WHERE user_id = ?
+            ");
+            $stmtUpdateProfile->execute([$address, $district_id, $village_id, $user_id]);
+
+            // Bersihkan token / OTP lama
+            $db->prepare("DELETE FROM user_verifications WHERE user_id = ?")->execute([$user_id]);
+        } else {
+            // 1. Simpan ke users
+            $stmtInsertUser = $db->prepare("
+                INSERT INTO users (role_id, name, email, phone, password_hash, is_active, created_at)
+                VALUES (?, ?, ?, ?, ?, 1, NOW())
+            ");
+            $stmtInsertUser->execute([$role_id, $name, $email, $phone, $password_hash]);
+            $user_id = (int)$db->lastInsertId();
+
+            // 2. Simpan ke profiles
+            $stmtInsertProfile = $db->prepare("
+                INSERT INTO profiles (user_id, address, district_id, village_id, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ");
+            $stmtInsertProfile->execute([$user_id, $address, $district_id, $village_id]);
+        }
 
         // 3. Jika penyedia jasa, simpan ke service_providers & service_areas dengan Bonus Sambutan Gratis
         if ($role_name === 'penyedia') {
             $starter_bonus = (float)get_setting('welcome_bonus_amount', defined('WELCOME_BONUS_WALLET') ? (float)WELCOME_BONUS_WALLET : 45000.00);
-            $stmtInsertProvider = $db->prepare("
-                INSERT INTO service_providers 
-                (user_id, primary_category_id, business_name, description, address, district_id, village_id, is_verified, wallet_balance, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW())
-            ");
+            
+            // Cek apakah provider record sudah ada
+            $stmtCheckProv = $db->prepare("SELECT id FROM service_providers WHERE user_id = ?");
+            $stmtCheckProv->execute([$user_id]);
+            $existingProvId = $stmtCheckProv->fetchColumn();
+
             $default_desc = "Penyedia jasa " . $business_name . " di wilayah Indragiri Hulu.";
-            $stmtInsertProvider->execute([$user_id, $category_id, $business_name, $default_desc, $address, $district_id, $village_id, $starter_bonus]);
-            $provider_id = (int)$db->lastInsertId();
+
+            if ($existingProvId) {
+                $provider_id = (int)$existingProvId;
+                $stmtUpProv = $db->prepare("
+                    UPDATE service_providers 
+                    SET primary_category_id = ?, business_name = ?, description = ?, address = ?, district_id = ?, village_id = ?
+                    WHERE id = ?
+                ");
+                $stmtUpProv->execute([$category_id, $business_name, $default_desc, $address, $district_id, $village_id, $provider_id]);
+            } else {
+                $stmtInsertProvider = $db->prepare("
+                    INSERT INTO service_providers 
+                    (user_id, primary_category_id, business_name, description, address, district_id, village_id, is_verified, wallet_balance, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW())
+                ");
+                $stmtInsertProvider->execute([$user_id, $category_id, $business_name, $default_desc, $address, $district_id, $village_id, $starter_bonus]);
+                $provider_id = (int)$db->lastInsertId();
+
+                // Catat mutasi bonus sambutan (Strategi Cicipi Madunya Dulu)
+                if ($starter_bonus > 0) {
+                    $cur_fee = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
+                    $free_quota_txt = ($cur_fee > 0) ? floor($starter_bonus / $cur_fee) . " Pesanan Pertama Gratis" : "Saldo Awal Kuota";
+                    $stmtBonus = $db->prepare("
+                        INSERT INTO provider_wallet_transactions 
+                        (provider_id, type, amount, balance_after, description, created_at)
+                        VALUES (?, 'bonus', ?, ?, ?, NOW())
+                    ");
+                    $stmtBonus->execute([$provider_id, $starter_bonus, $starter_bonus, "Bonus Sambutan Mitra Baru JASA INHU (" . $free_quota_txt . ")"]);
+                }
+            }
 
             // Default service area ke kecamatan tempat tinggal jika ada
             if ($district_id) {
                 $stmtArea = $db->prepare("INSERT IGNORE INTO service_areas (provider_id, district_id) VALUES (?, ?)");
                 $stmtArea->execute([$provider_id, $district_id]);
             }
-
-            // Catat mutasi bonus sambutan (Strategi Cicipi Madunya Dulu)
-            if ($starter_bonus > 0) {
-                $cur_fee = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
-                $free_quota_txt = ($cur_fee > 0) ? floor($starter_bonus / $cur_fee) . " Pesanan Pertama Gratis" : "Saldo Awal Kuota";
-                $stmtBonus = $db->prepare("
-                    INSERT INTO provider_wallet_transactions 
-                    (provider_id, type, amount, balance_after, description, created_at)
-                    VALUES (?, 'bonus', ?, ?, ?, NOW())
-                ");
-                $stmtBonus->execute([$provider_id, $starter_bonus, $starter_bonus, "Bonus Sambutan Mitra Baru JASA INHU (" . $free_quota_txt . ")"]);
-            }
         }
 
-        // 4. Notifikasi selamat datang
-        $stmtNotif = $db->prepare("
-            INSERT INTO notifications (user_id, title, message, link, created_at)
-            VALUES (?, ?, ?, ?, NOW())
-        ");
-        $notif_title = "Selamat Datang di JASA INHU";
-        $notif_msg = "Akun Anda berhasil dibuat. Selamat menggunakan platform marketplace jasa lokal Indragiri Hulu!";
-        $stmtNotif->execute([$user_id, $notif_title, $notif_msg, get_dashboard_url_for_role($role_name)]);
+        // 4. Notifikasi selamat datang (hanya jika belum ada)
+        $stmtCheckNotif = $db->prepare("SELECT id FROM notifications WHERE user_id = ? LIMIT 1");
+        $stmtCheckNotif->execute([$user_id]);
+        if (!$stmtCheckNotif->fetch()) {
+            $stmtNotif = $db->prepare("
+                INSERT INTO notifications (user_id, title, message, link, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ");
+            $notif_title = "Selamat Datang di JASA INHU";
+            $notif_msg = "Akun Anda berhasil dibuat. Selamat menggunakan platform marketplace jasa lokal Indragiri Hulu!";
+            $stmtNotif->execute([$user_id, $notif_title, $notif_msg, get_dashboard_url_for_role($role_name)]);
+        }
 
         $db->commit();
 
@@ -374,6 +426,50 @@ function logout_user(): void {
             );
         }
         session_destroy();
+    }
+}
+
+/**
+ * Hapus data pendaftaran sementara jika belum menyelesaikan verifikasi OTP
+ * Digunakan saat pengguna membatalkan pendaftaran atau ingin mendaftar ulang
+ */
+function delete_unverified_user(int $user_id): bool {
+    if ($user_id <= 0) return false;
+    $db = get_db();
+    
+    // Pastikan user ADA dan BELUM terverifikasi (email_verified_at IS NULL)
+    $stmt = $db->prepare("SELECT id, email_verified_at FROM users WHERE id = ? LIMIT 1");
+    $stmt->execute([$user_id]);
+    $u = $stmt->fetch();
+    if (!$u || !empty($u['email_verified_at'])) {
+        return false; // JANGAN hapus akun yang sudah resmi terverifikasi
+    }
+
+    try {
+        $db->beginTransaction();
+
+        // 1. Cek provider
+        $stmtP = $db->prepare("SELECT id FROM service_providers WHERE user_id = ?");
+        $stmtP->execute([$user_id]);
+        $provId = $stmtP->fetchColumn();
+        if ($provId) {
+            $db->prepare("DELETE FROM service_areas WHERE provider_id = ?")->execute([$provId]);
+            $db->prepare("DELETE FROM provider_wallet_transactions WHERE provider_id = ?")->execute([$provId]);
+            $db->prepare("DELETE FROM service_providers WHERE id = ?")->execute([$provId]);
+        }
+
+        // 2. Hapus relasi umum
+        $db->prepare("DELETE FROM user_verifications WHERE user_id = ?")->execute([$user_id]);
+        $db->prepare("DELETE FROM notifications WHERE user_id = ?")->execute([$user_id]);
+        $db->prepare("DELETE FROM profiles WHERE user_id = ?")->execute([$user_id]);
+        $db->prepare("DELETE FROM users WHERE id = ? AND email_verified_at IS NULL")->execute([$user_id]);
+
+        $db->commit();
+        return true;
+    } catch (Exception $e) {
+        $db->rollBack();
+        error_log("Failed to delete unverified user: " . $e->getMessage());
+        return false;
     }
 }
 

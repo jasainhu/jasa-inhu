@@ -19,12 +19,16 @@ $redirect_after = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
 
 // 1. Tangani pembatalan pendaftaran / ganti nomor
 if (isset($_GET['action']) && $_GET['action'] === 'cancel') {
+    $pending_id = (int)($_SESSION['pending_verification_user_id'] ?? 0);
+    if ($pending_id > 0) {
+        delete_unverified_user($pending_id);
+    }
     unset($_SESSION['pending_verification_user_id']);
     unset($_SESSION['pending_verification_name']);
     unset($_SESSION['pending_verification_phone']);
     unset($_SESSION['pending_verification_email']);
     unset($_SESSION['pending_verification_role']);
-    set_flash('info', 'Silakan masukkan nomor atau data pendaftaran yang benar.');
+    set_flash('info', 'Pendaftaran dibatalkan dan nomor HP Anda telah dibebaskan. Silakan masukkan data pendaftaran yang benar.');
     redirect('/register.php');
 }
 
@@ -84,7 +88,7 @@ if (!empty($current['email_verified_at'])) {
 
 $db = get_db();
 
-// 4. Tangani Form Kirim Ulang / Submit OTP
+// 4. Tangani Form Kirim Ulang / Submit OTP / Perbaiki Email
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validate_csrf()) {
         $error = 'Sesi keamanan berakhir. Silakan coba kembali.';
@@ -129,6 +133,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = $verifyRes['message'];
                 $otp_sent = true;
                 $active_channel = $_POST['active_channel'] ?? 'email';
+            }
+        }
+
+        // Aksi C: Ubah Alamat Email Langsung (Jika Salah Ketik Saat Registrasi)
+        elseif ($action === 'change_email') {
+            $new_email = strtolower(trim($_POST['new_email'] ?? ''));
+            if (empty($new_email) || !filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
+                $error = 'Format alamat email baru tidak valid.';
+            } else {
+                $stmtCheck = $db->prepare("SELECT id FROM users WHERE email = ? AND email_verified_at IS NOT NULL AND id != ? LIMIT 1");
+                $stmtCheck->execute([$new_email, (int)$current['id']]);
+                if ($stmtCheck->fetch()) {
+                    $error = 'Alamat email ini sudah digunakan oleh akun lain yang terverifikasi.';
+                } else {
+                    $stmtUp = $db->prepare("UPDATE users SET email = ?, updated_at = NOW() WHERE id = ?");
+                    $stmtUp->execute([$new_email, (int)$current['id']]);
+
+                    $_SESSION['pending_verification_email'] = $new_email;
+                    $current['email'] = $new_email;
+
+                    // Buat OTP baru dan kirimkan ke email yang baru
+                    $otpRes = generate_verification_otp((int)$current['id'], 'email');
+                    if ($otpRes['success']) {
+                        $success = 'Alamat email berhasil diperbaiki menjadi ' . $new_email . '. Kode OTP baru telah dikirimkan ke Gmail Anda!';
+                        $active_channel = 'email';
+                        $otp_sent = true;
+                        $direct_link = $otpRes['direct_url'] ?? '';
+                    } else {
+                        $error = 'Email diperbarui, tetapi gagal mengirim OTP: ' . $otpRes['message'];
+                    }
+                }
             }
         }
     }
@@ -230,9 +265,14 @@ require_once __DIR__ . '/includes/header.php';
                             Masukkan 6 digit kode OTP yang terkirim ke WhatsApp Anda:
                         </p>
                     <?php else: ?>
-                        <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill bg-danger text-white small fw-bold mb-2 shadow-xs" style="max-width: 100%;">
+                        <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill bg-danger text-white small fw-bold mb-1 shadow-xs" style="max-width: 100%;">
                             <i class="fa-regular fa-envelope fs-6 flex-shrink-0"></i>
                             <span class="text-truncate" style="max-width: 250px;">Terkirim ke: <?= e($current['email']) ?></span>
+                        </div>
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-primary fw-semibold" style="font-size: 0.76rem;" data-bs-toggle="modal" data-bs-target="#changeEmailModal">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Salah ketik email? Ubah email di sini
+                            </button>
                         </div>
                         <p class="text-muted small mb-0">
                             Kode verifikasi 6 digit telah diproses untuk email Anda:
@@ -379,11 +419,47 @@ require_once __DIR__ . '/includes/header.php';
 
         <?php if ($is_pending): ?>
             <div class="text-center mt-3">
-                <a href="<?= BASE_URL ?>/verify.php?action=cancel" class="text-muted small text-decoration-none">
-                    <i class="fa-solid fa-arrow-left me-1"></i> Salah input nomor HP? Batal & Daftar Ulang
+                <a href="<?= BASE_URL ?>/verify.php?action=cancel" class="text-muted small text-decoration-none" onclick="return confirm('Batalkan pendaftaran akun ini? Data dan nomor HP akan dibebaskan kembali sehingga Anda dapat mendaftar ulang.');">
+                    <i class="fa-solid fa-trash-can me-1 text-danger"></i> Salah input data? Batalkan Pendaftaran & Bersihkan Nomor HP
                 </a>
             </div>
         <?php endif; ?>
+    </div>
+</div>
+
+<!-- Modal Perbaiki Email Langsung -->
+<div class="modal fade" id="changeEmailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h6 class="modal-title fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-pen-to-square text-primary me-1.5"></i> Perbaiki Alamat Email
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="<?= BASE_URL ?>/verify.php<?= !empty($redirect_after) ? '?redirect=' . urlencode($redirect_after) : '' ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="change_email">
+                <input type="hidden" name="redirect" value="<?= e($redirect_after) ?>">
+
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3" style="font-size: 0.78rem;">
+                        Jika Anda salah memasukkan alamat email saat pendaftaran, masukkan alamat email Gmail yang benar di bawah ini. Kode OTP baru akan langsung dikirimkan ke email ini.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Alamat Email yang Benar</label>
+                        <input type="email" name="new_email" class="form-control" value="<?= e($current['email']) ?>" required autofocus placeholder="contoh: namaanda@gmail.com">
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top py-2.5 px-4 bg-light justify-content-between">
+                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Simpan & Kirim OTP Baru
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

@@ -269,16 +269,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 $role_filter = $_GET['role'] ?? '';
-$where_sql = '';
+$where_clauses = [];
 $params = [];
 
-if (!empty($role_filter)) {
-    $where_sql = "WHERE r.name = ?";
-    $params[] = $role_filter;
+// Saring: Jangan tampilkan akun yang belum menyelesaikan verifikasi OTP di daftar utama
+if ($role_filter === 'unverified') {
+    $where_clauses[] = "u.email_verified_at IS NULL";
+} else {
+    $where_clauses[] = "u.email_verified_at IS NOT NULL";
+    if (!empty($role_filter)) {
+        $where_clauses[] = "r.name = ?";
+        $params[] = $role_filter;
+    }
 }
 
+$where_sql = !empty($where_clauses) ? "WHERE " . implode(' AND ', $where_clauses) : "";
+
 $stmt = $db->prepare("
-    SELECT u.id, u.role_id, u.name, u.email, u.phone, u.is_active, u.created_at,
+    SELECT u.id, u.role_id, u.name, u.email, u.phone, u.is_active, u.email_verified_at, u.created_at,
            r.name as role_name, r.display_name as role_display,
            p.district_id, p.address, p.gender, p.birth_date,
            d.name as district_name, sp.business_name, sp.id as provider_id,
@@ -293,6 +301,13 @@ $stmt = $db->prepare("
 ");
 $stmt->execute($params);
 $users = $stmt->fetchAll();
+
+// Hitung jumlah statistik untuk tab navigasi
+$count_all = (int)$db->query("SELECT COUNT(*) FROM users WHERE email_verified_at IS NOT NULL")->fetchColumn();
+$count_pengguna = (int)$db->query("SELECT COUNT(*) FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name = 'pengguna' AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_penyedia = (int)$db->query("SELECT COUNT(*) FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name = 'penyedia' AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_admin = (int)$db->query("SELECT COUNT(*) FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name = 'admin' AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_unverified = (int)$db->query("SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL")->fetchColumn();
 
 $districts = get_all_districts();
 
@@ -319,14 +334,29 @@ require_once __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <!-- Filter Role Tabs -->
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="btn-group">
-        <a href="<?= BASE_URL ?>/admin/users.php" class="btn btn-sm <?= empty($role_filter) ? 'btn-primary' : 'btn-outline-secondary' ?>">Semua (<?= count($users) ?>)</a>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=pengguna" class="btn btn-sm <?= $role_filter === 'pengguna' ? 'btn-primary' : 'btn-outline-secondary' ?>">Masyarakat</a>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=penyedia" class="btn btn-sm <?= $role_filter === 'penyedia' ? 'btn-primary' : 'btn-outline-secondary' ?>">Penyedia Jasa</a>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=admin" class="btn btn-sm <?= $role_filter === 'admin' ? 'btn-primary' : 'btn-outline-secondary' ?>">Admin</a>
+        <a href="<?= BASE_URL ?>/admin/users.php" class="btn btn-sm <?= empty($role_filter) ? 'btn-primary' : 'btn-outline-secondary' ?>">Semua (<?= $count_all ?>)</a>
+        <a href="<?= BASE_URL ?>/admin/users.php?role=pengguna" class="btn btn-sm <?= $role_filter === 'pengguna' ? 'btn-primary' : 'btn-outline-secondary' ?>">Masyarakat (<?= $count_pengguna ?>)</a>
+        <a href="<?= BASE_URL ?>/admin/users.php?role=penyedia" class="btn btn-sm <?= $role_filter === 'penyedia' ? 'btn-primary' : 'btn-outline-secondary' ?>">Penyedia Jasa (<?= $count_penyedia ?>)</a>
+        <a href="<?= BASE_URL ?>/admin/users.php?role=admin" class="btn btn-sm <?= $role_filter === 'admin' ? 'btn-primary' : 'btn-outline-secondary' ?>">Admin (<?= $count_admin ?>)</a>
     </div>
+    <?php if ($count_unverified > 0): ?>
+        <a href="<?= BASE_URL ?>/admin/users.php?role=unverified" class="btn btn-sm <?= $role_filter === 'unverified' ? 'btn-warning text-dark' : 'btn-outline-warning text-dark' ?>">
+            <i class="fa-solid fa-clock me-1"></i> Belum Selesai OTP (<?= $count_unverified ?>)
+        </a>
+    <?php endif; ?>
 </div>
+
+<?php if ($role_filter === 'unverified'): ?>
+    <div class="alert alert-warning border-0 shadow-xs mb-3 d-flex align-items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-warning fs-5"></i>
+        <div>
+            <strong class="text-dark">Data Pendaftaran Belum Selesai OTP:</strong>
+            <div class="small text-muted">Akun-akun berikut baru mengisi formulir registrasi tetapi belum menyelesaikan verifikasi OTP. Akun ini tidak tampil di daftar pengguna aktif. Anda dapat menghapus akun ini jika pengguna salah input data.</div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <!-- Bar Aksi Massal (Muncul Otomatis Saat Ada Akun yang Diceklis) -->
 <div id="bulkActionBar" class="card border-danger bg-danger-subtle shadow-sm mb-3 d-none">
@@ -439,7 +469,11 @@ require_once __DIR__ . '/includes/header.php';
                         <td><?= e($u['district_name'] ?: 'Kab. Inhu') ?></td>
                         <td><?= format_date($u['created_at']) ?></td>
                         <td class="text-center">
-                            <?php if ($u['is_active']): ?>
+                            <?php if (empty($u['email_verified_at'])): ?>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" title="Pendaftar belum menyelesaikan verifikasi kode OTP">
+                                    <i class="fa-solid fa-clock me-1"></i> Menunggu OTP
+                                </span>
+                            <?php elseif ($u['is_active']): ?>
                                 <span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>
                             <?php else: ?>
                                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Nonaktif</span>

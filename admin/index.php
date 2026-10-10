@@ -27,19 +27,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// 1. Ambil statistik
-$total_users = $db->query("SELECT COUNT(*) FROM users WHERE role_id = 2")->fetchColumn();
-$total_providers = $db->query("SELECT COUNT(*) FROM users WHERE role_id = 3")->fetchColumn();
+// 1. Ambil statistik (Hanya akun yang telah menyelesaikan verifikasi OTP)
+$total_users = $db->query("SELECT COUNT(*) FROM users WHERE role_id = 2 AND email_verified_at IS NOT NULL")->fetchColumn();
+$total_providers = $db->query("SELECT COUNT(*) FROM users WHERE role_id = 3 AND email_verified_at IS NOT NULL")->fetchColumn();
 $total_categories = $db->query("SELECT COUNT(*) FROM service_categories")->fetchColumn();
 $total_requests = $db->query("SELECT COUNT(*) FROM service_requests")->fetchColumn();
 
-// 2. Daftar mitra penyedia jasa terbaru
+// 2. Daftar mitra penyedia jasa terbaru (yang sudah terverifikasi OTP)
 $stmtProviders = $db->query("
     SELECT sp.*, u.name as user_name, u.email, u.phone, sc.name as category_name, d.name as district_name
     FROM service_providers sp
     JOIN users u ON sp.user_id = u.id
     JOIN service_categories sc ON sp.primary_category_id = sc.id
     LEFT JOIN districts d ON sp.district_id = d.id
+    WHERE u.email_verified_at IS NOT NULL
     ORDER BY sp.created_at DESC
     LIMIT 6
 ");
