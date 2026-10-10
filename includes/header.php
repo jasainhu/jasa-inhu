@@ -407,60 +407,52 @@ function markAllNotificationsRead(e) {
 </script>
 
 <!-- =========================================================
-     SHOPEE-STYLE ULTRA-SLIM MOBILE HEADER (d-lg-none)
-     Satu Baris Ramping (~50px) Menghemat Ruang Layar HP
+     GOJEK / GRAB STYLE PREMIUM MOBILE HEADER (d-lg-none)
+     Tingkat 1: Chip Lokasi Glassmorphism + Action Icons
+     Tingkat 2: Capsule Search Bar Lebar 100% Super Nyaman
      ========================================================= -->
 <?php
 $current_page_basename = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '') === 'home') || !empty($hide_back_btn);
 ?>
-<header class="shopee-mobile-header d-lg-none sticky-top">
-    <div class="shopee-header-main">
-        <?php if (!$is_site_homepage): ?>
-            <!-- Tombol Panah Kembali (Hanya Tampil di Luar Halaman Beranda) -->
-            <a href="<?= BASE_URL ?>/" onclick="if (document.referrer && document.referrer.includes(window.location.host)) { window.history.back(); } else { window.location.href = '<?= BASE_URL ?>/'; } return false;" class="shopee-back-btn" title="Kembali" aria-label="Kembali">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-        <?php endif; ?>
-
-        <!-- Capsule Search Input Bar (Memanjang Penuh ala Shopee) -->
-        <form action="<?= BASE_URL ?>/search.php" method="GET" class="shopee-search-capsule">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" name="q" class="search-input" placeholder="Cari jasa: AC, Motor, Sumur..." value="<?= e($header_q) ?>" autocomplete="off">
-            <?php if ($header_dist): ?>
-                <input type="hidden" name="kecamatan" value="<?= $header_dist ?>">
-            <?php endif; ?>
-            <!-- Shortcut Kategori / Filter di Dalam Kapsul (ala Ikon Kamera Shopee) -->
-            <button type="button" class="btn-capsule-cat" data-bs-toggle="modal" data-bs-target="#headerMobileCatModal" title="Kategori Jasa">
-                <i class="fa-solid fa-shapes"></i>
-            </button>
-        </form>
-
-        <!-- Right Action Icons (Sama Persis dengan Desktop: 3 Ikon [Pesanan, Chat, Notifikasi] + Avatar Profil) -->
-        <div class="shopee-header-actions">
-            <?php if (is_logged_in() && $current_user): ?>
-                <!-- 1. Ikon Pesanan Saya (Clipboard List) -->
-                <a href="<?= (($current_user['role_name'] ?? '') === 'penyedia') ? BASE_URL . '/provider/leads.php' : BASE_URL . '/user/requests.php' ?>" class="shopee-action-btn" title="Pesanan Jasa Saya">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    <?php if ($header_active_orders > 0): ?>
-                        <span class="shopee-badge"><?= $header_active_orders > 99 ? '99+' : $header_active_orders ?></span>
-                    <?php endif; ?>
+<header class="gojek-mobile-header d-lg-none sticky-top">
+    <!-- Baris 1: Chip Lokasi Glassmorphism di Kiri + Action Icons di Kanan -->
+    <div class="gojek-header-top">
+        <div class="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 me-2">
+            <?php if (!$is_site_homepage): ?>
+                <!-- Tombol Panah Kembali (Hanya Tampil di Luar Beranda) -->
+                <a href="<?= BASE_URL ?>/" onclick="if (document.referrer && document.referrer.includes(window.location.host)) { window.history.back(); } else { window.location.href = '<?= BASE_URL ?>/'; } return false;" class="gojek-back-btn" title="Kembali" aria-label="Kembali">
+                    <i class="fa-solid fa-arrow-left"></i>
                 </a>
+            <?php endif; ?>
 
-                <!-- 2. Ikon Live Chat (Obrolan & Pesan) -->
-                <a href="<?= BASE_URL ?>/chat.php" class="shopee-action-btn" title="Kotak Obrolan & Pesan">
+            <!-- Chip Lokasi Glassmorphism Gojek Style -->
+            <button type="button" class="gojek-location-chip" data-bs-toggle="modal" data-bs-target="#districtSelectModal">
+                <i class="fa-solid fa-location-dot location-dot-icon"></i>
+                <span class="location-name text-truncate">
+                    <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Seluruh Kab. Inhu' ?>
+                </span>
+                <i class="fa-solid fa-chevron-down location-arrow-icon"></i>
+            </button>
+        </div>
+
+        <!-- Aksi Kanan (Chat, Notifikasi, Akun) -->
+        <div class="gojek-header-actions">
+            <?php if (is_logged_in() && $current_user): ?>
+                <!-- 1. Ikon Live Chat -->
+                <a href="<?= BASE_URL ?>/chat.php" class="gojek-action-btn" title="Kotak Obrolan & Pesan">
                     <i class="fa-regular fa-comment-dots"></i>
                     <?php if ($header_unread_chats > 0): ?>
-                        <span class="shopee-badge bg-teal" id="mobileHeaderChatBadge"><?= $header_unread_chats > 99 ? '99+' : $header_unread_chats ?></span>
+                        <span class="gojek-badge" id="mobileHeaderChatBadge"><?= $header_unread_chats > 99 ? '99+' : $header_unread_chats ?></span>
                     <?php endif; ?>
                 </a>
 
-                <!-- 3. Ikon Lonceng Pemberitahuan / Notifikasi -->
+                <!-- 2. Ikon Lonceng Pemberitahuan / Notifikasi -->
                 <div class="dropdown">
-                    <button class="shopee-action-btn btn p-0 border-0 bg-transparent" type="button" id="mobileNotifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Pemberitahuan">
+                    <button class="gojek-action-btn btn p-0 border-0 bg-transparent" type="button" id="mobileNotifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Pemberitahuan">
                         <i class="fa-regular fa-bell"></i>
                         <?php if ($header_unread_notifs > 0): ?>
-                            <span class="shopee-badge" id="mobileHeaderNotifBadge"><?= $header_unread_notifs > 99 ? '99+' : $header_unread_notifs ?></span>
+                            <span class="gojek-badge" id="mobileHeaderNotifBadge"><?= $header_unread_notifs > 99 ? '99+' : $header_unread_notifs ?></span>
                         <?php endif; ?>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end dropdown-menu-notif mt-2 shadow-lg" aria-labelledby="mobileNotifDropdownBtn">
@@ -511,9 +503,9 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                     </div>
                 </div>
 
-                <!-- 4. Profil Avatar Pengguna (Mobile Dropdown Menu Lengkap dg Logout) -->
+                <!-- 3. Profil Avatar Pengguna -->
                 <div class="dropdown">
-                    <button class="shopee-user-avatar-btn btn p-0 border-0" type="button" id="mobileUserProfileDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Akun: <?= e($header_first_name) ?>">
+                    <button class="gojek-user-avatar-btn btn p-0 border-0" type="button" id="mobileUserProfileDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Akun: <?= e($header_first_name) ?>">
                         <?php if (!empty($current_user['avatar']) && file_exists(__DIR__ . '/../' . $current_user['avatar'])): ?>
                             <img src="<?= BASE_URL ?>/<?= e($current_user['avatar']) ?>" alt="<?= e($current_user['name']) ?>">
                         <?php else: ?>
@@ -632,27 +624,29 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                     </ul>
                 </div>
             <?php else: ?>
-                <!-- Belum Masuk Akun: Hanya Tampilkan Tombol Masuk & Daftar Ringkas (Search bar jadi jauh lebih luas) -->
-                <button type="button" class="shopee-login-btn" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <!-- Belum Masuk Akun: Tombol Masuk & Daftar Elegan -->
+                <button type="button" class="gojek-login-btn" data-bs-toggle="modal" data-bs-target="#loginModal">
                     Masuk
                 </button>
-                <a href="<?= BASE_URL ?>/register.php" class="shopee-register-btn">
+                <a href="<?= BASE_URL ?>/register.php" class="gojek-register-btn">
                     Daftar
                 </a>
             <?php endif; ?>
         </div>
     </div>
 
-    <!-- Sub-bar Lokasi Tipis Shopee-style: "📍 Lokasi: [Kecamatan] ▾" -->
-    <div class="shopee-location-subbar">
-        <button type="button" class="btn-location-trigger" data-bs-toggle="modal" data-bs-target="#districtSelectModal">
-            <i class="fa-solid fa-location-dot me-1"></i>
-            <span class="location-label">Lokasi:</span>
-            <span class="location-val text-truncate">
-                <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Seluruh Kab. Inhu' ?>
-            </span>
-            <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.6rem;"></i>
-        </button>
+    <!-- Baris 2: Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab -->
+    <div class="gojek-header-search-row">
+        <form action="<?= BASE_URL ?>/search.php" method="GET" class="gojek-search-capsule">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" name="q" class="search-input" placeholder="Cari jasa: Tukang, Servis AC, Montir..." value="<?= e($header_q) ?>" autocomplete="off">
+            <?php if ($header_dist): ?>
+                <input type="hidden" name="kecamatan" value="<?= $header_dist ?>">
+            <?php endif; ?>
+            <button type="submit" class="gojek-search-btn" title="Cari Jasa">
+                Cari
+            </button>
+        </form>
     </div>
 </header>
 

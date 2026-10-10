@@ -570,121 +570,96 @@ a:hover {
 }
 
 /* =========================================================
-   SHOPEE-STYLE ULTRA-SLIM MOBILE HEADER
-   Satu Baris Ringkas & Ramping ala Aplikasi E-Commerce Shopee
+   GOJEK / GRAB STYLE PREMIUM MOBILE HEADER
+   Tingkat 1: Chip Lokasi Glassmorphism + Action Icons
+   Tingkat 2: Capsule Search Bar Lebar 100% Super Nyaman
    ========================================================= */
-.shopee-mobile-header {
+.gojek-mobile-header {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.16);
     position: sticky;
     top: 0;
     z-index: 1020;
-    padding: 8px 12px 6px 12px;
+    padding: 10px 14px 10px 14px;
 }
 
-.shopee-header-main {
+/* Baris 1: Lokasi di Kiri, Aksi di Kanan */
+.gojek-header-top {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
     width: 100%;
-    height: 40px;
+    margin-bottom: 8px;
 }
 
-/* Tombol Panah Kembali (Back Arrow Mobile ala Shopee) */
-.shopee-back-btn {
-    width: 34px;
-    height: 34px;
+.gojek-back-btn {
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     flex-shrink: 0;
     text-decoration: none;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.18);
     border: none;
-    padding: 0;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition: all 0.15s ease;
+}
+.gojek-back-btn:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.28);
 }
 
-.shopee-back-btn:hover,
-.shopee-back-btn:active {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    transform: scale(0.95);
-}
-
-/* Capsule Search Bar (Putih Melengkung Penuh) */
-.shopee-search-capsule {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    background: #ffffff;
+/* Chip Lokasi Glassmorphism */
+.gojek-location-chip {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.32);
     border-radius: 999px;
-    height: 38px;
-    padding: 0 8px 0 12px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    min-width: 0;
-}
-
-.shopee-search-capsule .search-icon {
-    color: #0d9488;
-    font-size: 0.95rem;
-    margin-right: 8px;
-    flex-shrink: 0;
-}
-
-.shopee-search-capsule .search-input {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 0.82rem;
-    color: #1e293b;
-    width: 100%;
-    min-width: 0;
-    padding: 0;
-}
-
-.shopee-search-capsule .search-input::placeholder {
-    color: #64748b;
+    padding: 5px 12px;
+    color: #ffffff;
     font-size: 0.8rem;
-}
-
-.shopee-search-capsule .btn-capsule-cat {
-    background: transparent;
-    border: none;
-    color: #64748b;
-    font-size: 0.95rem;
-    padding: 4px 6px;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
+    font-weight: 600;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: color 0.15s ease;
+    gap: 6px;
+    max-width: 100%;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.gojek-location-chip:active {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.28);
+}
+.gojek-location-chip .location-dot-icon {
+    color: #5eead4;
+    font-size: 0.82rem;
+}
+.gojek-location-chip .location-name {
+    max-width: 140px;
+    letter-spacing: -0.2px;
+}
+.gojek-location-chip .location-arrow-icon {
+    font-size: 0.62rem;
+    opacity: 0.85;
 }
 
-.shopee-search-capsule .btn-capsule-cat:hover {
-    color: #0d9488;
-}
-
-/* Right Action Buttons: Cart, Chat, User/Login */
-.shopee-header-actions {
+/* Right Action Buttons (Chat, Notif, Avatar) */
+.gojek-header-actions {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
 }
 
-.shopee-action-btn {
+.gojek-action-btn {
     position: relative;
     color: #ffffff !important;
-    font-size: 1.22rem;
+    font-size: 1.05rem;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -692,164 +667,153 @@ a:hover {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    transition: transform 0.15s ease;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: transform 0.15s ease, background 0.15s ease;
 }
-
-.shopee-action-btn:active {
+.gojek-action-btn:active {
     transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.28);
+}
+.gojek-action-btn.btn {
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    padding: 0 !important;
+    line-height: 1;
 }
 
-.shopee-badge {
+.gojek-badge {
     position: absolute;
-    top: -2px;
-    right: -6px;
+    top: -3px;
+    right: -4px;
     background-color: #ef4444;
     color: #ffffff;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 800;
     line-height: 1;
-    padding: 2px 4.5px;
+    padding: 2px 4px;
     border-radius: 999px;
     border: 1.5px solid #ffffff;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-    min-width: 17px;
+    min-width: 16px;
     text-align: center;
 }
 
-/* User Avatar & Login Pill */
-.shopee-user-avatar-btn {
-    width: 30px;
-    height: 30px;
+.gojek-user-avatar-btn {
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 2px solid #ffffff;
+    border: 1.5px solid #ffffff;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-decoration: none;
     flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
-
-.shopee-user-avatar-btn img {
+.gojek-user-avatar-btn img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.shopee-action-btn.btn {
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    line-height: 1;
-}
-
-.shopee-badge.bg-teal {
-    background-color: #0d9488 !important;
-}
-
-@media (max-width: 575.98px) {
-    .shopee-header-actions {
-        gap: 6px;
-    }
-    .shopee-action-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 1.15rem;
-    }
-    .shopee-user-avatar-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 0.74rem;
-    }
-    .shopee-header-actions .dropdown-menu-notif {
-        position: absolute !important;
-        right: 0 !important;
-        left: auto !important;
-        width: 320px !important;
-        max-width: calc(100vw - 20px) !important;
-    }
-}
-
-.shopee-login-btn {
+.gojek-login-btn {
     background: #ffffff;
     color: #0d9488 !important;
     font-weight: 700;
     font-size: 0.78rem;
-    padding: 4px 11px;
+    padding: 5px 12px;
     border-radius: 999px;
     border: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     white-space: nowrap;
     cursor: pointer;
-    transition: transform 0.15s ease, background 0.15s ease;
+    transition: transform 0.15s ease;
 }
-
-.shopee-login-btn:active {
+.gojek-login-btn:active {
     transform: scale(0.95);
 }
 
-.shopee-register-btn {
+.gojek-register-btn {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.6);
     color: #ffffff !important;
     font-weight: 700;
     font-size: 0.78rem;
-    padding: 3px 11px;
+    padding: 4px 12px;
     border-radius: 999px;
     text-decoration: none;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.15s ease, background 0.15s ease;
+    transition: transform 0.15s ease;
 }
-
-.shopee-register-btn:hover, .shopee-register-btn:active {
-    background: rgba(255, 255, 255, 0.35);
-    color: #ffffff !important;
+.gojek-register-btn:active {
     transform: scale(0.95);
 }
 
-/* Sub-bar Lokasi Tipis (~24px) */
-.shopee-location-subbar {
+/* Baris 2: Search Bar 100% Lebar Penuh */
+.gojek-header-search-row {
+    width: 100%;
+}
+
+.gojek-search-capsule {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding-top: 5px;
-    padding-bottom: 2px;
-    font-size: 0.73rem;
-    color: #ffffff;
-    gap: 8px;
+    background: #ffffff;
+    border-radius: 12px;
+    height: 42px;
+    padding: 0 6px 0 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    width: 100%;
 }
 
-.shopee-location-subbar .btn-location-trigger {
-    background: transparent;
+.gojek-search-capsule .search-icon {
+    color: #0d9488;
+    font-size: 0.95rem;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.gojek-search-capsule .search-input {
+    flex-grow: 1;
     border: none;
-    color: #ffffff;
-    font-size: 0.73rem;
-    display: inline-flex;
-    align-items: center;
+    outline: none;
+    background: transparent;
+    font-size: 0.85rem;
+    color: #1e293b;
+    width: 100%;
+    min-width: 0;
     padding: 0;
-    cursor: pointer;
-    font-weight: 500;
-    max-width: 100%;
-    text-align: left;
-    white-space: nowrap;
 }
 
-.shopee-location-subbar .location-label {
-    opacity: 0.85;
-    margin-right: 4px;
+.gojek-search-capsule .search-input::placeholder {
+    color: #94a3b8;
+    font-size: 0.82rem;
 }
 
-.shopee-location-subbar .location-val {
+.gojek-search-btn {
+    background: #0d9488;
+    color: #ffffff;
+    border: none;
+    font-size: 0.78rem;
     font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease;
+}
+.gojek-search-btn:active {
+    background: #0f766e;
 }
 
 .btn-subbar-tender {
