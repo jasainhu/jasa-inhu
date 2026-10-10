@@ -497,106 +497,9 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <!-- 4. Kartu Dompet & Promo Jasa (Fasilitas Khusus Warga Inhu) -->
-    <div class="shopee-card">
-        <div class="shopee-card-head">
-            <h6 class="shopee-card-title">
-                <i class="fa-solid fa-wallet text-warning"></i>
-                <span>Promo & Fasilitas Warga</span>
-            </h6>
-            <span class="badge text-bg-light border text-secondary" style="font-size: 0.7rem;">Inhu Special</span>
-        </div>
-
-        <div class="shopee-wallet-grid">
-            <!-- 1. Voucher & Kupon Promo (Buka Modal Kupon) -->
-            <a href="javascript:void(0)" class="shopee-wallet-item text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalKuponPromo">
-                <span class="shopee-wallet-val text-danger">
-                    <i class="fa-solid fa-ticket"></i> 2 Kupon
-                </span>
-                <span class="shopee-wallet-lbl">Kupon Promo</span>
-            </a>
-
-            <!-- 2. Poin Loyalitas Warga (Buka Modal Poin Reward) -->
-            <a href="javascript:void(0)" class="shopee-wallet-item text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalPoinLoyalitas">
-                <span class="shopee-wallet-val text-success">
-                    <i class="fa-solid fa-coins"></i> <?= $count_completed * 10 ?> Poin
-                </span>
-                <span class="shopee-wallet-lbl">Poin Loyalitas</span>
-            </a>
-
-            <!-- 3. Pusat Bantuan CS WhatsApp Resmi -->
-            <a href="<?= format_wa_url(get_setting('whatsapp_number', '085378230761'), 'Halo Admin CS JASA INHU, saya membutuhkan bantuan layanan.') ?>" target="_blank" class="shopee-wallet-item text-decoration-none">
-                <span class="shopee-wallet-val text-teal">
-                    <i class="fa-brands fa-whatsapp"></i> CS Siaga
-                </span>
-                <span class="shopee-wallet-lbl">Bantuan 24/7</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- 5. Kartu Aktivitas Layanan Saya (4 Menu Utama Tanpa Duplikasi) -->
-    <div class="shopee-card">
-        <div class="shopee-card-head">
-            <h6 class="shopee-card-title">
-                <i class="fa-solid fa-shapes text-primary"></i>
-                <span>Aktivitas Saya</span>
-            </h6>
-        </div>
-
-        <div class="shopee-activity-grid">
-            <!-- Menu 1: Cari Layanan Jasa -->
-            <a href="<?= BASE_URL ?>/search.php" class="shopee-activity-tile text-decoration-none">
-                <div class="shopee-activity-tile-left">
-                    <i class="fa-solid fa-magnifying-glass shopee-activity-icon text-teal"></i>
-                    <div>
-                        <div class="shopee-activity-name">Cari Layanan Jasa</div>
-                        <div class="text-muted" style="font-size: 0.68rem;">Temukan tukang & teknisi terdekat</div>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
-            </a>
-
-            <!-- Menu 2: Obrolan dengan Mitra Jasa -->
-            <a href="<?= BASE_URL ?>/chat.php" class="shopee-activity-tile text-decoration-none">
-                <div class="shopee-activity-tile-left">
-                    <i class="fa-solid fa-comments shopee-activity-icon text-info"></i>
-                    <div>
-                        <div class="shopee-activity-name">Obrolan / Chat</div>
-                        <div class="text-muted" style="font-size: 0.68rem;"><?= $unread_chats > 0 ? $unread_chats . ' pesan baru' : 'Konsultasi dengan mitra' ?></div>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
-            </a>
-
-            <!-- Menu 3: Pasang Tender / Lelang Proyek Jasa -->
-            <a href="<?= BASE_URL ?>/tender.php" class="shopee-activity-tile text-decoration-none">
-                <div class="shopee-activity-tile-left">
-                    <i class="fa-solid fa-bullhorn shopee-activity-icon text-warning"></i>
-                    <div>
-                        <div class="shopee-activity-name">Pasang Tender Jasa</div>
-                        <div class="text-muted" style="font-size: 0.68rem;">Lelang proyek & borongan kerja</div>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
-            </a>
-
-            <!-- Menu 4: Alamat Domisili & Kecamatan Inhu (Buka Modal Alamat) -->
-            <a href="javascript:void(0)" class="shopee-activity-tile text-decoration-none" data-bs-toggle="modal" data-bs-target="#editAddressModal">
-                <div class="shopee-activity-tile-left">
-                    <i class="fa-solid fa-location-dot shopee-activity-icon text-danger"></i>
-                    <div>
-                        <div class="shopee-activity-name">Alamat Domisili</div>
-                        <div class="text-muted text-truncate" style="font-size: 0.68rem; max-width: 140px;"><?= !empty($user['district_name']) ? 'Kec. ' . e($user['district_name']) : 'Atur lokasi rumah' ?></div>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.65rem;"></i>
-            </a>
-        </div>
-    </div>
-
-    <!-- 6. Card Buka Jasa Mandiri / Upgrade Jadi Mitra -->
+    <!-- 4. Card Buka Jasa Mandiri / Upgrade Jadi Mitra (Pusat Akuisisi & Monetisasi) -->
     <?php if ($user['role_name'] === 'pengguna'): ?>
-        <div class="mx-3 mb-3">
+        <div class="mx-3 my-3">
             <div class="p-3 rounded-4 border bg-gradient shadow-xs position-relative overflow-hidden" style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border-color: #99f6e4 !important;">
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <div class="d-flex align-items-center gap-2.5">
@@ -618,7 +521,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
     <?php elseif ($user['role_name'] === 'penyedia'): ?>
-        <div class="mx-3 mb-3">
+        <div class="mx-3 my-3">
             <div class="p-3 rounded-4 border border-warning-subtle bg-warning-subtle shadow-xs d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-2.5">
                     <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 42px; height: 42px;">
@@ -639,30 +542,21 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- 7. Menu Bantuan & Regulasi -->
+    <!-- 5. Menu Pengaturan & Informasi Akun -->
     <div class="shopee-list-group">
-        <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank" class="shopee-list-item">
+        <!-- 1. Alamat Domisili -->
+        <a href="javascript:void(0)" class="shopee-list-item" data-bs-toggle="modal" data-bs-target="#editAddressModal">
             <div class="shopee-list-item-left">
-                <i class="fa-solid fa-headset shopee-list-icon text-info"></i>
-                <span>Pusat Bantuan CS (WhatsApp Admin)</span>
+                <i class="fa-solid fa-location-dot shopee-list-icon text-danger"></i>
+                <div>
+                    <span class="d-block">Alamat Domisili</span>
+                    <span class="text-muted small" style="font-size: 0.7rem;"><?= !empty($user['district_name']) ? 'Kec. ' . e($user['district_name']) : 'Atur lokasi rumah Anda di Inhu' ?></span>
+                </div>
             </div>
             <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
         </a>
-        <a href="<?= BASE_URL ?>/terms.php" class="shopee-list-item">
-            <div class="shopee-list-item-left">
-                <i class="fa-solid fa-file-contract shopee-list-icon text-secondary"></i>
-                <span>Syarat & Ketentuan Layanan</span>
-            </div>
-            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
-        </a>
-        <a href="<?= BASE_URL ?>/privacy.php" class="shopee-list-item">
-            <div class="shopee-list-item-left">
-                <i class="fa-solid fa-user-shield shopee-list-icon text-secondary"></i>
-                <span>Kebijakan Privasi</span>
-            </div>
-            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
-        </a>
-        <!-- Menu Pengaturan Notifikasi & Suara HP -->
+
+        <!-- 2. Pengaturan Notifikasi & Suara HP -->
         <a href="javascript:void(0)" class="shopee-list-item" data-bs-toggle="modal" data-bs-target="#notificationSettingsModal">
             <div class="shopee-list-item-left">
                 <i class="fa-solid fa-bell shopee-list-icon text-warning"></i>
@@ -673,8 +567,9 @@ require_once __DIR__ . '/../includes/header.php';
                 <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
             </div>
         </a>
+
         <?php if ($user['role_name'] === 'penyedia'): ?>
-        <!-- Menu Beralih ke Profil Mitra di Mobile -->
+        <!-- 3. Beralih ke Profil Mitra di Mobile -->
         <a href="<?= BASE_URL ?>/switch_mode.php?to=penyedia" class="shopee-list-item bg-warning-subtle text-warning-emphasis">
             <div class="shopee-list-item-left">
                 <i class="fa-solid fa-store shopee-list-icon text-warning"></i>
@@ -686,6 +581,33 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </a>
         <?php endif; ?>
+
+        <!-- 4. Syarat & Ketentuan Layanan -->
+        <a href="<?= BASE_URL ?>/terms.php" class="shopee-list-item">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-file-contract shopee-list-icon text-secondary"></i>
+                <span>Syarat & Ketentuan Layanan</span>
+            </div>
+            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+        </a>
+
+        <!-- 5. Kebijakan Privasi -->
+        <a href="<?= BASE_URL ?>/privacy.php" class="shopee-list-item">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-user-shield shopee-list-icon text-secondary"></i>
+                <span>Kebijakan Privasi</span>
+            </div>
+            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+        </a>
+
+        <!-- 6. Keluar dari Akun (Logout) -->
+        <a href="<?= BASE_URL ?>/logout.php" class="shopee-list-item text-danger">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-arrow-right-from-bracket shopee-list-icon text-danger"></i>
+                <span class="text-danger fw-semibold">Keluar dari Akun (Logout)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right shopee-list-chevron text-danger"></i>
+        </a>
     </div>
 
     <!-- Tombol Buka Pengaturan Cepat di Mobile -->
