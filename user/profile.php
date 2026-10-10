@@ -181,6 +181,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     redirect('/user/profile.php?tab=password');
                 }
             }
+        } elseif ($action === 'upgrade_to_provider') {
+            $business_name = trim($_POST['business_name'] ?? '');
+            $category_id = (int)($_POST['category_id'] ?? 0);
+            $description = trim($_POST['description'] ?? '');
+            $district_id = !empty($_POST['district_id']) ? (int)$_POST['district_id'] : (!empty($user['district_id']) ? (int)$user['district_id'] : null);
+            $village_id = !empty($_POST['village_id']) ? (int)$_POST['village_id'] : (!empty($user['village_id']) ? (int)$user['village_id'] : null);
+            $address = trim($_POST['address'] ?? ($user['address'] ?? ''));
+
+            if (empty($business_name)) {
+                $error = 'Nama usaha atau merek jasa mandiri Anda wajib diisi.';
+            } elseif ($category_id <= 0) {
+                $error = 'Silakan pilih bidang kategori keahlian jasa Anda.';
+            } else {
+                try {
+                    $db->beginTransaction();
+
+                    // 1. Ambil role_id untuk 'penyedia'
+                    $stmtRole = $db->prepare("SELECT id FROM roles WHERE name = 'penyedia' LIMIT 1");
+                    $stmtRole->execute();
+                    $penyedia_role_id = (int)$stmtRole->fetchColumn();
+
+                    if (!$penyedia_role_id) {
+                        throw new Exception("Role penyedia tidak ditemukan di sistem.");
+                    }
+
+                    // 2. Update role_id user menjadi penyedia
+                    $stmtUpUser = $db->prepare("UPDATE users SET role_id = ?, updated_at = NOW() WHERE id = ?");
+                    $stmtUpUser->execute([$penyedia_role_id, $user['id']]);
+
+                    // 3. Update profile jika ada data alamat/kecamatan baru
+                    if ($district_id) {
+                        $stmtUpProf = $db->prepare("UPDATE profiles SET district_id = ?, village_id = ?, address = ?, updated_at = NOW() WHERE user_id = ?");
+                        $stmtUpProf->execute([$district_id, $village_id, $address, $user['id']]);
+                    }
+
+                    // 4. Periksa apakah sudah ada record di service_providers
+                    $stmtCheckProv = $db->prepare("SELECT id FROM service_providers WHERE user_id = ?");
+                    $stmtCheckProv->execute([$user['id']]);
+                    $existingProvId = $stmtCheckProv->fetchColumn();
+
+                    $starter_bonus = (float)get_setting('welcome_bonus_amount', defined('WELCOME_BONUS_WALLET') ? (float)WELCOME_BONUS_WALLET : 45000.00);
+                    $default_desc = !empty($description) ? $description : ("Penyedia jasa " . $business_name . " di wilayah Indragiri Hulu.");
+
+                    if ($existingProvId) {
+                        $provider_id = (int)$existingProvId;
+                        $stmtUpdProv = $db->prepare("
+                            UPDATE service_providers 
+                            SET primary_category_id = ?, business_name = ?, description = ?, district_id = ?, village_id = ?, address = ?
+                            WHERE id = ?
+                        ");
+                        $stmtUpdProv->execute([$category_id, $business_name, $default_desc, $district_id, $village_id, $address, $provider_id]);
+                    } else {
+                        $stmtInsProv = $db->prepare("
+                            INSERT INTO service_providers 
+                            (user_id, primary_category_id, business_name, description, address, district_id, village_id, is_verified, wallet_balance, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW())
+                        ");
+                        $stmtInsProv->execute([$user['id'], $category_id, $business_name, $default_desc, $address, $district_id, $village_id, $starter_bonus]);
+                        $provider_id = (int)$db->lastInsertId();
+
+                        // Catat mutasi bonus sambutan jika saldo > 0
+                        if ($starter_bonus > 0) {
+                            $cur_fee = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
+                            $free_quota_txt = ($cur_fee > 0) ? floor($starter_bonus / $cur_fee) . " Pesanan Pertama Gratis" : "Saldo Awal Kuota";
+                            $stmtBonus = $db->prepare("
+                                INSERT INTO provider_wallet_transactions 
+                                (provider_id, type, amount, balance_after, description, created_at)
+                                VALUES (?, 'bonus', ?, ?, ?, NOW())
+                            ");
+                            $stmtBonus->execute([$provider_id, $starter_bonus, $starter_bonus, "Bonus Sambutan Mitra Baru JASA INHU (" . $free_quota_txt . ")"]);
+                        }
+                    }
+
+                    // 5. Tambahkan service_areas
+                    if ($district_id) {
+                        $stmtArea = $db->prepare("INSERT IGNORE INTO service_areas (provider_id, district_id) VALUES (?, ?)");
+                        $stmtArea->execute([$provider_id, $district_id]);
+                    }
+
+                    // 6. Notifikasi selamat datang sebagai mitra
+                    $stmtNotif = $db->prepare("
+                        INSERT INTO notifications (user_id, title, message, link, created_at)
+                        VALUES (?, ?, ?, ?, NOW())
+                    ");
+                    $stmtNotif->execute([
+                        $user['id'],
+                        "Selamat Bergabung Menjadi Mitra!",
+                        "Akun Anda kini telah aktif sebagai Mitra Penyedia Jasa di JASA INHU. Silakan kelola tarif dan terima pesanan pekerjaan dari warga.",
+                        "/provider/index.php"
+                    ]);
+
+                    $db->commit();
+
+                    // Update session pengguna yang sedang login
+                    $_SESSION['role_name'] = 'penyedia';
+                    $_SESSION['role_id'] = $penyedia_role_id;
+
+                    set_flash('success', '🎉 Selamat! Akun Anda berhasil di-upgrade menjadi Mitra Penyedia Jasa JASA INHU. Bonus saldo pesanan gratis telah ditambahkan!');
+                    redirect('/provider/index.php');
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    $error = 'Gagal meng-upgrade akun: ' . $e->getMessage();
+                }
+            }
         }
     }
 }
@@ -224,8 +328,9 @@ $stmtChats = $db->prepare("
 $stmtChats->execute([$user['id']]);
 $unread_chats = (int)$stmtChats->fetchColumn();
 
-// Ambil daftar kecamatan di Inhu
+// Ambil daftar kecamatan dan kategori aktif di Inhu
 $districts = get_all_districts();
+$categories = get_active_categories();
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -476,21 +581,46 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <!-- 6. Banner Ajakan Gabung Mitra (Jika Pengguna Belum Jadi Mitra) -->
+    <!-- 6. Card Buka Jasa Mandiri / Upgrade Jadi Mitra -->
     <?php if ($user['role_name'] === 'pengguna'): ?>
+        <div class="mx-3 mb-3">
+            <div class="p-3 rounded-4 border bg-gradient shadow-xs position-relative overflow-hidden" style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border-color: #99f6e4 !important;">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 44px; height: 44px; font-size: 1.15rem;">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-1.5 mb-0.5">
+                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.85rem;">Buka Jasa Mandiri</h6>
+                                <span class="badge rounded-pill bg-warning text-dark px-1.5 py-0.5 fw-bold" style="font-size: 0.62rem;">GRATIS</span>
+                            </div>
+                            <div class="text-secondary" style="font-size: 0.72rem; line-height: 1.35;">Mulai terima order pekerjaan dari warga Inhu & dapatkan saldo awal gratis!</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-teal btn-sm fw-bold px-3 py-2 rounded-3 text-nowrap shadow-xs" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#upgradeProviderModal">
+                        Buka Sekarang &rsaquo;
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php elseif ($user['role_name'] === 'penyedia'): ?>
         <div class="mx-3 mb-3">
             <div class="p-3 rounded-4 border bg-white shadow-xs d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 42px; height: 42px;">
                         <i class="fa-solid fa-briefcase"></i>
                     </div>
                     <div>
-                        <h6 class="fw-bold mb-0.5 text-dark" style="font-size: 0.82rem;">Punya Keahlian Tukang / Jasa?</h6>
-                        <div class="text-muted" style="font-size: 0.72rem;">Daftar gratis & dapatkan pelanggan dari sekitar Anda.</div>
+                        <div class="d-flex align-items-center gap-1.5 mb-0.5">
+                            <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.85rem;">Dashboard Mitra Jasa</h6>
+                            <span class="badge rounded-pill bg-success-subtle text-success px-1.5 py-0.5 fw-bold" style="font-size: 0.62rem;">Mitra Aktif</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.72rem;">Kelola layanan, tarif & terima pesanan pelanggan.</div>
                     </div>
                 </div>
-                <a href="<?= BASE_URL ?>/register.php" class="btn btn-teal btn-sm fw-bold px-3 py-1.5 rounded-3 text-nowrap" style="font-size: 0.75rem;">
-                    Buka Usaha
+                <a href="<?= BASE_URL ?>/provider/index.php" class="btn btn-outline-success btn-sm fw-bold px-3 py-1.5 rounded-3 text-nowrap" style="font-size: 0.75rem;">
+                    Buka Dashboard &rsaquo;
                 </a>
             </div>
         </div>
@@ -616,6 +746,36 @@ require_once __DIR__ . '/../includes/header.php';
                     <i class="fa-solid fa-headset text-success"></i>
                     <span>Pusat Bantuan CS</span>
                 </a>
+
+                <?php if ($user['role_name'] === 'pengguna'): ?>
+                    <div class="mt-3 p-3 rounded-3 border text-start" style="background: linear-gradient(135deg, #f0fdfa 0%, #e6fffa 100%); border-color: #99f6e4 !important;">
+                        <div class="d-flex align-items-center gap-2 mb-1.5">
+                            <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                <i class="fa-solid fa-store"></i>
+                            </div>
+                            <span class="fw-bold text-dark small" style="font-size: 0.8rem;">Buka Jasa Mandiri</span>
+                        </div>
+                        <p class="text-muted mb-2.5" style="font-size: 0.72rem; line-height: 1.4;">
+                            Punya keahlian tukang, servis, atau rental? Daftar jadi mitra & dapatkan bonus saldo kuota order gratis!
+                        </p>
+                        <button type="button" class="btn btn-teal btn-sm w-100 fw-bold py-1.5 rounded-2 shadow-xs" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#upgradeProviderModal">
+                            <i class="fa-solid fa-circle-plus me-1"></i> Buka Jasa Sekarang
+                        </button>
+                    </div>
+                <?php elseif ($user['role_name'] === 'penyedia'): ?>
+                    <div class="mt-3 p-3 rounded-3 border bg-light text-start">
+                        <div class="d-flex align-items-center gap-2 mb-1.5">
+                            <i class="fa-solid fa-briefcase text-success"></i>
+                            <span class="fw-bold text-dark small" style="font-size: 0.8rem;">Mode Mitra Aktif</span>
+                        </div>
+                        <p class="text-muted mb-2.5" style="font-size: 0.72rem; line-height: 1.4;">
+                            Kelola pesanan masuk & dompet saldo dari panel khusus mitra.
+                        </p>
+                        <a href="<?= BASE_URL ?>/provider/index.php" class="btn btn-outline-success btn-sm w-100 fw-bold py-1.5 rounded-2" style="font-size: 0.75rem;">
+                            Buka Dashboard Mitra &rsaquo;
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -1131,6 +1291,26 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Section: Akun Saya -->
         <div class="shopee-settings-section-title">Akun Saya</div>
         <div class="list-group list-group-flush border-top border-bottom bg-white mb-2">
+            <?php if ($user['role_name'] === 'pengguna'): ?>
+                <a href="javascript:void(0)" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-teal text-decoration-none bg-teal-subtle bg-opacity-10" data-bs-toggle="modal" data-bs-target="#upgradeProviderModal">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-store text-teal"></i>
+                        <div>
+                            <span class="small fw-bold d-block text-dark">Buka Jasa Mandiri (Jadi Mitra)</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">Mulai cari rezeki & terima orderan dari warga Inhu</span>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill bg-warning text-dark px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">GRATIS</span>
+                </a>
+            <?php elseif ($user['role_name'] === 'penyedia'): ?>
+                <a href="<?= BASE_URL ?>/provider/index.php" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-briefcase text-success"></i>
+                        <span class="small fw-semibold">Dashboard Mitra Penyedia Jasa</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
+                </a>
+            <?php endif; ?>
             <a href="javascript:void(0)" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 text-dark text-decoration-none" data-bs-toggle="modal" data-bs-target="#changePassModal">
                 <span class="small fw-semibold">Keamanan & Ubah Kata Sandi</span>
                 <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
@@ -1222,6 +1402,103 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="modal-footer border-top py-2.5 px-4 bg-light">
                     <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Perbarui Kata Sandi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================
+     MODAL BUKA JASA MANDIRI / UPGRADE JADI MITRA PENYEDIA
+     ============================================================== -->
+<div class="modal fade" id="upgradeProviderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 520px;">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4 bg-white">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center shadow-xs" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-store fs-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold text-dark mb-0">Buka Jasa Mandiri</h6>
+                        <div class="text-muted" style="font-size: 0.72rem;">Daftar Jadi Mitra Penyedia Jasa di JASA INHU</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" action="<?= BASE_URL ?>/user/profile.php" id="formUpgradeProvider">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="upgrade_to_provider">
+
+                <div class="modal-body p-4">
+                    <!-- Banner Keuntungan Mitra -->
+                    <div class="p-3 rounded-3 mb-3 border" style="background: linear-gradient(135deg, #f0fdfa 0%, #e6fffa 100%); border-color: #99f6e4 !important;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fa-solid fa-gift text-teal fs-5 mt-0.5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small mb-1">Keuntungan Langsung Mitra Baru:</div>
+                                <ul class="list-unstyled mb-0 small text-muted" style="font-size: 0.75rem; line-height: 1.5;">
+                                    <li><i class="fa-solid fa-check text-success me-1"></i> <strong>Tanpa Buat Akun Baru</strong>: Nomor WhatsApp & profil Anda tetap sama.</li>
+                                    <li><i class="fa-solid fa-check text-success me-1"></i> <strong>Bonus Saldo Sambutan</strong>: Langsung dapat kuota pesanan awal gratis.</li>
+                                    <li><i class="fa-solid fa-check text-success me-1"></i> Tampil di pencarian se-Kabupaten Indragiri Hulu.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1. Nama Usaha / Merek Jasa -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nama Usaha / Merek Layanan Jasa <span class="text-danger">*</span></label>
+                        <input type="text" name="business_name" class="form-control" placeholder="Contoh: Bengkel AC Berkah / Tukang <?= e($user['name']) ?>" value="<?= e($user['name']) ?>" required>
+                        <div class="form-text text-muted" style="font-size: 0.72rem;">Bisa menggunakan nama Anda atau merek nama usaha Anda.</div>
+                    </div>
+
+                    <!-- 2. Kategori Keahlian Utama -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Kategori Keahlian Utama <span class="text-danger">*</span></label>
+                        <select name="category_id" class="form-select" required>
+                            <option value="">-- Pilih Kategori Jasa Anda --</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>">
+                                    <?= e($cat['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text text-muted" style="font-size: 0.72rem;">Kategori utama keahlian yang ingin Anda tawarkan ke warga.</div>
+                    </div>
+
+                    <!-- 3. Kecamatan Operasional -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Kecamatan Domisili / Wilayah Layanan <span class="text-danger">*</span></label>
+                        <select name="district_id" class="form-select" required>
+                            <option value="">-- Pilih Kecamatan di Inhu --</option>
+                            <?php foreach ($districts as $d): ?>
+                                <option value="<?= $d['id'] ?>" <?= ($user['district_id'] == $d['id']) ? 'selected' : '' ?>>
+                                    Kecamatan <?= e($d['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- 4. Alamat / Lokasi -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Alamat / Patokan Usaha</label>
+                        <textarea name="address" rows="2" class="form-control" placeholder="Contoh: Jl. Narasinga, Rengat (dekat Pasar)"><?= e($user['address'] ?? '') ?></textarea>
+                    </div>
+
+                    <!-- 5. Deskripsi Layanan -->
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Deskripsi Singkat Keahlian & Layanan</label>
+                        <textarea name="description" rows="3" class="form-control" placeholder="Jelaskan keahlian Anda, jam buka layanan, pengalaman kerja, atau garansi jika ada..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top py-2.5 px-4 bg-light justify-content-between">
+                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3 shadow-xs" id="btnSubmitUpgrade">
+                        <i class="fa-solid fa-store me-1"></i> Aktifkan Jasa Saya Sekarang &rsaquo;
+                    </button>
                 </div>
             </form>
         </div>
