@@ -1945,6 +1945,37 @@ a:hover {
         border-radius: 14px;
     }
 
+/* Mini Scroll Indicator Bar Ala Shopee/Tokopedia */
+.hub-scroll-track-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 8px;
+    padding-bottom: 2px;
+}
+
+.hub-scroll-track {
+    width: 44px;
+    height: 3.5px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.hub-scroll-thumb {
+    width: 16px;
+    height: 100%;
+    background: linear-gradient(90deg, #0d9488 0%, #0f766e 100%);
+    border-radius: 999px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    will-change: transform;
+    transition: transform 0.05s ease-out;
+}
+
     .shopee-hub-item {
         flex: 0 0 68px;
         width: 68px;

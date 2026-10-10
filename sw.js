@@ -1,5 +1,5 @@
 // JASA INHU - Service Worker PWA
-const CACHE_NAME = 'jasainhu-pwa-v3';
+const CACHE_NAME = 'jasainhu-pwa-v4';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

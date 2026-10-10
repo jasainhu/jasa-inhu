@@ -412,7 +412,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <!-- 2. Deretan 10 Ikon Menu & Program Unggulan Ala Shopee Quick Hub -->
         <div class="shopee-hub-card">
-            <div class="shopee-hub-grid">
+            <div class="shopee-hub-grid" id="shopeeHubGrid">
                 <?php foreach ($shopee_hub as $sh): ?>
                     <?php if (!empty($sh['modal_trigger'])): ?>
                         <a href="javascript:void(0)" class="shopee-hub-item" data-bs-toggle="modal" data-bs-target="#allCategoriesModal">
@@ -430,6 +430,13 @@ require_once __DIR__ . '/includes/header.php';
                         </a>
                     <?php endif; ?>
                 <?php endforeach; ?>
+            </div>
+
+            <!-- Mini Scroll Indicator Bar Ala Shopee/Tokopedia -->
+            <div class="hub-scroll-track-wrapper d-lg-none">
+                <div class="hub-scroll-track" title="Geser ke samping untuk menu lainnya">
+                    <div class="hub-scroll-thumb" id="hubScrollThumb"></div>
+                </div>
             </div>
         </div>
 
@@ -1317,6 +1324,26 @@ function filterCategoriesInModal(query) {
         emptyBox.classList.add('d-none');
     }
 }
+
+// Sync Shopee/Tokopedia Mini Scroll Bar Indicator
+document.addEventListener('DOMContentLoaded', function() {
+    const hubGrid = document.getElementById('shopeeHubGrid');
+    const hubThumb = document.getElementById('hubScrollThumb');
+    if (hubGrid && hubThumb) {
+        const updateHubScroll = () => {
+            const maxScroll = hubGrid.scrollWidth - hubGrid.clientWidth;
+            if (maxScroll <= 0) return;
+            const progress = Math.min(Math.max(hubGrid.scrollLeft / maxScroll, 0), 1);
+            const trackWidth = 44;
+            const thumbWidth = 16;
+            const maxTranslate = trackWidth - thumbWidth;
+            hubThumb.style.transform = `translateX(${progress * maxTranslate}px)`;
+        };
+        hubGrid.addEventListener('scroll', updateHubScroll, { passive: true });
+        window.addEventListener('resize', updateHubScroll);
+        updateHubScroll();
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
