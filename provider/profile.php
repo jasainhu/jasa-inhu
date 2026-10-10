@@ -571,6 +571,31 @@ require_once __DIR__ . '/../includes/header.php';
         </form>
     </div>
 
+    <!-- PENGATURAN NOTIFIKASI & NADA DERING ORDERAN HP -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+            <div class="fw-bold text-dark small d-flex align-items-center gap-1.5 fs-6">
+                <i class="fa-solid fa-bell text-warning fs-5"></i>
+                <span>Pengaturan Suara Dering & Notifikasi HP</span>
+            </div>
+            <span class="badge bg-teal-subtle text-teal rounded-pill small px-2.5 py-1">Real-time Chime</span>
+        </div>
+        <p class="text-muted small mb-3" style="font-size: 0.75rem; line-height: 1.45;">
+            Agar Anda tidak ketinggalan saat ada warga Indragiri Hulu yang memesan jasa Anda, pastikan suara notifikasi aktif dan browser diizinkan berdering.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-outline-teal fw-bold rounded-pill px-3 sound-toggle-btn shadow-2xs" onclick="ProviderNotification.toggleSound()" style="font-size: 0.78rem;">
+                <i class="fa-solid fa-volume-high me-1 text-success"></i> Suara Order: Aktif
+            </button>
+            <button type="button" class="btn btn-sm btn-teal text-white fw-bold rounded-pill px-3 shadow-2xs" onclick="ProviderNotification.testSound()" style="font-size: 0.78rem;">
+                <i class="fa-solid fa-play me-1"></i> Uji Coba Suara Dering HP
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="ProviderNotification.requestBrowserNotification()" style="font-size: 0.78rem;">
+                <i class="fa-solid fa-mobile-screen me-1 text-primary"></i> Izinkan Pop-up Notifikasi HP
+            </button>
+        </div>
+    </div>
+
     <!-- 3. MENU PINTASAN AKUN & BANTUAN MITRA -->
     <div class="card border shadow-2xs rounded-4 bg-white p-3 mb-4">
         <div class="fw-bold text-dark small mb-2 d-flex align-items-center gap-1.5">
@@ -633,6 +658,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<script src="<?= BASE_URL ?>/assets/js/provider_sound.js"></script>
 <script>
 function previewProviderPhoto(input) {
     if (input.files && input.files[0]) {

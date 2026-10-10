@@ -768,13 +768,22 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="text-white-50 mb-3" style="font-size: 0.72rem;">
                         Biaya kontak flat <?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS (Rp 0)' ?> hanya dipotong saat Anda menyetujui pesanan baru.
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 mb-2">
                         <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-light btn-sm fw-bold flex-fill rounded-3 text-teal">
                             <i class="fa-solid fa-store me-1"></i> Lihat Toko Publik ↗
                         </a>
                         <a href="<?= BASE_URL ?>/provider/portfolios.php" class="btn btn-outline-light btn-sm fw-bold rounded-3" title="Unggah Hasil Kerja">
                             <i class="fa-solid fa-plus me-1"></i> Portofolio
                         </a>
+                    </div>
+                    <!-- Sound & Notification Controller Bar -->
+                    <div class="pt-2 border-top border-white border-opacity-20 d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-light text-teal fw-bold flex-fill rounded-3 sound-toggle-btn shadow-2xs" onclick="ProviderNotification.toggleSound()" style="font-size: 0.72rem;">
+                            <i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-light fw-bold rounded-3" onclick="ProviderNotification.testSound()" style="font-size: 0.72rem;" title="Uji Coba Bunyi Nada Dering HP">
+                            <i class="fa-solid fa-play me-1"></i> Tes Dering
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1363,6 +1372,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<script src="<?= BASE_URL ?>/assets/js/provider_sound.js"></script>
 <script>
 function openCompleteOrderModal(requestId, title, customerName, defaultPrice) {
     document.getElementById('completeRequestId').value = requestId;
@@ -1375,6 +1385,13 @@ function openCompleteOrderModal(requestId, title, customerName, defaultPrice) {
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
 }
+
+// Inisialisasi Deteksi Order Baru & Nada Dering Masuk
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.ProviderNotification) {
+        window.ProviderNotification.startOrderPolling(<?= !empty($direct_orders[0]['id']) ? (int)$direct_orders[0]['id'] : 0 ?>);
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
