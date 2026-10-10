@@ -650,6 +650,17 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
         </a>
+        <!-- Menu Pengaturan Notifikasi & Suara HP -->
+        <a href="javascript:void(0)" class="shopee-list-item" data-bs-toggle="modal" data-bs-target="#notificationSettingsModal">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-bell shopee-list-icon text-warning"></i>
+                <span>Pengaturan Notifikasi & Suara HP</span>
+            </div>
+            <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-teal-subtle text-teal py-0.5 px-2 rounded-pill small" style="font-size: 0.68rem;">Atur Suara</span>
+                <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+            </div>
+        </a>
     </div>
 
     <!-- Tombol Buka Pengaturan Cepat di Mobile -->
@@ -713,6 +724,9 @@ require_once __DIR__ . '/../includes/header.php';
                     </a>
                     <a href="?tab=password" class="shopee-nav-sub-item <?= $active_tab === 'password' ? 'active' : '' ?>">
                         Ubah Password
+                    </a>
+                    <a href="javascript:void(0)" class="shopee-nav-sub-item text-dark" data-bs-toggle="modal" data-bs-target="#notificationSettingsModal">
+                        <i class="fa-solid fa-bell me-1 text-warning"></i> Notifikasi & Suara
                     </a>
                 </nav>
 
@@ -1499,6 +1513,64 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- ==============================================================
+     MODAL PENGATURAN NOTIFIKASI & SUARA HP PENGGUNA
+     ============================================================== -->
+<div class="modal fade" id="notificationSettingsModal" tabindex="-1" aria-labelledby="notifModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content rounded-4 border-0 shadow overflow-hidden">
+            <div class="modal-header border-bottom py-2.5 px-3 bg-white">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-warning bg-opacity-15 text-warning-emphasis d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;">
+                        <i class="fa-solid fa-bell fs-6 text-warning"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold text-dark mb-0 fs-6" id="notifModalLabel">Notifikasi & Suara Aplikasi</h6>
+                        <span class="text-muted small" style="font-size: 0.72rem;">Atur nada dering & pemberitahuan pesanan Anda</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3.5">
+                <!-- Info Status Suara -->
+                <div class="p-3 rounded-3 bg-light border mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="small fw-bold text-dark">Suara Notifikasi Dering</span>
+                        <button type="button" class="btn btn-sm btn-light text-teal fw-bold rounded-pill sound-toggle-btn shadow-2xs" onclick="AppNotification.toggleSound('customer')" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif (On)
+                        </button>
+                    </div>
+                    <p class="text-muted small mb-0" style="font-size: 0.73rem;">
+                        Berbunyi halus (*soft chime*) saat mitra menerima pesanan Anda, mulai OTW ke rumah Anda, atau mengirimkan chat pesan.
+                    </p>
+                </div>
+
+                <!-- Tombol Tes Suara & Izin HP -->
+                <div class="d-grid gap-2 mb-3">
+                    <button type="button" class="btn btn-teal text-white fw-bold py-2 rounded-3 shadow-xs" onclick="AppNotification.testSound('customer')">
+                        <i class="fa-solid fa-play me-1.5"></i> Uji Coba Suara Notifikasi Pelanggan
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-2 rounded-3 fw-semibold" onclick="AppNotification.requestBrowserNotification('customer')">
+                        <i class="fa-solid fa-mobile-screen me-1.5 text-primary"></i> Izinkan Notifikasi Pop-up di Layar HP
+                    </button>
+                </div>
+
+                <!-- Edukasi WhatsApp -->
+                <div class="p-2.5 rounded-3 border bg-success-subtle border-success-subtle small text-success-emphasis d-flex align-items-center gap-2" style="font-size: 0.74rem;">
+                    <i class="fa-brands fa-whatsapp fs-5 text-success flex-shrink-0"></i>
+                    <div>
+                        <strong>Notifikasi WhatsApp Otomatis:</strong> Setiap ada pembaruan status teknisi, sistem juga otomatis mengirim kabar ke WhatsApp Anda.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 px-3">
+                <button type="button" class="btn btn-secondary btn-sm rounded-3 w-100 fw-semibold" data-bs-dismiss="modal">Tutup & Simpan Pengaturan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="<?= BASE_URL ?>/assets/js/provider_sound.js"></script>
 <script>
 function previewAvatar(input, imgId, placeholderId) {
     if (input.files && input.files[0]) {

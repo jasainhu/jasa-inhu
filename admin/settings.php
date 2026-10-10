@@ -642,6 +642,68 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
         </div>
+
+        <!-- 6. Pengaturan Dering & Notifikasi Operasional Admin -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 border-0 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-bell text-warning fs-4"></i>
+                            <span>Dering & Notifikasi Operasional Admin</span>
+                        </h5>
+                        <p class="text-muted small mb-0">Dering lonceng kasir otomatis ketika ada transaksi deposit saldo, pendaftaran mitra baru, atau konfirmasi pesanan</p>
+                    </div>
+                    <span class="badge bg-teal-subtle text-teal border border-teal-subtle px-3 py-2 rounded-pill fw-semibold small">
+                        <i class="fa-solid fa-volume-high me-1"></i> Sound Engine Web Audio
+                    </span>
+                </div>
+                <div class="card-body p-4 pt-1">
+                    <div class="row g-4 align-items-center">
+                        <div class="col-md-7">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4 mb-3 border">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-teal text-white rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                                        <i class="fa-solid fa-cash-register fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Dering Kasir (Cash Ding Chime)</h6>
+                                        <p class="small text-muted mb-0">Suara nada jernih ganda frekuensi tinggi (988Hz & 1318Hz) untuk membedakan notifikasi operasional admin dengan notifikasi umum.</p>
+                                    </div>
+                                </div>
+                                <div class="ms-3 flex-shrink-0">
+                                    <button type="button" class="btn btn-sm btn-light text-teal fw-bold rounded-pill sound-toggle-btn shadow-2xs" onclick="AppNotification.toggleSound('admin')">
+                                        <i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif (On)
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="alert alert-info border-0 rounded-4 small mb-0 d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-circle-info fs-5 flex-shrink-0 text-info"></i>
+                                <div><strong>Tips Operasional:</strong> Biarkan tab admin tetap terbuka di HP atau Komputer Anda saat jam kerja. Notifikasi Web Audio akan berbunyi otomatis tanpa boros kuota internet.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="p-3 border rounded-4 bg-white shadow-xs">
+                                <h6 class="fw-bold text-dark mb-2 small text-uppercase tracking-wider">Uji Coba & Izin Perangkat</h6>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-teal text-white fw-bold py-2 text-start d-flex align-items-center justify-content-between rounded-3" onclick="AppNotification.testSound('admin')">
+                                        <span><i class="fa-solid fa-play me-2"></i> Tes Dering Kasir (Ding)</span>
+                                        <span class="badge bg-white text-teal">Coba Dengar</span>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary fw-semibold py-2 text-start d-flex align-items-center justify-content-between rounded-3" onclick="AppNotification.requestBrowserNotification('admin')">
+                                        <span><i class="fa-solid fa-mobile-screen me-2 text-primary"></i> Izinkan Pop-up Notif di HP</span>
+                                        <span class="badge bg-light text-dark border">Push Alert</span>
+                                    </button>
+                                </div>
+                                <div class="mt-3 small text-muted">
+                                    <i class="fa-solid fa-circle-check text-success me-1"></i> Mendukung browser HP (Google Chrome, Edge, Safari) & PC.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Tombol Simpan Sticky di Layar Bawah -->
@@ -777,5 +839,7 @@ function updateSimulation() {
 document.getElementById('inputLeadFee')?.addEventListener('input', updateSimulation);
 document.getElementById('inputBonus')?.addEventListener('input', updateSimulation);
 </script>
+
+<script src="<?= BASE_URL ?>/assets/js/provider_sound.js"></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
