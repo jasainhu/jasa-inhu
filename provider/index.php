@@ -501,730 +501,799 @@ $stmtConvProvider = $db->prepare("
 $stmtConvProvider->execute([$user['id'], $user['id'], $user['id'], $user['id']]);
 $recent_chat_conversations = $stmtConvProvider->fetchAll();
 
+// 8. Riwayat Pekerjaan Selesai
+$stmtCompleted = $db->prepare("
+    SELECT sr.*, u.name as customer_name, u.phone as customer_phone, 
+           sc.name as category_name, sc.icon as category_icon, d.name as district_name,
+           (CASE WHEN sr.provider_id = ? THEN 'direct' ELSE 'bidding' END) as order_origin,
+           srr.offer_price as agreed_price,
+           (SELECT rating FROM reviews r WHERE r.request_id = sr.id LIMIT 1) as customer_rating,
+           (SELECT comment FROM reviews r WHERE r.request_id = sr.id LIMIT 1) as customer_comment
+    FROM service_requests sr
+    JOIN users u ON sr.user_id = u.id
+    JOIN service_categories sc ON sr.category_id = sc.id
+    JOIN districts d ON sr.district_id = d.id
+    LEFT JOIN service_request_responses srr ON (srr.request_id = sr.id AND srr.provider_id = ? AND srr.status = 'accepted')
+    WHERE (sr.provider_id = ? OR sr.id IN (SELECT request_id FROM service_request_responses WHERE provider_id = ? AND status = 'accepted'))
+      AND sr.status = 'completed'
+    ORDER BY sr.updated_at DESC
+    LIMIT 10
+");
+$stmtCompleted->execute([$provider['id'] ?? 0, $provider['id'] ?? 0, $provider['id'] ?? 0, $provider['id'] ?? 0]);
+$completed_jobs = $stmtCompleted->fetchAll();
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
+
+<style>
+/* Modern Provider Dashboard Styling */
+.provider-hero-card {
+    background: linear-gradient(135deg, #092c28 0%, #0f766e 60%, #115e59 100%);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(15, 118, 110, 0.2);
+}
+.provider-hero-card::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.provider-stat-badge {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: #fff;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.provider-stat-badge:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+.modern-nav-pills {
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 16px;
+    gap: 6px;
+}
+.modern-nav-pills .nav-link {
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: #475569;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.modern-nav-pills .nav-link:hover {
+    color: #0f766e;
+    background: rgba(255, 255, 255, 0.6);
+}
+.modern-nav-pills .nav-link.active {
+    background: #ffffff;
+    color: #0f766e;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+.order-card {
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    background: #fff;
+}
+.order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+    border-color: #cbd5e1;
+}
+.order-card.priority-active {
+    border-left: 5px solid #0d9488;
+}
+.order-card.priority-new {
+    border-left: 5px solid #ef4444;
+}
+.btn-wa-call {
+    background-color: #25D366;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-wa-call:hover {
+    background-color: #1eb956;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+.stepper-progress {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 15px 0 20px;
+}
+.stepper-progress::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 20px;
+    right: 20px;
+    height: 3px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+.stepper-step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+.stepper-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #cbd5e1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #64748b;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+}
+.stepper-step.completed .stepper-dot {
+    background: #0d9488;
+    border-color: #0d9488;
+    color: #fff;
+}
+.stepper-step.active .stepper-dot {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+}
+.stepper-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    display: block;
+}
+.stepper-step.completed .stepper-label,
+.stepper-step.active .stepper-label {
+    color: #0f172a;
+}
+.avatar-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+</style>
+
 <div class="container py-4">
-    <!-- Header Welcome Card -->
-    <div class="card border-0 shadow-sm p-3 p-md-4 mb-4 text-white" style="background: linear-gradient(135deg, var(--dark) 0%, #115e59 100%); border-radius: 18px;">
-        <div class="row align-items-center">
-            <div class="col-md-7">
+
+    <!-- Flash Error / Alert -->
+    <?php if (!empty($error)): ?>
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-3">
+            <i class="fa-solid fa-circle-exclamation fs-4"></i>
+            <div><?= e($error) ?></div>
+        </div>
+    <?php endif; ?>
+
+    <!-- 1. Modern Hero Header Card -->
+    <div class="provider-hero-card p-4 p-md-5 mb-4 text-white">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
                 <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                    <span class="badge text-bg-success fw-bold">Mitra Penyedia Jasa Inhu</span>
+                    <span class="badge bg-emerald-500 text-white fw-bold px-3 py-1.5 rounded-pill" style="background-color: #10b981;">
+                        <i class="fa-solid fa-id-badge me-1"></i> Mitra Resmi Inhu
+                    </span>
                     <?php if (!empty($provider['is_verified'])): ?>
-                        <span class="badge bg-success-subtle text-white border border-light small">
-                            <i class="fa-solid fa-circle-check"></i> Terverifikasi
+                        <span class="badge bg-white text-teal fw-bold px-3 py-1.5 rounded-pill shadow-xs" style="color: #0d9488;">
+                            <i class="fa-solid fa-circle-check text-success"></i> Terverifikasi
                         </span>
                     <?php else: ?>
-                        <span class="badge text-bg-warning text-dark small">Menunggu Verifikasi Admin</span>
+                        <span class="badge bg-warning text-dark fw-bold px-3 py-1.5 rounded-pill">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Menunggu Verifikasi
+                        </span>
                     <?php endif; ?>
                 </div>
-                <h2 class="fw-bold mb-1 fs-4 fs-md-2"><?= e($provider['business_name'] ?? $user['name']) ?></h2>
-                <p class="text-light opacity-90 mb-0 small">
+
+                <h1 class="fw-bold fs-2 mb-2 text-white">
+                    <?= e($provider['business_name'] ?? $user['name']) ?>
+                </h1>
+
+                <p class="text-white-50 mb-3 small">
                     <i class="fa-solid <?= e($provider['category_icon'] ?? 'fa-wrench') ?> text-warning me-1"></i>
-                    Bidang: <strong><?= e($provider['category_name'] ?? 'Jasa Umum') ?></strong> &bull;
-                    <i class="fa-solid fa-map-pin text-danger ms-2 me-1"></i> Wilayah: <?= e($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?>
+                    Bidang: <strong class="text-white"><?= e($provider['category_name'] ?? 'Jasa Umum') ?></strong> &bull;
+                    <i class="fa-solid fa-location-dot text-danger ms-2 me-1"></i>
+                    Wilayah: <strong class="text-white"><?= e($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?></strong>
                 </p>
+
+                <!-- Quick Performance Stats -->
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="provider-stat-badge">
+                        <div class="text-white-50" style="font-size: 0.72rem;">Rating Pelanggan</div>
+                        <div class="fw-bold fs-6">
+                            ⭐ <?= number_format((float)($provider['rating_avg'] ?? 0), 1) ?>
+                            <span class="text-white-50 fw-normal small">(<?= (int)($provider['reviews_count'] ?? 0) ?> ulasan)</span>
+                        </div>
+                    </div>
+                    <div class="provider-stat-badge">
+                        <div class="text-white-50" style="font-size: 0.72rem;">Pekerjaan Selesai</div>
+                        <div class="fw-bold fs-6">
+                            <i class="fa-solid fa-circle-check text-success me-1"></i>
+                            <?= (int)($provider['completed_jobs'] ?? 0) ?> Pekerjaan
+                        </div>
+                    </div>
+                    <div class="provider-stat-badge">
+                        <div class="text-white-50" style="font-size: 0.72rem;">Portofolio Hasil Kerja</div>
+                        <div class="fw-bold fs-6">
+                            <i class="fa-solid fa-images text-info me-1"></i>
+                            <?= $total_portfolios ?> Foto
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-5 text-md-end mt-3 mt-md-0 d-flex flex-wrap gap-2 justify-content-md-end">
-                <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-warning text-dark fw-bold py-2 px-3 shadow-sm flex-fill flex-md-grow-0" style="border-radius: 10px;" title="Kelola Saldo Dompet & Biaya Kontak">
-                    <i class="fa-solid fa-wallet me-1"></i> Saldo: Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
-                </a>
-                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-outline-light fw-bold py-2 px-3 shadow-sm flex-fill flex-md-grow-0" style="border-radius: 10px;" title="Lihat Tampilan Toko/Profil Publik Anda yang Dilihat Pelanggan">
-                    <i class="fa-solid fa-store me-1"></i> Profil Publik ↗
-                </a>
-                <a href="<?= BASE_URL ?>/provider/portfolio.php" class="btn btn-outline-light fw-bold py-2 px-3 shadow-sm flex-fill flex-md-grow-0" style="border-radius: 10px;">
-                    <i class="fa-solid fa-camera me-1"></i> Portofolio (<?= $total_portfolios ?>)
-                </a>
-                <a href="<?= BASE_URL ?>/provider/leads.php" class="btn btn-light fw-bold py-2 px-3 shadow-sm flex-fill flex-md-grow-0" style="color: var(--primary-dark); border-radius: 10px;">
-                    <i class="fa-solid fa-magnifying-glass me-1"></i> Cari Pekerjaan
-                </a>
+
+            <!-- Saldo & Quick Links -->
+            <div class="col-lg-5 text-lg-end">
+                <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-20 backdrop-blur d-inline-block text-start w-100" style="max-width: 380px;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-white-50 small"><i class="fa-solid fa-wallet me-1"></i> Saldo Dompet Mitra:</span>
+                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="badge bg-warning text-dark text-decoration-none fw-bold px-2 py-1 rounded-pill">
+                            + Top Up Saldo
+                        </a>
+                    </div>
+                    <div class="fs-3 fw-bold text-white mb-2">
+                        Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
+                    </div>
+                    <div class="text-white-50 mb-3" style="font-size: 0.72rem;">
+                        Biaya kontak flat <?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS (Rp 0)' ?> hanya dipotong saat Anda menyetujui pesanan baru.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-light btn-sm fw-bold flex-fill rounded-3 text-teal">
+                            <i class="fa-solid fa-store me-1"></i> Lihat Toko Publik ↗
+                        </a>
+                        <a href="<?= BASE_URL ?>/provider/portfolios.php" class="btn btn-outline-light btn-sm fw-bold rounded-3" title="Unggah Hasil Kerja">
+                            <i class="fa-solid fa-plus me-1"></i> Portofolio
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <?php if (!empty($error)): ?>
-        <div class="alert alert-danger mb-4"><?= e($error) ?></div>
+    <!-- 2. Banner Notifikasi Lowongan Baru Warga (Jika Ada) -->
+    <?php if (!empty($open_leads) && count($open_leads) > 0): ?>
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-3 mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" style="background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 44px; height: 44px; min-width: 44px;">
+                    <i class="fa-solid fa-bullhorn fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark">Ada <?= count($open_leads) ?> Lowongan Jasa Terbuka dari Warga!</h6>
+                    <span class="text-muted small">Pelanggan di Kab. Inhu sedang mencari jasa kategori Anda. Kirim penawaran sekarang untuk dapat orderan!</span>
+                </div>
+            </div>
+            <a href="#pills-leads" onclick="document.getElementById('pills-leads-tab').click();" class="btn btn-dark btn-sm fw-bold px-3 py-2 rounded-pill shadow-xs text-nowrap">
+                Lihat Lowongan Warga <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
     <?php endif; ?>
 
-    <!-- Stats Row (Grid 2x2 di Mobile, 4 Kolom di Desktop) -->
-    <div class="row g-2 g-md-3 mb-4">
-        <div class="col-6 col-lg-3">
-            <div class="stat-card border-top border-4 border-warning h-100 p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="small fw-semibold text-muted text-truncate">Saldo Dompet</span>
-                    <a href="<?= BASE_URL ?>/provider/wallet.php" class="stat-icon text-decoration-none" style="background: #fef3c7; color: #d97706; width: 34px; height: 34px;" title="Isi Saldo">
-                        <i class="fa-solid fa-wallet" style="font-size: 0.85rem;"></i>
-                    </a>
-                </div>
-                <div class="h5 h4-md fw-bold mb-1 text-teal text-truncate">Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?></div>
-                <div class="small text-muted d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
-                    <span>~<?= $lead_fee_amount > 0 ? floor(((float)($provider['wallet_balance'] ?? 0)) / $lead_fee_amount) : '∞' ?> order</span>
-                    <a href="<?= BASE_URL ?>/provider/wallet.php" class="text-teal fw-bold text-decoration-none">+ Top-Up</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card h-100 p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="small fw-semibold text-muted text-truncate">Disepakati</span>
-                    <div class="stat-icon" style="background: #dcfce7; color: #16a34a; width: 34px; height: 34px;">
-                        <i class="fa-solid fa-handshake" style="font-size: 0.85rem;"></i>
-                    </div>
-                </div>
-                <div class="h5 h4-md fw-bold mb-1"><?= (int)($prov_stats['accepted_offers'] ?? 0) ?></div>
-                <div class="small text-muted text-truncate" style="font-size: 0.72rem;">Pelanggan sepakat</div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card h-100 p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="small fw-semibold text-muted text-truncate">Pekerjaan Selesai</span>
-                    <div class="stat-icon" style="background: #e0f2fe; color: #0284c7; width: 34px; height: 34px;">
-                        <i class="fa-solid fa-check-circle" style="font-size: 0.85rem;"></i>
-                    </div>
-                </div>
-                <div class="h5 h4-md fw-bold mb-1"><?= (int)($provider['completed_jobs'] ?? 0) ?></div>
-                <div class="small text-muted text-truncate" style="font-size: 0.72rem;">Proyek terselesaikan</div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card h-100 p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="small fw-semibold text-muted text-truncate">Rating & Ulasan</span>
-                    <div class="stat-icon" style="background: #fdf2f8; color: #db2777; width: 34px; height: 34px;">
-                        <i class="fa-solid fa-star" style="font-size: 0.85rem;"></i>
-                    </div>
-                </div>
-                <div class="h5 h4-md fw-bold mb-1 d-flex align-items-center gap-1">
-                    <span><?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?></span>
-                    <i class="fa-solid fa-star text-warning" style="font-size: 0.8rem;"></i>
-                </div>
-                <div class="small text-muted text-truncate" style="font-size: 0.72rem;"><?= (int)($provider['reviews_count'] ?? 0) ?> ulasan</div>
-            </div>
-        </div>
+    <!-- 3. Modern Segmented Tab Navigation -->
+    <div class="mb-4">
+        <ul class="nav nav-pills modern-nav-pills shadow-xs" id="providerOrderTabs" role="tablist">
+            <!-- Tab 1: Pesanan Baru -->
+            <li class="nav-item flex-fill" role="presentation">
+                <button class="nav-link w-100 <?= (!empty($direct_orders) || empty($active_jobs)) ? 'active' : '' ?>" id="pills-new-tab" data-bs-toggle="pill" data-bs-target="#pills-new" type="button" role="tab" aria-controls="pills-new" aria-selected="<?= (!empty($direct_orders) || empty($active_jobs)) ? 'true' : 'false' ?>">
+                    <i class="fa-solid fa-inbox text-danger"></i>
+                    <span>Pesanan Baru</span>
+                    <?php if (count($direct_orders) > 0): ?>
+                        <span class="badge bg-danger rounded-pill px-2 py-1"><?= count($direct_orders) ?></span>
+                    <?php else: ?>
+                        <span class="badge bg-light text-muted rounded-pill px-2 py-1">0</span>
+                    <?php endif; ?>
+                </button>
+            </li>
+
+            <!-- Tab 2: Sedang Dikerjakan -->
+            <li class="nav-item flex-fill" role="presentation">
+                <button class="nav-link w-100 <?= (empty($direct_orders) && !empty($active_jobs)) ? 'active' : '' ?>" id="pills-active-tab" data-bs-toggle="pill" data-bs-target="#pills-active" type="button" role="tab" aria-controls="pills-active" aria-selected="<?= (empty($direct_orders) && !empty($active_jobs)) ? 'true' : 'false' ?>">
+                    <i class="fa-solid fa-motorcycle text-primary"></i>
+                    <span>Sedang Dikerjakan</span>
+                    <?php if (count($active_jobs) > 0): ?>
+                        <span class="badge bg-primary rounded-pill px-2 py-1"><?= count($active_jobs) ?></span>
+                    <?php else: ?>
+                        <span class="badge bg-light text-muted rounded-pill px-2 py-1">0</span>
+                    <?php endif; ?>
+                </button>
+            </li>
+
+            <!-- Tab 3: Bursa Lowongan Warga -->
+            <li class="nav-item flex-fill" role="presentation">
+                <button class="nav-link w-100" id="pills-leads-tab" data-bs-toggle="pill" data-bs-target="#pills-leads" type="button" role="tab" aria-controls="pills-leads" aria-selected="false">
+                    <i class="fa-solid fa-briefcase text-warning"></i>
+                    <span>Bursa Lowongan Warga</span>
+                    <?php if (count($open_leads) > 0): ?>
+                        <span class="badge bg-warning text-dark rounded-pill px-2 py-1"><?= count($open_leads) ?></span>
+                    <?php endif; ?>
+                </button>
+            </li>
+
+            <!-- Tab 4: Riwayat Selesai -->
+            <li class="nav-item flex-fill" role="presentation">
+                <button class="nav-link w-100" id="pills-completed-tab" data-bs-toggle="pill" data-bs-target="#pills-completed" type="button" role="tab" aria-controls="pills-completed" aria-selected="false">
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    <span>Riwayat Selesai</span>
+                    <span class="badge bg-light text-muted rounded-pill px-2 py-1"><?= count($completed_jobs) ?></span>
+                </button>
+            </li>
+        </ul>
     </div>
 
-    <!-- Bagian Pekerjaan Sedang Berjalan (Active Jobs) -->
-    <?php if (!empty($active_jobs)): ?>
-        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden; border-left: 5px solid var(--primary) !important;">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge text-bg-primary fw-bold px-2.5 py-1.5"><i class="fa-solid fa-spinner fa-spin me-1"></i> Sedang Dikerjakan</span>
-                    <h5 class="fw-bold mb-0 text-dark">Pekerjaan Sedang Berjalan (<?= count($active_jobs) ?>)</h5>
+    <!-- Tab Contents -->
+    <div class="tab-content" id="providerOrderTabsContent">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: PESANAN BARU (DIRECT ORDERS)       -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade <?= (!empty($direct_orders) || empty($active_jobs)) ? 'show active' : '' ?>" id="pills-new" role="tabpanel" aria-labelledby="pills-new-tab">
+            <?php if (empty($direct_orders)): ?>
+                <!-- Empty State -->
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-3">
+                    <div class="mx-auto mb-3 bg-light rounded-circle d-flex align-items-center justify-content-center text-muted" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-inbox fs-1 text-teal opacity-50"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">Belum Ada Pesanan Baru Masuk</h5>
+                    <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
+                        Pesanan langsung dari warga yang memilih profil toko Anda akan masuk di sini. Anda juga bisa mencari pekerjaan aktif di tab <strong>Bursa Lowongan Warga</strong>.
+                    </p>
+                    <div>
+                        <button type="button" onclick="document.getElementById('pills-leads-tab').click();" class="btn btn-outline-teal fw-bold px-4 py-2 rounded-pill shadow-xs">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Cek Lowongan Terbuka Warga
+                        </button>
+                    </div>
                 </div>
-                <span class="small text-muted d-none d-md-inline">Selesaikan dan konfirmasi untuk mendapatkan ulasan kepuasan dari pelanggan</span>
-            </div>
-            <div class="card-body p-3">
-                <div class="d-flex flex-column gap-3">
-                    <?php foreach ($active_jobs as $job): 
-                        $job_step = $job['progress_step'] ?? 'accepted';
+            <?php else: ?>
+                <div class="row g-3">
+                    <?php foreach ($direct_orders as $order): 
+                        $custPhoneClean = preg_replace('/[^0-9]/', '', $order['customer_phone'] ?? '');
+                        if (str_starts_with($custPhoneClean, '0')) {
+                            $custPhoneClean = '62' . substr($custPhoneClean, 1);
+                        }
+                        $waTextNew = urlencode("Halo Bapak/Ibu " . ($order['customer_name'] ?? 'Pelanggan') . ", saya " . ($provider['business_name'] ?? 'Mitra Jasa') . " dari Aplikasi Jasa Inhu mengenai pesanan jasa: \"" . $order['title'] . "\". Boleh kami konfirmasi lokasi dan jadwalnya?");
                     ?>
-                        <div class="p-3 rounded-3 border bg-white shadow-xs">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="d-flex flex-wrap align-items-center gap-1">
-                                    <span class="badge text-bg-light border text-primary small">
-                                        <i class="fa-solid <?= e($job['category_icon']) ?> me-1"></i> <?= e($job['category_name']) ?>
-                                    </span>
-                                    <span class="badge text-bg-light border text-muted small">
-                                        <i class="fa-solid fa-location-dot text-danger me-1"></i> Kec. <?= e($job['district_name']) ?>
-                                    </span>
-                                    <?php if ($job['order_origin'] === 'direct'): ?>
-                                        <span class="badge text-bg-warning text-dark small">
-                                            <i class="fa-solid fa-handshake-angle me-1"></i> Pesanan Langsung
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="badge text-bg-info text-white small">
-                                            <i class="fa-solid fa-gavel me-1"></i> Lelang Terbuka
-                                        </span>
-                                    <?php endif; ?>
-
-                                    <!-- Status Progres Terkini -->
-                                    <?php if ($job_step === 'on_the_way'): ?>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">
-                                            <i class="fa-solid fa-motorcycle me-1"></i> OTW Lokasi
-                                        </span>
-                                    <?php elseif ($job_step === 'working'): ?>
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small">
-                                            <i class="fa-solid fa-screwdriver-wrench me-1"></i> Sedang Dikerjakan
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle small">
-                                            <i class="fa-solid fa-check me-1"></i> Pesanan Diterima
-                                        </span>
-                                    <?php endif; ?>
+                        <div class="col-12">
+                            <div class="order-card priority-new shadow-sm p-4">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 pb-3 border-bottom mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-circle bg-danger-subtle text-danger">
+                                            <?= strtoupper(substr($order['customer_name'] ?? 'P', 0, 1)) ?>
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <h5 class="fw-bold text-dark mb-0"><?= e($order['customer_name']) ?></h5>
+                                                <span class="badge bg-danger text-white rounded-pill small">Pesanan Baru Menunggu Respon</span>
+                                            </div>
+                                            <div class="text-muted small mt-1">
+                                                <i class="fa-solid fa-map-pin text-danger me-1"></i> <?= e($order['district_name'] ?: 'Kab. Inhu') ?> &bull; 
+                                                <i class="fa-solid fa-clock me-1 ms-1"></i> Masuk: <?= format_date($order['created_at']) ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-md-end">
+                                        <div class="text-muted small">Anggaran Perkiraan Pelanggan:</div>
+                                        <div class="fs-5 fw-bold text-success">
+                                            <?= $order['budget'] ? format_rupiah($order['budget']) : '<span class="text-muted fs-6">Sesuai Kesepakatan</span>' ?>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="fw-bold text-teal fs-6">
-                                    <?= format_rupiah($job['agreed_price'] ?: $job['budget']) ?>
-                                </div>
-                            </div>
 
-                            <h5 class="fw-bold text-dark mb-1"><?= e($job['title']) ?></h5>
-                            <p class="small text-muted mb-3" style="white-space: pre-line;"><?= e($job['description']) ?></p>
-
-                            <!-- Mini Step Bar -->
-                            <div class="p-2 mb-3 rounded-2 bg-light border d-flex align-items-center justify-content-between small flex-wrap gap-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="text-muted fw-semibold">Tahap:</span>
-                                    <?php if ($job_step === 'created' || $job_step === 'accepted'): ?>
-                                        <span class="fw-bold text-primary"><i class="fa-solid fa-circle-dot me-1"></i>1. Diterima</span> &rarr; <span class="text-muted">2. OTW Lokasi</span> &rarr; <span class="text-muted">3. Pengerjaan</span> &rarr; <span class="text-muted">4. Selesai</span>
-                                    <?php elseif ($job_step === 'on_the_way'): ?>
-                                        <span class="text-success"><i class="fa-solid fa-check"></i> Diterima</span> &rarr; <span class="fw-bold text-primary"><i class="fa-solid fa-motorcycle me-1"></i>2. Menuju Lokasi</span> &rarr; <span class="text-muted">3. Pengerjaan</span> &rarr; <span class="text-muted">4. Selesai</span>
-                                    <?php elseif ($job_step === 'working'): ?>
-                                        <span class="text-success"><i class="fa-solid fa-check"></i> Diterima</span> &rarr; <span class="text-success"><i class="fa-solid fa-check"></i> Tiba di Lokasi</span> &rarr; <span class="fw-bold text-warning-emphasis"><i class="fa-solid fa-screwdriver-wrench me-1"></i>3. Dikerjakan</span> &rarr; <span class="text-muted">4. Selesai</span>
-                                    <?php endif; ?>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" data-bs-toggle="collapse" data-bs-target="#timelineJob<?= $job['id'] ?>">
-                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> Riwayat Status <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.7rem;"></i>
-                                </button>
-                            </div>
-
-                            <!-- Collapse Riwayat Jejak Status -->
-                            <div class="collapse mb-3" id="timelineJob<?= $job['id'] ?>">
-                                <div class="p-3 bg-white border rounded-3 small">
-                                    <div class="fw-bold text-dark mb-2"><i class="fa-solid fa-list-check me-1 text-teal"></i> Jejak Aktivitas Pesanan:</div>
-                                    <?php 
-                                        $job_timeline = get_order_timeline((int)$job['id']);
-                                        if (empty($job_timeline)):
-                                    ?>
-                                        <span class="text-muted">Belum ada riwayat aktivitas tercatat.</span>
-                                    <?php else: ?>
-                                        <div class="d-flex flex-column gap-2">
-                                            <?php foreach ($job_timeline as $ev): ?>
-                                                <div class="d-flex justify-content-between align-items-start border-bottom pb-1">
-                                                    <div>
-                                                        <span class="fw-semibold text-dark"><?= e($ev['title']) ?></span>
-                                                        <?php if (!empty($ev['note'])): ?>
-                                                            <div class="text-muted" style="font-size: 0.8rem;"><?= e($ev['note']) ?></div>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                    <span class="text-muted" style="font-size: 0.75rem; white-space: nowrap;"><?= date('H:i, d M', strtotime($ev['created_at'])) ?></span>
-                                                </div>
-                                            <?php endforeach; ?>
+                                <!-- Job Detail Description -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-dark mb-1">
+                                        <i class="fa-solid <?= e($order['category_icon'] ?? 'fa-wrench') ?> text-teal me-1"></i>
+                                        <?= e($order['title']) ?>
+                                    </h6>
+                                    <p class="text-secondary small mb-2 bg-light p-3 rounded-3 border">
+                                        <?= nl2br(e($order['description'])) ?>
+                                    </p>
+                                    <?php if (!empty($order['address'])): ?>
+                                        <div class="small text-muted mb-2">
+                                            <i class="fa-solid fa-location-dot text-danger me-1"></i> <strong>Alamat Pelanggan:</strong> <?= e($order['address']) ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                            </div>
 
-                            <div class="d-flex flex-wrap align-items-center justify-content-between pt-2 border-top gap-2 small">
-                                <span class="text-muted">
-                                    Pelanggan: <strong><?= e($job['customer_name']) ?></strong> &bull; Dimulai: <?= format_date($job['created_at'], true) ?>
-                                </span>
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    <a href="<?= BASE_URL ?>/chat.php?to_user=<?= $job['user_id'] ?>" class="btn btn-sm btn-outline-teal fw-semibold">
-                                        <i class="fa-solid fa-comments me-1"></i> Chat
-                                    </a>
-                                    <a href="https://wa.me/<?= preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $job['customer_phone'])) ?>?text=Halo%20<?= urlencode($job['customer_name']) ?>,%20kami%20dari%20<?= urlencode($provider['business_name']) ?>%20sedang%20mengerjakan%20jasa:%20'<?= urlencode($job['title']) ?>'" target="_blank" class="btn btn-sm btn-success">
-                                        <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
-                                    </a>
+                                <!-- Quick Chat & Actions Bar -->
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pt-2">
+                                    <!-- Direct Chat Contacts -->
+                                    <div class="d-flex gap-2">
+                                        <?php if (!empty($custPhoneClean)): ?>
+                                            <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextNew ?>" target="_blank" class="btn btn-wa-call btn-sm px-3 py-2 rounded-3" title="Chat WhatsApp Pelanggan">
+                                                <i class="fa-brands fa-whatsapp fs-6 me-1"></i> Hubungi WA
+                                            </a>
+                                        <?php endif; ?>
+                                        <a href="<?= BASE_URL ?>/chat.php?user_id=<?= $order['user_id'] ?>" class="btn btn-outline-teal btn-sm px-3 py-2 rounded-3" title="Obrolan Pesan di Aplikasi">
+                                            <i class="fa-solid fa-comments me-1"></i> Chat Aplikasi
+                                        </a>
+                                    </div>
 
-                                    <!-- Tombol Transisi Status Interaktif -->
-                                    <?php if ($job_step === 'created' || $job_step === 'accepted'): ?>
-                                        <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="d-inline"
-                                              data-confirm="Pelanggan akan menerima notifikasi bahwa Anda sedang dalam perjalanan meluncur ke lokasi."
-                                              data-confirm-title="Meluncur ke Lokasi Pelanggan?"
-                                              data-confirm-btn="Ya, Sedang Meluncur"
-                                              data-confirm-cancel="Batal"
-                                              data-confirm-type="info">
+                                    <!-- Main Accept / Reject Buttons -->
+                                    <div class="d-flex gap-2">
+                                        <!-- Reject Form -->
+                                        <form method="POST" action="<?= BASE_URL ?>/provider/index.php" onsubmit="return confirm('Yakin ingin menolak pesanan ini?');">
                                             <?= csrf_field() ?>
-                                            <input type="hidden" name="action" value="update_order_step">
-                                            <input type="hidden" name="request_id" value="<?= $job['id'] ?>">
-                                            <input type="hidden" name="step" value="on_the_way">
-                                            <button type="submit" class="btn btn-sm btn-primary fw-semibold shadow-xs">
-                                                <i class="fa-solid fa-motorcycle me-1"></i> Sedang Menuju Lokasi
+                                            <input type="hidden" name="action" value="reject_direct_order">
+                                            <input type="hidden" name="request_id" value="<?= $order['id'] ?>">
+                                            <input type="hidden" name="reject_reason" value="Mitra sedang ada jadwal pekerjaan lain">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm px-3 py-2 rounded-3 fw-bold">
+                                                <i class="fa-solid fa-xmark me-1"></i> Tolak
                                             </button>
                                         </form>
-                                    <?php elseif ($job_step === 'on_the_way'): ?>
-                                        <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="d-inline"
-                                              data-confirm="Status pesanan akan diubah menjadi 'Sedang Dikerjakan' di aplikasi pelanggan."
-                                              data-confirm-title="Mulai Pengerjaan Jasa Sekarang?"
-                                              data-confirm-btn="Ya, Mulai Kerjakan"
-                                              data-confirm-cancel="Batal"
-                                              data-confirm-type="warning">
+
+                                        <!-- Accept Form -->
+                                        <form method="POST" action="<?= BASE_URL ?>/provider/index.php" onsubmit="return confirm('Terima pesanan ini dan mulai pengerjaan? Biaya kontak <?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS' ?> akan dipotong dari saldo dompet Anda.');">
                                             <?= csrf_field() ?>
-                                            <input type="hidden" name="action" value="update_order_step">
-                                            <input type="hidden" name="request_id" value="<?= $job['id'] ?>">
-                                            <input type="hidden" name="step" value="working">
-                                            <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold shadow-xs">
-                                                <i class="fa-solid fa-screwdriver-wrench me-1"></i> Mulai Pengerjaan
+                                            <input type="hidden" name="action" value="accept_direct_order">
+                                            <input type="hidden" name="request_id" value="<?= $order['id'] ?>">
+                                            <button type="submit" class="btn btn-success btn-sm px-4 py-2 rounded-3 fw-bold shadow-xs">
+                                                <i class="fa-solid fa-check me-1"></i> TERIMA PESANAN SEKARANG
                                             </button>
                                         </form>
-                                    <?php endif; ?>
-
-                                    <button type="button" class="btn btn-sm <?= ($job_step === 'working') ? 'btn-success text-white' : 'btn-outline-success' ?> fw-bold" onclick="openCompleteOrderModal(<?= $job['id'] ?>, '<?= e(addslashes($job['title'])) ?>', '<?= e(addslashes($job['customer_name'])) ?>', <?= (float)($job['agreed_price'] ?: $job['budget']) ?>)">
-                                        <i class="fa-solid fa-circle-check me-1"></i> Tandai Selesai & Terbitkan Tagihan
-                                    </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
-    <?php endif; ?>
 
-    <!-- Bagian Pesanan Langsung Masuk (Jika Ada) -->
-    <?php if (!empty($direct_orders)): ?>
-        <div class="card border-warning shadow-sm mb-4" style="border-width: 2px;">
-            <div class="card-header bg-warning bg-opacity-10 py-3 d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge text-bg-warning text-dark"><i class="fa-solid fa-star me-1"></i> Pesanan Langsung</span>
-                    <h5 class="fw-bold mb-0 text-dark">Pesanan Khusus Masuk untuk Anda (<?= count($direct_orders) ?>)</h5>
+        <!-- ========================================== -->
+        <!-- TAB 2: SEDANG DIKERJAKAN (ACTIVE JOBS)    -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade <?= (empty($direct_orders) && !empty($active_jobs)) ? 'show active' : '' ?>" id="pills-active" role="tabpanel" aria-labelledby="pills-active-tab">
+            <?php if (empty($active_jobs)): ?>
+                <!-- Empty State -->
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-3">
+                    <div class="mx-auto mb-3 bg-light rounded-circle d-flex align-items-center justify-content-center text-muted" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-motorcycle fs-1 text-primary opacity-50"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">Tidak Ada Pekerjaan yang Sedang Dikerjakan</h5>
+                    <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
+                        Saat Anda menerima pesanan dari warga, Anda dapat memantau status perjalanan (OTW), mulai pengerjaan, dan menerbitkan kwitansi akhir di sini.
+                    </p>
+                    <div>
+                        <button type="button" onclick="document.getElementById('pills-new-tab').click();" class="btn btn-teal fw-bold px-4 py-2 rounded-pill shadow-xs">
+                            <i class="fa-solid fa-inbox me-1"></i> Lihat Pesanan Masuk
+                        </button>
+                    </div>
                 </div>
-                <span class="small text-muted">Pelanggan menunjuk usaha Anda secara spesifik</span>
-            </div>
-            <div class="card-body p-3">
-                <div class="d-flex flex-column gap-3">
-                    <?php foreach ($direct_orders as $do): ?>
-                        <div class="p-3 rounded-3 border bg-white shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <span class="badge text-bg-light border text-primary small">
-                                        <i class="fa-solid <?= e($do['category_icon']) ?> me-1"></i> <?= e($do['category_name']) ?>
-                                    </span>
-                                    <span class="badge text-bg-light border text-muted small ms-1">
-                                        <i class="fa-solid fa-location-dot text-danger me-1"></i> Kec. <?= e($do['district_name']) ?>
-                                    </span>
-                                    <span class="badge text-bg-warning text-dark small ms-1">
-                                        <i class="fa-solid fa-handshake-angle me-1"></i> Ditunjuk Langsung
-                                    </span>
+            <?php else: ?>
+                <div class="row g-3">
+                    <?php foreach ($active_jobs as $job): 
+                        $step = $job['progress_step'] ?? 'accepted';
+                        $custPhoneClean = preg_replace('/[^0-9]/', '', $job['customer_phone'] ?? '');
+                        if (str_starts_with($custPhoneClean, '0')) {
+                            $custPhoneClean = '62' . substr($custPhoneClean, 1);
+                        }
+                        $waTextActive = urlencode("Halo Bapak/Ibu " . ($job['customer_name'] ?? 'Pelanggan') . ", saya " . ($provider['business_name'] ?? 'Mitra Jasa') . " dari Aplikasi Jasa Inhu yang sedang mengerjakan pesanan: \"" . $job['title'] . "\".");
+                        $finalEstimate = (int)($job['agreed_price'] ?: $job['budget'] ?: 0);
+                    ?>
+                        <div class="col-12">
+                            <div class="order-card priority-active shadow-sm p-4">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 pb-3 border-bottom mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-circle bg-primary-subtle text-primary">
+                                            <?= strtoupper(substr($job['customer_name'] ?? 'P', 0, 1)) ?>
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <h5 class="fw-bold text-dark mb-0"><?= e($job['customer_name']) ?></h5>
+                                                <?php if ($step === 'accepted'): ?>
+                                                    <span class="badge bg-primary text-white rounded-pill small">Pesanan Diterima - Siap Berangkat</span>
+                                                <?php elseif ($step === 'on_the_way'): ?>
+                                                    <span class="badge bg-info text-white rounded-pill small">🛵 Mitra Sedang Menuju Lokasi (OTW)</span>
+                                                <?php elseif ($step === 'working'): ?>
+                                                    <span class="badge bg-warning text-dark rounded-pill small">🔧 Sedang Melakukan Pengerjaan</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="text-muted small mt-1">
+                                                <i class="fa-solid fa-location-dot text-danger me-1"></i> <?= e($job['district_name'] ?: 'Kab. Inhu') ?> &bull; 
+                                                <i class="fa-solid fa-clock me-1 ms-1"></i> Mulai: <?= format_date($job['created_at']) ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-md-end">
+                                        <div class="text-muted small">Biaya Kesepakatan:</div>
+                                        <div class="fs-5 fw-bold text-teal">
+                                            <?= $finalEstimate > 0 ? format_rupiah($finalEstimate) : 'Sesuai Tagihan Akhir' ?>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="fw-bold text-teal fs-6">
-                                    <?= format_rupiah($do['budget']) ?>
+
+                                <!-- Interactive Modern Stepper -->
+                                <div class="stepper-progress">
+                                    <!-- Step 1: Diterima -->
+                                    <div class="stepper-step completed">
+                                        <div class="stepper-dot"><i class="fa-solid fa-check"></i></div>
+                                        <span class="stepper-label">1. Diterima</span>
+                                    </div>
+                                    <!-- Step 2: OTW -->
+                                    <div class="stepper-step <?= in_array($step, ['on_the_way', 'working', 'completed']) ? 'completed' : ($step === 'accepted' ? 'active' : '') ?>">
+                                        <div class="stepper-dot">
+                                            <?= in_array($step, ['on_the_way', 'working', 'completed']) ? '<i class="fa-solid fa-check"></i>' : '2' ?>
+                                        </div>
+                                        <span class="stepper-label">2. Menuju Lokasi</span>
+                                    </div>
+                                    <!-- Step 3: Bekerja -->
+                                    <div class="stepper-step <?= in_array($step, ['working', 'completed']) ? 'completed' : ($step === 'on_the_way' ? 'active' : '') ?>">
+                                        <div class="stepper-dot">
+                                            <?= in_array($step, ['working', 'completed']) ? '<i class="fa-solid fa-check"></i>' : '3' ?>
+                                        </div>
+                                        <span class="stepper-label">3. Pengerjaan</span>
+                                    </div>
+                                    <!-- Step 4: Selesai -->
+                                    <div class="stepper-step <?= ($step === 'working') ? 'active' : '' ?>">
+                                        <div class="stepper-dot">4</div>
+                                        <span class="stepper-label">4. Selesai & Kwitansi</span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <h5 class="fw-bold text-dark mb-1"><?= e($do['title']) ?></h5>
-                            <p class="small text-muted mb-3" style="white-space: pre-line;"><?= e($do['description']) ?></p>
-
-                            <div class="d-flex flex-wrap align-items-center justify-content-between pt-2 border-top gap-2 small">
-                                <span class="text-muted">
-                                    Pemesan: <strong><?= e($do['customer_name']) ?></strong> &bull; Dibuat: <?= format_date($do['created_at'], true) ?>
-                                </span>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a href="<?= BASE_URL ?>/chat.php?to_user=<?= $do['user_id'] ?>" class="btn btn-sm btn-outline-teal fw-semibold">
-                                        <i class="fa-solid fa-comments me-1"></i> Chat
-                                    </a>
-                                    <a href="https://wa.me/<?= preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $do['customer_phone'])) ?>?text=Halo%20<?= urlencode($do['customer_name']) ?>,%20kami%20dari%20<?= urlencode($provider['business_name']) ?>%20telah%20menerima%20pesanan%20jasa%20Anda:%20'<?= urlencode($do['title']) ?>'" target="_blank" class="btn btn-sm btn-success">
-                                        <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
-                                    </a>
-                                    <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="d-inline"
-                                          data-confirm="<?= $lead_fee_amount > 0 ? "Saldo deposit Anda akan dipotong Rp " . number_format($lead_fee_amount, 0, ',', '.') . " sebagai biaya kontak." : "Biaya kontak saat ini GRATIS (Promo Rp 0)!" ?>"
-                                          data-confirm-title="Terima Pesanan Langsung Ini?"
-                                          data-confirm-btn="Ya, Terima & Kerjakan"
-                                          data-confirm-cancel="Batal"
-                                          data-confirm-type="success">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="action" value="accept_direct_order">
-                                        <input type="hidden" name="request_id" value="<?= $do['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-primary-custom fw-semibold">
-                                            <i class="fa-solid fa-circle-check me-1"></i> Terima & Mulai Kerjakan
-                                            <span class="badge bg-white text-dark ms-1" style="font-size: 0.65rem;">
-                                                <?= $lead_fee_amount > 0 ? '-Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS' ?>
-                                            </span>
-                                        </button>
-                                    </form>
-                                    <?php if ($do['my_response_id']): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-2 px-3">
-                                            <i class="fa-solid fa-check"></i> Tawaran Terkirim
-                                        </span>
-                                    <?php else: ?>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#directOfferForm<?= $do['id'] ?>">
-                                            <i class="fa-solid fa-paper-plane me-1"></i> Ajukan Biaya Khusus
-                                        </button>
+                                <!-- Job Detail Description -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-dark mb-1">
+                                        <i class="fa-solid <?= e($job['category_icon'] ?? 'fa-wrench') ?> text-teal me-1"></i>
+                                        <?= e($job['title']) ?>
+                                    </h6>
+                                    <p class="text-secondary small mb-2 bg-light p-3 rounded-3 border">
+                                        <?= nl2br(e($job['description'])) ?>
+                                    </p>
+                                    <?php if (!empty($job['address'])): ?>
+                                        <div class="small text-muted mb-2">
+                                            <i class="fa-solid fa-map-pin text-danger me-1"></i> <strong>Alamat Lokasi:</strong> <?= e($job['address']) ?>
+                                        </div>
                                     <?php endif; ?>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#rejectDirectForm<?= $do['id'] ?>">
-                                        <i class="fa-solid fa-xmark me-1"></i> Tolak
-                                    </button>
                                 </div>
-                            </div>
 
-                            <!-- Form Tolak Pesanan Langsung -->
-                            <div class="collapse mt-3 pt-3 border-top" id="rejectDirectForm<?= $do['id'] ?>">
-                                <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="bg-danger-subtle p-3 rounded-3 border border-danger-subtle">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="action" value="reject_direct_order">
-                                    <input type="hidden" name="request_id" value="<?= $do['id'] ?>">
-                                    <h6 class="fw-bold small mb-2 text-danger"><i class="fa-solid fa-circle-exclamation me-1"></i> Alasan Penolakan Pesanan</h6>
-                                    <div class="mb-2">
-                                        <input type="text" name="reject_reason" class="form-control form-control-sm" placeholder="Contoh: Jadwal kerja penuh hari ini / Lokasi di luar jangkauan" required>
-                                    </div>
-                                    <div class="text-end">
-                                        <button type="button" class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#rejectDirectForm<?= $do['id'] ?>">Batal</button>
-                                        <button type="submit" class="btn btn-sm btn-danger fw-semibold">Konfirmasi Tolak Pesanan</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Form Respon Pesanan Langsung -->
-                            <?php if (!$do['my_response_id']): ?>
-                                <div class="collapse mt-3 pt-3 border-top" id="directOfferForm<?= $do['id'] ?>">
-                                    <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="bg-light p-3 rounded-3 border">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="action" value="submit_offer">
-                                        <input type="hidden" name="request_id" value="<?= $do['id'] ?>">
-                                        <h6 class="fw-bold small mb-2 text-dark">Kirimkan Konfirmasi Biaya & Kesiapan Anda</h6>
-                                        <div class="row g-2 mb-2">
-                                            <div class="col-md-6">
-                                                <label class="form-label small fw-semibold">Biaya / Harga Jasa yang Disepakati (Rp) <span class="text-danger">*</span></label>
-                                                <input type="number" name="offer_price" class="form-control form-control-sm" placeholder="Contoh: 150000" value="<?= $do['budget'] ?: '' ?>" required>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label small fw-semibold">Estimasi Waktu Pengerjaan / Kedatangan</label>
-                                                <input type="text" name="estimated_duration" class="form-control form-control-sm" placeholder="Contoh: Datang hari ini jam 14.00 WIB" required>
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="form-label small fw-semibold">Pesan Konfirmasi untuk Pemesan <span class="text-danger">*</span></label>
-                                                <textarea name="message" rows="2" class="form-control form-control-sm" placeholder="Contoh: Halo Pak, kami siap meluncur ke lokasi sesuai jadwal yang diminta..." required></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <button type="button" class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#directOfferForm<?= $do['id'] ?>">Batal</button>
-                                            <button type="submit" class="btn btn-sm btn-primary-custom">Kirim Konfirmasi ke Pemesan</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <!-- Peluang Pekerjaan Terbaru di Inhu (Umum / Lelang) -->
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card border shadow-sm">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0 text-dark">
-                        <i class="fa-solid fa-bullhorn text-primary me-2"></i> Peluang Pekerjaan Terbuka di Inhu
-                    </h5>
-                    <a href="<?= BASE_URL ?>/provider/leads.php" class="small text-teal text-decoration-none fw-semibold">
-                        Lihat Semua &rarr;
-                    </a>
-                </div>
-                <div class="card-body p-3">
-                    <?php if (!empty($open_leads)): ?>
-                        <div class="d-flex flex-column gap-3">
-                            <?php foreach ($open_leads as $lead): ?>
-                                <div class="p-3 rounded-3 border bg-white shadow-sm">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <span class="badge text-bg-light border text-primary small">
-                                                <i class="fa-solid <?= e($lead['category_icon']) ?> me-1"></i> <?= e($lead['category_name']) ?>
-                                            </span>
-                                            <span class="badge text-bg-light border text-muted small ms-1">
-                                                <i class="fa-solid fa-location-dot text-danger me-1"></i> Kec. <?= e($lead['district_name']) ?>
-                                            </span>
-                                            <?php if ($lead['urgency'] === 'urgent'): ?>
-                                                <span class="badge text-bg-danger small ms-1">Mendesak</span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="fw-bold text-teal">
-                                            <?= format_rupiah($lead['budget']) ?>
-                                        </div>
+                                <!-- Action Buttons Stepper Bar -->
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pt-2">
+                                    <!-- Direct Chat Contacts -->
+                                    <div class="d-flex gap-2">
+                                        <?php if (!empty($custPhoneClean)): ?>
+                                            <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextActive ?>" target="_blank" class="btn btn-wa-call btn-sm px-3 py-2 rounded-3" title="Chat WhatsApp Pelanggan">
+                                                <i class="fa-brands fa-whatsapp fs-6 me-1"></i> Hubungi WA
+                                            </a>
+                                        <?php endif; ?>
+                                        <a href="<?= BASE_URL ?>/chat.php?user_id=<?= $job['user_id'] ?>" class="btn btn-outline-teal btn-sm px-3 py-2 rounded-3" title="Obrolan Pesan di Aplikasi">
+                                            <i class="fa-solid fa-comments me-1"></i> Chat Aplikasi
+                                        </a>
                                     </div>
 
-                                    <h6 class="fw-bold text-dark mb-1"><?= e($lead['title']) ?></h6>
-                                    <p class="small text-muted mb-2"><?= e($lead['description']) ?></p>
-
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between pt-2 border-top small">
-                                        <span class="text-muted">
-                                            Pemohon: <strong><?= e($lead['customer_name']) ?></strong> &bull; <?= $lead['total_offers'] ?> Tawaran Masuk
-                                        </span>
-                                        <div>
-                                            <?php if ($lead['my_response_id']): ?>
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                                    <i class="fa-solid fa-check"></i> Sudah Menawar
-                                                </span>
-                                            <?php else: ?>
-                                                <button type="button" class="btn btn-sm btn-primary-custom py-1 px-3" data-bs-toggle="collapse" data-bs-target="#offerForm<?= $lead['id'] ?>">
-                                                    <i class="fa-solid fa-paper-plane me-1"></i> Kirim Tawaran
+                                    <!-- Next Step Button Based on Step -->
+                                    <div class="d-flex flex-fill justify-content-md-end">
+                                        <?php if ($step === 'accepted'): ?>
+                                            <!-- Step 1 to Step 2: OTW -->
+                                            <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="w-100" style="max-width: 320px;">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="action" value="update_order_step">
+                                                <input type="hidden" name="request_id" value="<?= $job['id'] ?>">
+                                                <input type="hidden" name="step" value="on_the_way">
+                                                <button type="submit" class="btn btn-primary fw-bold w-100 py-2.5 rounded-3 shadow-xs">
+                                                    <i class="fa-solid fa-motorcycle me-2"></i> Saya Menuju Lokasi (OTW)
                                                 </button>
-                                            <?php endif; ?>
-                                        </div>
+                                            </form>
+
+                                        <?php elseif ($step === 'on_the_way'): ?>
+                                            <!-- Step 2 to Step 3: Working -->
+                                            <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="w-100" style="max-width: 320px;">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="action" value="update_order_step">
+                                                <input type="hidden" name="request_id" value="<?= $job['id'] ?>">
+                                                <input type="hidden" name="step" value="working">
+                                                <button type="submit" class="btn btn-warning text-dark fw-bold w-100 py-2.5 rounded-3 shadow-xs">
+                                                    <i class="fa-solid fa-wrench me-2"></i> Sudah Sampai & Mulai Kerja
+                                                </button>
+                                            </form>
+
+                                        <?php elseif ($step === 'working'): ?>
+                                            <!-- Step 3 to Step 4: Complete Job Modal -->
+                                            <button type="button" onclick="openCompleteOrderModal(<?= $job['id'] ?>, '<?= addslashes(e($job['title'])) ?>', '<?= addslashes(e($job['customer_name'])) ?>', <?= $finalEstimate ?>)" class="btn btn-success fw-bold w-100 py-2.5 rounded-3 shadow-xs" style="max-width: 340px;">
+                                                <i class="fa-solid fa-circle-check me-2"></i> Selesai & Buat Tagihan Kwitansi
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: BURSA LOWONGAN WARGA (OPEN LEADS)  -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade" id="pills-leads" role="tabpanel" aria-labelledby="pills-leads-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0">Permintaan Jasa Terbuka Warga Inhu</h5>
+                <span class="badge bg-teal-subtle text-teal px-3 py-2 rounded-pill small">Sistem Penawaran Harga</span>
+            </div>
+
+            <?php if (empty($open_leads)): ?>
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-3">
+                    <div class="mx-auto mb-3 bg-light rounded-circle d-flex align-items-center justify-content-center text-muted" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-bullhorn fs-1 text-warning opacity-50"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">Belum Ada Lowongan Jasa Terbuka Saat Ini</h5>
+                    <p class="text-muted small mx-auto mb-0" style="max-width: 450px;">
+                        Saat ada warga Indragiri Hulu yang membuat permintaan jasa lelang untuk umum, daftarnya akan segera ditampilkan di sini.
+                    </p>
+                </div>
+            <?php else: ?>
+                <div class="row g-3">
+                    <?php foreach ($open_leads as $lead): ?>
+                        <div class="col-md-6">
+                            <div class="order-card shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                        <span class="badge bg-teal-subtle text-teal rounded-pill small">
+                                            <i class="fa-solid <?= e($lead['category_icon'] ?? 'fa-wrench') ?> me-1"></i> <?= e($lead['category_name']) ?>
+                                        </span>
+                                        <span class="badge bg-light text-muted small">
+                                            <?= $lead['total_offers'] ?> Tawaran Masuk
+                                        </span>
                                     </div>
 
-                                    <!-- Collapsible Form Kirim Tawaran -->
-                                    <?php if (!$lead['my_response_id']): ?>
-                                        <div class="collapse mt-3 pt-3 border-top" id="offerForm<?= $lead['id'] ?>">
-                                            <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="bg-light p-3 rounded-3 border">
+                                    <h6 class="fw-bold text-dark fs-6 mb-1"><?= e($lead['title']) ?></h6>
+                                    <p class="text-muted small mb-3">
+                                        <?= e(mb_strimwidth($lead['description'], 0, 140, '...')) ?>
+                                    </p>
+
+                                    <div class="d-flex align-items-center justify-content-between small text-muted mb-3 bg-light p-2.5 rounded-3">
+                                        <div><i class="fa-solid fa-location-dot text-danger me-1"></i> <?= e($lead['district_name'] ?: 'Inhu') ?></div>
+                                        <div><i class="fa-solid fa-wallet text-success me-1"></i> Anggaran: <strong class="text-dark"><?= $lead['budget'] ? format_rupiah($lead['budget']) : 'Nego' ?></strong></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <?php if ($lead['my_response_id']): ?>
+                                        <button class="btn btn-outline-secondary btn-sm w-100 rounded-3" disabled>
+                                            <i class="fa-solid fa-check text-success me-1"></i> Tawaran Anda Sudah Terkirim
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="btn btn-warning text-dark fw-bold btn-sm w-100 rounded-3 shadow-xs" type="button" data-bs-toggle="collapse" data-bs-target="#offerForm<?= $lead['id'] ?>">
+                                            <i class="fa-solid fa-paper-plane me-1"></i> Ajukan Penawaran Harga
+                                        </button>
+
+                                        <!-- Collapsible Bidding Form -->
+                                        <div class="collapse mt-3" id="offerForm<?= $lead['id'] ?>">
+                                            <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="p-3 bg-light rounded-3 border small">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="action" value="submit_offer">
                                                 <input type="hidden" name="request_id" value="<?= $lead['id'] ?>">
-                                                
-                                                <h6 class="fw-bold small mb-2 text-dark">Kirimkan Penawaran Anda ke Pelanggan</h6>
-                                                <div class="row g-2 mb-2">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-semibold">Harga Penawaran Anda (Rp) <span class="text-danger">*</span></label>
-                                                        <input type="number" name="offer_price" class="form-control form-control-sm" placeholder="Contoh: 150000" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-semibold">Estimasi Waktu Pengerjaan</label>
-                                                        <input type="text" name="estimated_duration" class="form-control form-control-sm" placeholder="Contoh: 2 jam / 1 hari kerja">
-                                                    </div>
-                                                    <div class="col-12">
-                                                        <label class="form-label small fw-semibold">Pesan / Penjelasan untuk Pelanggan <span class="text-danger">*</span></label>
-                                                        <textarea name="message" rows="2" class="form-control form-control-sm" placeholder="Perkenalkan diri dan jelaskan kesiapan Anda mengerjakan..." required></textarea>
-                                                    </div>
+
+                                                <div class="mb-2">
+                                                    <label class="form-label fw-bold mb-1">Harga Tawaran Anda (Rp):</label>
+                                                    <input type="number" name="offer_price" class="form-control form-control-sm" placeholder="Contoh: 150000" required value="<?= $lead['budget'] ?: '' ?>">
                                                 </div>
-                                                <div class="text-end">
-                                                    <button type="button" class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#offerForm<?= $lead['id'] ?>">Batal</button>
-                                                    <button type="submit" class="btn btn-sm btn-primary-custom">Kirim Penawaran</button>
+                                                <div class="mb-2">
+                                                    <label class="form-label fw-bold mb-1">Estimasi Waktu Pengerjaan:</label>
+                                                    <input type="text" name="estimated_duration" class="form-control form-control-sm" placeholder="Contoh: 2 Jam / 1 Hari" required>
                                                 </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label fw-bold mb-1">Pesan untuk Pelanggan:</label>
+                                                    <textarea name="message" rows="2" class="form-control form-control-sm" placeholder="Jelaskan keahlian dan kesiapan Anda..." required></textarea>
+                                                </div>
+                                                <button type="submit" class="btn btn-success btn-sm fw-bold w-100 rounded-3">
+                                                    Kirim Tawaran Sekarang
+                                                </button>
                                             </form>
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                            <?php endforeach; ?>
+                            </div>
                         </div>
-                    <?php else: ?>
-                        <div class="text-center py-4 text-muted">
-                            <i class="fa-solid fa-clipboard-check fs-2 text-muted mb-2 d-block"></i>
-                            Saat ini belum ada permintaan jasa terbuka baru di Inhu.
-                        </div>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
 
-        <!-- Sidebar: Dompet Saldo, Obrolan, Ulasan & Tawaran Saya -->
-        <div class="col-lg-4">
-            <!-- Widget Dompet Deposit Mitra -->
-            <div class="card border-0 shadow-sm mb-4 text-white" style="background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%); border-radius: 14px;">
-                <div class="card-body p-3.5">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small text-uppercase fw-bold text-white-50"><i class="fa-solid fa-wallet text-warning me-1"></i> Dompet Saldo Deposit</span>
-                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="badge bg-warning text-dark text-decoration-none py-1.5 px-2.5 fw-bold shadow-xs">
-                            + Isi Saldo
-                        </a>
-                    </div>
-                    <div class="h3 fw-bold text-white mb-0.5">
-                        Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
-                    </div>
-                    <div class="text-white-50 mb-1" style="font-size: 0.7rem;">
-                        <i class="fa-solid fa-lock text-warning me-1"></i> Kredit Kuota Pesanan (Non-Tunai)
-                    </div>
-                    <div class="small text-white-50 d-flex justify-content-between align-items-center border-top border-white border-opacity-15 pt-2 mt-2">
-                        <span>Kuota: <strong class="text-white">~<?= $lead_fee_amount > 0 ? floor(((float)($provider['wallet_balance'] ?? 0)) / $lead_fee_amount) : '∞' ?> Order</strong></span>
-                        <span>Biaya: <strong class="text-white"><?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS' ?>/order</strong></span>
-                    </div>
-                </div>
+        <!-- ========================================== -->
+        <!-- TAB 4: RIWAYAT SELESAI (COMPLETED JOBS)   -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade" id="pills-completed" role="tabpanel" aria-labelledby="pills-completed-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0">Riwayat Pekerjaan Selesai</h5>
+                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill small">Arsip Kwitansi Resmi</span>
             </div>
 
-            <!-- Card Obrolan & Pesan Pelanggan -->
-            <div class="card border shadow-sm mb-4" style="border-radius: 14px; overflow: hidden;">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <div class="fw-bold small text-dark d-flex align-items-center gap-1.5">
-                        <i class="fa-solid fa-comments text-teal"></i>
-                        <span>OBROLAN PELANGGAN</span>
+            <?php if (empty($completed_jobs)): ?>
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-3">
+                    <div class="mx-auto mb-3 bg-light rounded-circle d-flex align-items-center justify-content-center text-muted" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-circle-check fs-1 text-success opacity-50"></i>
                     </div>
-                    <a href="<?= BASE_URL ?>/chat.php" class="small text-teal text-decoration-none fw-semibold">
-                        Buka Semua ↗
-                    </a>
+                    <h5 class="fw-bold text-dark mb-1">Belum Ada Riwayat Pekerjaan Selesai</h5>
+                    <p class="text-muted small mx-auto mb-0" style="max-width: 450px;">
+                        Pekerjaan yang telah Anda selesaikan dan terbitkan kwitansinya akan tersimpan rapi beserta ulasan bintang pelanggan di sini.
+                    </p>
                 </div>
-                <div class="list-group list-group-flush small">
-                    <?php if (!empty($recent_chat_conversations)): ?>
-                        <?php foreach ($recent_chat_conversations as $conv): ?>
-                            <?php $unread = (int)$conv['unread_count']; ?>
-                            <div class="list-group-item p-3">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <span class="fw-bold text-dark d-flex align-items-center gap-1">
-                                        <i class="fa-solid fa-circle-user text-teal"></i> <?= e($conv['customer_name']) ?>
-                                    </span>
-                                    <?php if ($unread > 0): ?>
-                                        <span class="badge bg-teal rounded-pill" style="font-size: 0.65rem;">
-                                            <?= $unread ?> Pesan Baru
+            <?php else: ?>
+                <div class="row g-3">
+                    <?php foreach ($completed_jobs as $comp): ?>
+                        <div class="col-md-6">
+                            <div class="order-card shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                        <span class="badge bg-success text-white rounded-pill small">
+                                            <i class="fa-solid fa-check me-1"></i> Selesai
                                         </span>
-                                    <?php else: ?>
-                                        <span class="text-muted small" style="font-size: 0.68rem;">
-                                            <?= !empty($conv['last_message_at']) ? date('H:i', strtotime($conv['last_message_at'])) : '' ?>
+                                        <span class="text-muted small">
+                                            <?= format_date($comp['updated_at'] ?: $comp['created_at']) ?>
                                         </span>
+                                    </div>
+
+                                    <h6 class="fw-bold text-dark fs-6 mb-1"><?= e($comp['title']) ?></h6>
+                                    <div class="text-muted small mb-2">
+                                        Pelanggan: <strong><?= e($comp['customer_name']) ?></strong> &bull; <?= e($comp['district_name'] ?: 'Inhu') ?>
+                                    </div>
+
+                                    <div class="bg-light p-2.5 rounded-3 mb-3 d-flex justify-content-between align-items-center small">
+                                        <span class="text-muted">Total Pembayaran:</span>
+                                        <span class="fw-bold text-success fs-6"><?= format_rupiah($comp['agreed_price'] ?: $comp['budget']) ?></span>
+                                    </div>
+
+                                    <!-- Customer Review & Rating if available -->
+                                    <?php if (!empty($comp['customer_rating'])): ?>
+                                        <div class="p-2.5 bg-warning-subtle rounded-3 mb-3 small">
+                                            <div class="d-flex align-items-center gap-1 text-warning mb-1">
+                                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                    <i class="fa-solid fa-star <?= $i <= $comp['customer_rating'] ? 'text-warning' : 'text-secondary opacity-25' ?>"></i>
+                                                <?php endfor; ?>
+                                                <span class="fw-bold text-dark ms-1"><?= $comp['customer_rating'] ?> / 5</span>
+                                            </div>
+                                            <?php if (!empty($comp['customer_comment'])): ?>
+                                                <div class="text-dark fst-italic">"<?= e($comp['customer_comment']) ?>"</div>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
-                                <p class="text-muted mb-2 small text-truncate" style="line-height: 1.4; max-width: 250px;">
-                                    <?= e($conv['last_message'] ?: 'Mulai obrolan baru...') ?>
-                                </p>
-                                <div class="d-flex justify-content-between align-items-center pt-1 border-top">
-                                    <span class="text-muted" style="font-size: 0.7rem;">
-                                        <i class="fa-regular fa-clock me-1"></i> <?= format_date($conv['last_message_at'], true) ?>
-                                    </span>
-                                    <a href="<?= BASE_URL ?>/chat.php?c=<?= $conv['id'] ?>" class="btn btn-sm btn-outline-teal py-0.5 px-2 fw-semibold" style="font-size: 0.72rem;">
-                                        <i class="fa-solid fa-reply me-1"></i> Buka Chat ↗
+
+                                <div class="pt-2 border-top">
+                                    <a href="<?= BASE_URL ?>/receipt.php?request_id=<?= $comp['id'] ?>" target="_blank" class="btn btn-outline-teal btn-sm w-100 rounded-3">
+                                        <i class="fa-solid fa-receipt me-1"></i> Lihat Kwitansi Resmi ↗
                                     </a>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="p-3 text-center text-muted small">
-                            <i class="fa-regular fa-comments fs-3 text-muted opacity-50 mb-1 d-block"></i>
-                            Belum ada pesan obrolan masuk dari pelanggan.
                         </div>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
-            </div>
-
-            <!-- Card Ulasan & Testimoni Pelanggan -->
-            <div class="card border shadow-sm mb-4" style="border-radius: 14px; overflow: hidden;">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <div class="fw-bold small text-dark d-flex align-items-center gap-1">
-                        <i class="fa-solid fa-star text-warning"></i>
-                        <span>ULASAN & TESTIMONI</span>
-                    </div>
-                    <span class="badge bg-warning bg-opacity-20 text-dark fw-bold">
-                        <?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?> / 5.0
-                    </span>
-                </div>
-                <div class="card-body p-3 border-bottom bg-light bg-opacity-50">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="text-center p-2 rounded-3 bg-white border" style="min-width: 80px;">
-                            <div class="h3 fw-bold text-dark mb-0"><?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?></div>
-                            <div class="text-warning small" style="font-size: 0.72rem;">
-                                <?php
-                                $fullStars = floor((float)($provider['rating_avg'] ?? 5.0));
-                                for ($s = 1; $s <= 5; $s++) {
-                                    if ($s <= $fullStars) echo '<i class="fa-solid fa-star"></i>';
-                                    else echo '<i class="fa-regular fa-star text-muted"></i>';
-                                }
-                                ?>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="fw-semibold text-dark small">Kepuasan Warga Inhu</div>
-                            <div class="small text-muted" style="font-size: 0.8rem;">
-                                Berdasarkan <strong><?= (int)($provider['reviews_count'] ?? 0) ?> ulasan</strong> & <?= (int)($provider['completed_jobs'] ?? 0) ?> pesanan selesai.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="list-group list-group-flush small">
-                    <?php if (!empty($recent_reviews)): ?>
-                        <?php foreach ($recent_reviews as $rev): ?>
-                            <div class="list-group-item p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <div class="fw-bold text-dark d-flex align-items-center gap-1">
-                                        <i class="fa-solid fa-circle-user text-teal"></i> <?= e($rev['customer_name']) ?>
-                                    </div>
-                                    <span class="text-muted" style="font-size: 0.72rem;"><?= format_date($rev['created_at']) ?></span>
-                                </div>
-                                <div class="text-warning mb-1" style="font-size: 0.78rem;">
-                                    <?php for ($s = 1; $s <= 5; $s++): ?>
-                                        <i class="fa-<?= $s <= (int)$rev['rating'] ? 'solid' : 'regular' ?> fa-star"></i>
-                                    <?php endfor; ?>
-                                    <span class="text-dark fw-bold ms-1" style="font-size: 0.75rem;"><?= (int)$rev['rating'] ?>.0</span>
-                                </div>
-
-                                <!-- Tag Kesan Pelanggan -->
-                                <?php if (!empty($rev['tags'])): 
-                                    $pTags = array_filter(array_map('trim', explode(',', $rev['tags'])));
-                                ?>
-                                    <div class="d-flex flex-wrap gap-1 my-1.5">
-                                        <?php foreach ($pTags as $tag): ?>
-                                            <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2 rounded-pill" style="font-size: 0.65rem;">
-                                                <?= e($tag) ?>
-                                            </span>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <!-- Foto Bukti Hasil Kerja jika diunggah -->
-                                <?php if (!empty($rev['photo_url'])): ?>
-                                    <div class="my-1.5">
-                                        <a href="<?= BASE_URL ?>/<?= e($rev['photo_url']) ?>" target="_blank" class="d-inline-block border rounded-2 overflow-hidden shadow-xs">
-                                            <img src="<?= BASE_URL ?>/<?= e($rev['photo_url']) ?>" alt="Bukti Kerja" style="width: 100px; height: 65px; object-fit: cover;">
-                                        </a>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if (!empty($rev['comment'])): ?>
-                                    <p class="text-secondary mb-1 fst-italic" style="font-size: 0.82rem; line-height: 1.4;">
-                                        "<?= e($rev['comment']) ?>"
-                                    </p>
-                                <?php endif; ?>
-
-                                <?php if (!empty($rev['request_title'])): ?>
-                                    <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.72rem;">
-                                        <span class="text-truncate"><i class="fa-solid fa-tag text-teal me-1"></i> Jasa: <?= e($rev['request_title']) ?></span>
-                                        <?php if (!empty($rev['request_id'])): ?>
-                                            <a href="<?= BASE_URL ?>/invoice.php?id=<?= $rev['request_id'] ?>" target="_blank" class="text-teal fw-semibold text-decoration-none text-nowrap ms-2">
-                                                <i class="fa-solid fa-receipt me-1"></i> Kwitansi ↗
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <!-- Respon / Tanggapan Resmi Mitra -->
-                                <?php if (!empty($rev['reply_text'])): ?>
-                                    <div class="mt-2 p-2 bg-light rounded-2 border-start border-3 border-teal">
-                                        <div class="d-flex justify-content-between align-items-center mb-0.5">
-                                            <span class="fw-bold text-teal" style="font-size: 0.72rem;"><i class="fa-solid fa-reply me-1"></i> Respon Anda:</span>
-                                            <span class="text-muted" style="font-size: 0.65rem;"><?= format_date($rev['replied_at'], true) ?></span>
-                                        </div>
-                                        <p class="mb-0 text-muted fst-italic" style="font-size: 0.76rem;">"<?= e($rev['reply_text']) ?>"</p>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="mt-2 text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-teal py-0.5 px-2 rounded-2" data-bs-toggle="collapse" data-bs-target="#replyReviewForm<?= $rev['id'] ?>" style="font-size: 0.72rem;">
-                                            <i class="fa-solid fa-reply me-1"></i> Beri Tanggapan
-                                        </button>
-                                        <div class="collapse mt-2 text-start" id="replyReviewForm<?= $rev['id'] ?>">
-                                            <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="bg-light p-2.5 rounded-2 border">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="action" value="reply_review">
-                                                <input type="hidden" name="review_id" value="<?= $rev['id'] ?>">
-                                                <label class="form-label fw-semibold small mb-1 text-dark">Tulis Tanggapan Resmi Anda:</label>
-                                                <textarea name="reply_text" rows="2" class="form-control form-control-sm mb-2" placeholder="Contoh: Terima kasih banyak atas kepercayaannya Pak/Bu..." required></textarea>
-                                                <div class="d-flex justify-content-end gap-1.5">
-                                                    <button type="button" class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#replyReviewForm<?= $rev['id'] ?>" style="font-size: 0.75rem;">Batal</button>
-                                                    <button type="submit" class="btn btn-sm btn-teal text-white fw-semibold" style="font-size: 0.75rem;">Kirim Tanggapan</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="p-4 text-center text-muted">
-                            <i class="fa-regular fa-comment-dots fs-3 text-muted mb-2 d-block opacity-50"></i>
-                            Belum ada ulasan dari pelanggan. Selesaikan pesanan jasa untuk mengumpulkan bintang pertama Anda!
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Sidebar Tawaran Saya -->
-            <div class="card border shadow-sm" style="border-radius: 14px; overflow: hidden;">
-                <div class="card-header bg-white py-3 fw-bold small text-muted">
-                    <i class="fa-solid fa-clock-rotate-left me-1"></i> TAWARAN TERAKHIR SAYA
-                </div>
-                <div class="list-group list-group-flush small">
-                    <?php if (!empty($my_offers)): ?>
-                        <?php foreach ($my_offers as $mo): ?>
-                            <div class="list-group-item p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="badge text-bg-light border text-muted">Kec. <?= e($mo['district_name']) ?></span>
-                                    <span class="badge <?= $mo['status'] === 'accepted' ? 'text-bg-success' : 'text-bg-warning' ?>">
-                                        <?= strtoupper(e($mo['status'])) ?>
-                                    </span>
-                                </div>
-                                <div class="fw-bold text-dark mb-1"><?= e($mo['request_title']) ?></div>
-                                <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.75rem;">
-                                    <span class="fw-bold text-teal"><?= format_rupiah($mo['offer_price']) ?></span>
-                                    <span><?= format_date($mo['created_at']) ?></span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="p-4 text-center text-muted">Belum ada penawaran dikirim.</div>
-                    <?php endif; ?>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
-    </div>
-</div>
 
+    </div>
+
+</div>
 <!-- Modal Konfirmasi Pekerjaan Selesai & Tagihan Akhir -->
 <div class="modal fade" id="completeOrderModal" tabindex="-1" aria-labelledby="completeOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
