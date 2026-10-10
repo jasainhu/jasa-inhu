@@ -347,17 +347,11 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="shopee-mobile-hub d-lg-none">
     <!-- 1. Profile Hero Banner Atas -->
     <div class="shopee-profile-hero">
-        <!-- Action bar atas (Ikon Pengaturan Roda Gigi & Obrolan) -->
+        <!-- Action bar atas (Ikon Pengaturan Akun) -->
         <div class="shopee-hero-actions">
             <button type="button" class="shopee-hero-icon-btn" data-bs-toggle="offcanvas" data-bs-target="#settingsOffcanvas" title="Pengaturan Akun">
                 <i class="fa-solid fa-gear"></i>
             </button>
-            <a href="<?= BASE_URL ?>/chat.php" class="shopee-hero-icon-btn" title="Pesan Obrolan">
-                <i class="fa-solid fa-comments"></i>
-                <?php if ($unread_chats > 0): ?>
-                    <span class="shopee-hero-badge"><?= $unread_chats ?></span>
-                <?php endif; ?>
-            </a>
         </div>
 
         <!-- Baris Identitas Pengguna -->

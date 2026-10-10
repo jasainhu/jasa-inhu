@@ -113,7 +113,14 @@
                 <span>Orderan</span>
             </a>
             <a href="<?= BASE_URL ?>/chat.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'chat.php') ? 'active' : '' ?>">
-                <i class="fa-solid fa-comments"></i>
+                <div class="position-relative d-inline-block">
+                    <i class="fa-solid fa-comments"></i>
+                    <?php if (!empty($header_unread_chats) && $header_unread_chats > 0): ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.52rem; padding: 0.2em 0.35em;">
+                            <?= $header_unread_chats > 99 ? '99+' : $header_unread_chats ?>
+                        </span>
+                    <?php endif; ?>
+                </div>
                 <span>Obrolan</span>
             </a>
             <a href="<?= BASE_URL ?>/provider/profile.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'provider/profile.php') ? 'active' : '' ?>">
@@ -139,7 +146,14 @@
                 <span>Bantuan CS</span>
             </a>
             <a href="<?= BASE_URL ?>/chat.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'chat.php') ? 'active' : '' ?>">
-                <i class="fa-solid fa-comments"></i>
+                <div class="position-relative d-inline-block">
+                    <i class="fa-solid fa-comments"></i>
+                    <?php if (!empty($header_unread_chats) && $header_unread_chats > 0): ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.52rem; padding: 0.2em 0.35em;">
+                            <?= $header_unread_chats > 99 ? '99+' : $header_unread_chats ?>
+                        </span>
+                    <?php endif; ?>
+                </div>
                 <span>Obrolan</span>
             </a>
             <a href="<?= BASE_URL ?>/user/profile.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', '/user/profile.php') || str_contains($_SERVER['REQUEST_URI'] ?? '', '/user/index.php') ? 'active' : '' ?>">
