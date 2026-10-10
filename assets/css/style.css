@@ -1272,6 +1272,10 @@ a:hover {
     -webkit-tap-highlight-color: transparent;
 }
 
+body.modal-open .mobile-bottom-nav {
+    display: none !important;
+}
+
 .mobile-nav-item {
     display: flex;
     flex-direction: column;
