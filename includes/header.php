@@ -477,13 +477,6 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
         <!-- Aksi Kanan (Chat, Notifikasi, Akun) -->
         <div class="gojek-header-actions">
             <?php if (is_logged_in() && $current_user): ?>
-                <!-- 1. Ikon Live Chat -->
-                <a href="<?= BASE_URL ?>/chat.php" class="gojek-action-btn" title="Kotak Obrolan & Pesan">
-                    <i class="fa-regular fa-comment-dots"></i>
-                    <?php if ($header_unread_chats > 0): ?>
-                        <span class="gojek-badge" id="mobileHeaderChatBadge"><?= $header_unread_chats > 99 ? '99+' : $header_unread_chats ?></span>
-                    <?php endif; ?>
-                </a>
 
                 <!-- 2. Ikon Lonceng Pemberitahuan / Notifikasi -->
                 <div class="dropdown">
