@@ -393,18 +393,8 @@ function register_user(array $data): array {
             }
         }
 
-        // 4. Notifikasi selamat datang (hanya jika belum ada)
-        $stmtCheckNotif = $db->prepare("SELECT id FROM notifications WHERE user_id = ? LIMIT 1");
-        $stmtCheckNotif->execute([$user_id]);
-        if (!$stmtCheckNotif->fetch()) {
-            $stmtNotif = $db->prepare("
-                INSERT INTO notifications (user_id, title, message, link, created_at)
-                VALUES (?, ?, ?, ?, NOW())
-            ");
-            $notif_title = "Selamat Datang di JASA INHU";
-            $notif_msg = "Akun Anda berhasil dibuat. Selamat menggunakan platform marketplace jasa lokal Indragiri Hulu!";
-            $stmtNotif->execute([$user_id, $notif_title, $notif_msg, get_dashboard_url_for_role($role_name)]);
-        }
+        // 4. Notifikasi selamat datang (otomatis disesuaikan untuk Mitra vs Pengguna)
+        send_welcome_notification($user_id);
 
         $db->commit();
 
@@ -595,6 +585,9 @@ function verify_user_otp(int $user_id, string $code): array {
     $db->prepare("UPDATE user_verifications SET is_verified = 1 WHERE id = ?")->execute([$ver['id']]);
     $db->prepare("UPDATE users SET email_verified_at = NOW() WHERE id = ?")->execute([$user_id]);
 
+    // Kirimkan notifikasi ucapan selamat datang interaktif ke inbox pengguna
+    send_welcome_notification($user_id);
+
     return ['success' => true, 'message' => 'Selamat, akun Anda berhasil diverifikasi!'];
 }
 
@@ -624,6 +617,9 @@ function verify_user_token(string $token): array {
     $db->prepare("UPDATE user_verifications SET is_verified = 1 WHERE id = ?")->execute([$ver['id']]);
     $db->prepare("UPDATE users SET email_verified_at = NOW() WHERE id = ?")->execute([$ver['user_id']]);
 
+    // Kirimkan notifikasi ucapan selamat datang interaktif ke inbox pengguna
+    send_welcome_notification((int)$ver['user_id']);
+
     // Otomatis login jika belum
     if (!is_logged_in()) {
         $stmtUser = $db->prepare("SELECT u.*, r.name as role_name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?");
@@ -638,4 +634,47 @@ function verify_user_token(string $token): array {
     }
 
     return ['success' => true, 'user_id' => (int)$ver['user_id'], 'message' => 'Selamat, akun Anda berhasil diverifikasi melalui Gmail!'];
+}
+
+/**
+ * Kirimkan notifikasi ucapan selamat datang yang ramah, hangat, dan interaktif
+ */
+function send_welcome_notification(int $user_id): void {
+    $db = get_db();
+
+    // Cek apakah sudah pernah menerima notifikasi selamat datang
+    $stmtCheck = $db->prepare("SELECT id FROM notifications WHERE user_id = ? AND title LIKE '%Selamat Datang%' LIMIT 1");
+    $stmtCheck->execute([$user_id]);
+    if ($stmtCheck->fetch()) {
+        return;
+    }
+
+    $stmtU = $db->prepare("
+        SELECT u.id, u.name, r.name as role_name 
+        FROM users u 
+        JOIN roles r ON u.role_id = r.id 
+        WHERE u.id = ? 
+        LIMIT 1
+    ");
+    $stmtU->execute([$user_id]);
+    $u = $stmtU->fetch();
+    if (!$u) return;
+
+    $isProvider = ($u['role_name'] === 'penyedia');
+
+    if ($isProvider) {
+        $title = "🎉 Selamat Datang di Jasa Inhu, Mitra " . $u['name'] . "!";
+        $message = "Terima kasih telah bergabung sebagai Mitra Resmi! Layanan Anda kini siap menjangkau ribuan warga di Kab. Indragiri Hulu. Segera lengkapi portofolio hasil kerja dan verifikasi KTP Anda agar toko semakin dipercaya calon pelanggan.";
+        $link = "/provider/profile.php";
+    } else {
+        $title = "🎉 Selamat Datang di JASA INHU, " . $u['name'] . "!";
+        $message = "Senang Anda bergabung! Mencari tukang servis, teknisi, montir, dan pekerja lokal terpercaya di kecamatan Anda kini jauh lebih mudah dan cepat. Coba cari jasa atau konsultasikan kebutuhan Anda sekarang.";
+        $link = "/#kategori";
+    }
+
+    $stmtIns = $db->prepare("
+        INSERT INTO notifications (user_id, title, message, link, is_read, created_at)
+        VALUES (?, ?, ?, ?, 0, NOW())
+    ");
+    $stmtIns->execute([$user_id, $title, $message, $link]);
 }

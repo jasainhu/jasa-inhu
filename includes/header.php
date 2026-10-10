@@ -195,7 +195,7 @@ if (is_logged_in() && !empty($current_user)) {
                                 <?php foreach ($header_recent_notifs as $hn): ?>
                                     <a href="<?= BASE_URL . ($hn['link'] ? (str_starts_with($hn['link'], '/') ? $hn['link'] : '/' . $hn['link']) : '#') ?>" class="notif-item <?= !$hn['is_read'] ? 'unread' : '' ?>">
                                         <div class="notif-icon-circle">
-                                            <i class="fa-solid <?= str_contains(strtolower($hn['title']), 'pesanan') ? 'fa-clipboard-check' : 'fa-bell' ?>"></i>
+                                            <i class="fa-solid <?= str_contains(strtolower($hn['title']), 'pesanan') ? 'fa-clipboard-check text-success' : (str_contains(strtolower($hn['title']), 'selamat datang') ? 'fa-champagne-glasses text-warning' : 'fa-bell text-teal') ?>"></i>
                                         </div>
                                         <div class="flex-grow-1 overflow-hidden">
                                             <div class="d-flex align-items-center justify-content-between mb-0.5">
@@ -470,7 +470,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                 <?php foreach ($header_recent_notifs as $hn): ?>
                                     <a href="<?= BASE_URL . ($hn['link'] ? (str_starts_with($hn['link'], '/') ? $hn['link'] : '/' . $hn['link']) : '#') ?>" class="notif-item <?= !$hn['is_read'] ? 'unread' : '' ?>">
                                         <div class="notif-icon-circle">
-                                            <i class="fa-solid <?= str_contains(strtolower($hn['title']), 'pesanan') ? 'fa-clipboard-check' : 'fa-bell' ?>"></i>
+                                            <i class="fa-solid <?= str_contains(strtolower($hn['title']), 'pesanan') ? 'fa-clipboard-check text-success' : (str_contains(strtolower($hn['title']), 'selamat datang') ? 'fa-champagne-glasses text-warning' : 'fa-bell text-teal') ?>"></i>
                                         </div>
                                         <div class="flex-grow-1 overflow-hidden">
                                             <div class="d-flex align-items-center justify-content-between mb-0.5">
