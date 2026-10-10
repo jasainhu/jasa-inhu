@@ -219,21 +219,44 @@ function register_user(array $data): array {
     $business_name = trim($data['business_name'] ?? '');
     $category_id = !empty($data['category_id']) ? (int)$data['category_id'] : null;
 
-    // Validasi
-    if (empty($name) || empty($email) || empty($phone) || empty($password)) {
-        return ['success' => false, 'message' => 'Nama lengkap, email, nomor HP, dan kata sandi wajib diisi.'];
+    $db = get_db();
+
+    // Cek apakah pendaftar sedang kembali untuk mengedit data pendaftaran yang belum terverifikasi
+    $session_pending_id = (int)($_SESSION['pending_verification_user_id'] ?? 0);
+    $existing_unverified_id = null;
+
+    if ($session_pending_id > 0) {
+        $stmtPending = $db->prepare("SELECT id, password_hash FROM users WHERE id = ? AND email_verified_at IS NULL LIMIT 1");
+        $stmtPending->execute([$session_pending_id]);
+        $pendingUserRow = $stmtPending->fetch();
+        if ($pendingUserRow) {
+            $existing_unverified_id = (int)$pendingUserRow['id'];
+            $old_password_hash = $pendingUserRow['password_hash'];
+        }
+    }
+
+    // Validasi data dasar
+    if (empty($name) || empty($email) || empty($phone)) {
+        return ['success' => false, 'message' => 'Nama lengkap, alamat email, dan nomor HP wajib diisi.'];
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return ['success' => false, 'message' => 'Format alamat email tidak valid.'];
     }
 
-    if (strlen($password) < 6) {
-        return ['success' => false, 'message' => 'Kata sandi minimal harus 6 karakter.'];
-    }
-
-    if ($password !== $password_confirm) {
-        return ['success' => false, 'message' => 'Konfirmasi kata sandi tidak cocok.'];
+    // Validasi kata sandi (Wajib untuk pendaftaran baru, opsional jika sedang edit data pendaftaran)
+    $password_hash = null;
+    if (empty($existing_unverified_id) || !empty($password)) {
+        if (empty($password) || strlen($password) < 6) {
+            return ['success' => false, 'message' => 'Kata sandi minimal harus 6 karakter.'];
+        }
+        if ($password !== $password_confirm) {
+            return ['success' => false, 'message' => 'Konfirmasi kata sandi tidak cocok.'];
+        }
+        $password_hash = password_hash($password, PASSWORD_BCRYPT);
+    } else {
+        // Gunakan hash kata sandi lama yang sudah dibuat sebelumnya
+        $password_hash = $old_password_hash ?? null;
     }
 
     if ($role_type === 'penyedia') {
@@ -245,14 +268,11 @@ function register_user(array $data): array {
         }
     }
 
-    $db = get_db();
-
-    // Cek duplikasi email atau telepon
+    // Cek duplikasi email atau telepon (kecuali akun unverified milik user sendiri)
     $stmt = $db->prepare("SELECT id, email, phone, email_verified_at FROM users WHERE email = ? OR phone = ? LIMIT 1");
     $stmt->execute([$email, $phone]);
     $existing = $stmt->fetch();
 
-    $existing_unverified_id = null;
     if ($existing) {
         // Jika akun SUDAH terverifikasi resmi, tolak duplikasi
         if (!empty($existing['email_verified_at'])) {
@@ -263,8 +283,12 @@ function register_user(array $data): array {
         }
 
         // Jika akun SEBELUMNYA BELUM terverifikasi OTP (misal salah ketik email saat registrasi):
-        // Kita perbarui (reuse) akun unverified tersebut dengan data baru yang dimasukkan pengguna
-        $existing_unverified_id = (int)$existing['id'];
+        if (!$existing_unverified_id) {
+            $existing_unverified_id = (int)$existing['id'];
+            if (!$password_hash) {
+                $password_hash = $existing['password_hash'] ?? null;
+            }
+        }
     }
 
     // Ambil ID role dari database
@@ -277,8 +301,9 @@ function register_user(array $data): array {
     }
     $role_id = (int)$role_row['id'];
 
-    // Hashing kata sandi dengan bcrypt
-    $password_hash = password_hash($password, PASSWORD_BCRYPT);
+    if (!$password_hash) {
+        $password_hash = password_hash('123456', PASSWORD_BCRYPT); // Fallback aman
+    }
 
     try {
         $db->beginTransaction();

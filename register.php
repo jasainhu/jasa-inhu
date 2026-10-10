@@ -22,6 +22,32 @@ if (is_logged_in()) {
 
 $error_message = '';
 $prefill_role = ($_GET['role'] ?? 'pengguna') === 'penyedia' ? 'penyedia' : 'pengguna';
+$prefill_data = [];
+$is_editing = false;
+
+// Jika pendaftar kembali dari halaman verifikasi untuk memperbaiki data
+if (!empty($_SESSION['pending_verification_user_id'])) {
+    $pending_uid = (int)$_SESSION['pending_verification_user_id'];
+    $db = get_db();
+    $stmt = $db->prepare("
+        SELECT u.id, u.name, u.email, u.phone, r.name as role_name,
+               p.district_id, p.village_id, p.address,
+               sp.business_name, sp.primary_category_id as category_id
+        FROM users u
+        JOIN roles r ON u.role_id = r.id
+        LEFT JOIN profiles p ON u.id = p.user_id
+        LEFT JOIN service_providers sp ON u.id = sp.user_id
+        WHERE u.id = ? AND u.email_verified_at IS NULL
+        LIMIT 1
+    ");
+    $stmt->execute([$pending_uid]);
+    $pRow = $stmt->fetch();
+    if ($pRow) {
+        $is_editing = true;
+        $prefill_data = $pRow;
+        $prefill_role = !empty($_POST['role_type']) ? $_POST['role_type'] : ($pRow['role_name'] ?: 'pengguna');
+    }
+}
 
 $districts = get_all_districts();
 $categories = get_active_categories();
@@ -41,6 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Helper pengambil nilai input (Memprioritaskan POST jika gagal submit, lalu prefill jika edit, lalu kosong)
+$val_name = $_POST['name'] ?? $prefill_data['name'] ?? '';
+$val_phone = $_POST['phone'] ?? $prefill_data['phone'] ?? '';
+$val_email = $_POST['email'] ?? $prefill_data['email'] ?? '';
+$val_district_id = $_POST['district_id'] ?? $prefill_data['district_id'] ?? '';
+$val_address = $_POST['address'] ?? $prefill_data['address'] ?? '';
+$val_business_name = $_POST['business_name'] ?? $prefill_data['business_name'] ?? '';
+$val_category_id = $_POST['category_id'] ?? $prefill_data['category_id'] ?? '';
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -50,9 +85,20 @@ require_once __DIR__ . '/includes/header.php';
             <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-3" style="background: var(--primary-subtle); color: var(--primary);">
                 <i class="fa-solid fa-user-plus fs-3"></i>
             </div>
-            <h3 class="fw-bold mb-1">Daftar Akun JASA INHU</h3>
-            <p class="text-muted small">Pilih peran akun Anda di Kabupaten Indragiri Hulu</p>
+            <h3 class="fw-bold mb-1"><?= $is_editing ? 'Ubah Data Pendaftaran' : 'Daftar Akun JASA INHU' ?></h3>
+            <p class="text-muted small">
+                <?= $is_editing ? 'Perbaiki informasi yang keliru di bawah ini lalu lanjutkan verifikasi' : 'Pilih peran akun Anda di Kabupaten Indragiri Hulu' ?>
+            </p>
         </div>
+
+        <?php if ($is_editing): ?>
+            <div class="alert alert-info border-0 rounded-3 mb-3 d-flex align-items-center gap-2 py-2 px-3 shadow-xs">
+                <i class="fa-solid fa-circle-info text-primary fs-5 flex-shrink-0"></i>
+                <div class="small">
+                    Data Anda sebelumnya tetap terisi lengkap. Silakan perbaiki bagian yang salah (misal alamat email), lalu klik <strong>Simpan & Lanjutkan Verifikasi</strong>.
+                </div>
+            </div>
+        <?php endif; ?>
 
         <?php if (!empty($error_message)): ?>
             <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
@@ -105,7 +151,7 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Nama Usaha / Merek Jasa Mandiri</label>
-                                <input type="text" name="business_name" class="form-control form-control-sm" placeholder="Contoh: Pak Herman Tukang Bangunan / Bengkel Berkah" value="<?= e($_POST['business_name'] ?? '') ?>" data-required>
+                                <input type="text" name="business_name" class="form-control form-control-sm" placeholder="Contoh: Pak Herman Tukang Bangunan / Bengkel Berkah" value="<?= e($val_business_name) ?>" data-required>
                                 <div class="form-text small" style="font-size: 0.72rem;">
                                     Tulis nama usaha, atau nama panggilan & keahlian Anda.
                                 </div>
@@ -115,7 +161,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <select name="category_id" class="form-select form-select-sm" data-required>
                                     <option value="">-- Pilih Kategori --</option>
                                     <?php foreach ($categories as $cat): ?>
-                                        <option value="<?= $cat['id'] ?>" <?= (isset($_POST['category_id']) && $_POST['category_id'] == $cat['id']) ? 'selected' : '' ?>>
+                                        <option value="<?= $cat['id'] ?>" <?= ($val_category_id == $cat['id']) ? 'selected' : '' ?>>
                                             <?= e($cat['name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -131,16 +177,16 @@ require_once __DIR__ . '/includes/header.php';
                 <!-- Informasi Akun Dasar -->
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold">Nama Lengkap (Sesuai KTP) <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control" placeholder="Nama Anda" value="<?= e($_POST['name'] ?? '') ?>" required>
+                    <input type="text" name="name" class="form-control" placeholder="Nama Anda" value="<?= e($val_name) ?>" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold">Nomor WhatsApp / HP <span class="text-danger">*</span></label>
-                    <input type="text" name="phone" class="form-control" placeholder="0812xxxxxxxx" value="<?= e($_POST['phone'] ?? '') ?>" required>
+                    <input type="text" name="phone" class="form-control" placeholder="0812xxxxxxxx" value="<?= e($val_phone) ?>" required>
                 </div>
 
                 <div class="col-12">
                     <label class="form-label small fw-semibold">Alamat Email <span class="text-danger">*</span></label>
-                    <input type="email" name="email" class="form-control" placeholder="nama@email.com" value="<?= e($_POST['email'] ?? '') ?>" required>
+                    <input type="email" name="email" class="form-control" placeholder="nama@email.com" value="<?= e($val_email) ?>" required>
                 </div>
 
                 <!-- Wilayah Domisili di Inhu -->
@@ -149,7 +195,7 @@ require_once __DIR__ . '/includes/header.php';
                     <select name="district_id" id="district_select" class="form-select">
                         <option value="">-- Pilih Kecamatan --</option>
                         <?php foreach ($districts as $dist): ?>
-                            <option value="<?= $dist['id'] ?>" <?= (isset($_POST['district_id']) && $_POST['district_id'] == $dist['id']) ? 'selected' : '' ?>>
+                            <option value="<?= $dist['id'] ?>" <?= ($val_district_id == $dist['id']) ? 'selected' : '' ?>>
                                 Kec. <?= e($dist['name']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -164,7 +210,7 @@ require_once __DIR__ . '/includes/header.php';
 
                 <div class="col-12">
                     <label class="form-label small fw-semibold">Alamat Domisili / Patokan Tempat Tinggal</label>
-                    <input type="text" name="address" class="form-control" placeholder="Nama jalan, RT/RW, nomor rumah, atau patokan..." value="<?= e($_POST['address'] ?? '') ?>">
+                    <input type="text" name="address" class="form-control" placeholder="Nama jalan, RT/RW, nomor rumah, atau patokan..." value="<?= e($val_address) ?>">
                     <div class="form-text small" style="font-size: 0.72rem;">
                         Bagi pekerja mandiri tanpa toko fisik, cukup masukkan alamat rumah atau patokan tempat tinggal di Inhu.
                     </div>
@@ -172,12 +218,12 @@ require_once __DIR__ . '/includes/header.php';
 
                 <!-- Kata Sandi -->
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Kata Sandi <span class="text-danger">*</span></label>
-                    <input type="password" name="password" class="form-control" placeholder="Minimal 6 karakter" required>
+                    <label class="form-label small fw-semibold">Kata Sandi <?= $is_editing ? '<span class="text-muted fw-normal" style="font-size:0.75rem;">(Opsional jika tidak ganti)</span>' : '<span class="text-danger">*</span>' ?></label>
+                    <input type="password" name="password" class="form-control" placeholder="<?= $is_editing ? 'Biarkan kosong jika tidak ganti' : 'Minimal 6 karakter' ?>" <?= $is_editing ? '' : 'required' ?>>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
-                    <input type="password" name="password_confirm" class="form-control" placeholder="Ulangi kata sandi" required>
+                    <label class="form-label small fw-semibold">Konfirmasi Kata Sandi <?= $is_editing ? '<span class="text-muted fw-normal" style="font-size:0.75rem;">(Opsional)</span>' : '<span class="text-danger">*</span>' ?></label>
+                    <input type="password" name="password_confirm" class="form-control" placeholder="<?= $is_editing ? 'Ulangi sandi baru jika diisi' : 'Ulangi kata sandi' ?>" <?= $is_editing ? '' : 'required' ?>>
                 </div>
             </div>
 
@@ -186,8 +232,16 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <button type="submit" class="btn btn-primary-custom w-100 py-2 mt-2">
-                <i class="fa-solid fa-user-plus me-1"></i> Selesaikan Pendaftaran
+                <i class="fa-solid <?= $is_editing ? 'fa-circle-check' : 'fa-user-plus' ?> me-1"></i> <?= $is_editing ? 'Simpan & Lanjutkan Verifikasi ›' : 'Selesaikan Pendaftaran' ?>
             </button>
+
+            <?php if ($is_editing): ?>
+                <div class="text-center mt-2.5">
+                    <a href="<?= BASE_URL ?>/verify.php?action=cancel" class="text-muted small text-decoration-none" onclick="return confirm('Mulai pendaftaran dari awal? Data yang sudah diisi akan dikosongkan.');">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Mulai Dari Awal (Kosongkan Form)
+                    </a>
+                </div>
+            <?php endif; ?>
         </form>
 
         <div class="text-center mt-4 pt-3 border-top small text-muted">

@@ -419,8 +419,8 @@ require_once __DIR__ . '/includes/header.php';
 
         <?php if ($is_pending): ?>
             <div class="text-center mt-3">
-                <a href="<?= BASE_URL ?>/verify.php?action=cancel" class="text-muted small text-decoration-none" onclick="return confirm('Batalkan pendaftaran akun ini? Data dan nomor HP akan dibebaskan kembali sehingga Anda dapat mendaftar ulang.');">
-                    <i class="fa-solid fa-trash-can me-1 text-danger"></i> Salah input data? Batalkan Pendaftaran & Bersihkan Nomor HP
+                <a href="<?= BASE_URL ?>/register.php?edit=1" class="text-secondary small text-decoration-none fw-semibold">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Kembali & Ubah Data Pendaftaran
                 </a>
             </div>
         <?php endif; ?>
