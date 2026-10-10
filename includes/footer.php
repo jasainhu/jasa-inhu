@@ -134,9 +134,9 @@
                 <span>Profil</span>
             </a>
         <?php else: ?>
-            <a href="<?= BASE_URL ?>/user/requests.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'requests.php') ? 'active' : '' ?>">
-                <i class="fa-solid fa-clipboard-list"></i>
-                <span>Pesanan</span>
+            <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20CS%20JASA%20INHU,%20saya%20butuh%20bantuan%20layanan" target="_blank" class="mobile-nav-item">
+                <i class="fa-solid fa-headset text-success"></i>
+                <span>Bantuan CS</span>
             </a>
             <a href="<?= BASE_URL ?>/chat.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'chat.php') ? 'active' : '' ?>">
                 <i class="fa-solid fa-comments"></i>
@@ -148,6 +148,10 @@
             </a>
         <?php endif; ?>
     <?php else: ?>
+        <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20CS%20JASA%20INHU,%20saya%20butuh%20bantuan%20layanan" target="_blank" class="mobile-nav-item">
+            <i class="fa-solid fa-headset text-success"></i>
+            <span>Bantuan CS</span>
+        </a>
         <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#loginModal" class="mobile-nav-item">
             <i class="fa-solid fa-arrow-right-to-bracket"></i>
             <span>Masuk</span>

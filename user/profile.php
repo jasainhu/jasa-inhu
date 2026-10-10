@@ -437,7 +437,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- 3. Kartu Pesanan Jasa Saya (4 Status Grid) -->
+    <!-- 3. Kartu Pesanan Jasa Saya (4 Status Grid Lengkap) -->
     <div class="shopee-card">
         <div class="shopee-card-head">
             <h6 class="shopee-card-title">
@@ -445,47 +445,54 @@ require_once __DIR__ . '/../includes/header.php';
                 <span>Pesanan Jasa Saya</span>
             </h6>
             <a href="<?= BASE_URL ?>/user/requests.php" class="shopee-card-more">
-                <span>Lihat Riwayat Pesanan</span>
+                <span>Lihat Semua Riwayat</span>
                 <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
             </a>
         </div>
 
         <div class="shopee-status-grid">
+            <!-- 1. Menunggu Respon -->
             <a href="<?= BASE_URL ?>/user/requests.php?status=open" class="shopee-status-item">
                 <div class="shopee-status-icon-box">
-                    <i class="fa-regular fa-clock"></i>
+                    <i class="fa-regular fa-clock text-secondary"></i>
                     <?php if ($count_open > 0): ?>
                         <span class="shopee-status-badge"><?= $count_open ?></span>
                     <?php endif; ?>
                 </div>
-                <span class="shopee-status-label">Menunggu Respon</span>
+                <span class="shopee-status-label">Menunggu</span>
             </a>
 
+            <!-- 2. Sedang Dikerjakan -->
             <a href="<?= BASE_URL ?>/user/requests.php?status=in_progress" class="shopee-status-item">
                 <div class="shopee-status-icon-box">
-                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                    <i class="fa-solid fa-screwdriver-wrench text-teal"></i>
                     <?php if ($count_in_progress > 0): ?>
                         <span class="shopee-status-badge"><?= $count_in_progress ?></span>
                     <?php endif; ?>
                 </div>
-                <span class="shopee-status-label">Sedang Dikerjakan</span>
+                <span class="shopee-status-label">Dikerjakan</span>
             </a>
 
+            <!-- 3. Selesai (Kotak Baru) -->
             <a href="<?= BASE_URL ?>/user/requests.php?status=completed" class="shopee-status-item">
                 <div class="shopee-status-icon-box">
-                    <i class="fa-regular fa-star"></i>
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    <?php if ($count_completed > 0): ?>
+                        <span class="shopee-status-badge bg-success"><?= $count_completed ?></span>
+                    <?php endif; ?>
+                </div>
+                <span class="shopee-status-label">Selesai</span>
+            </a>
+
+            <!-- 4. Beri Ulasan -->
+            <a href="<?= BASE_URL ?>/user/requests.php?status=completed" class="shopee-status-item">
+                <div class="shopee-status-icon-box">
+                    <i class="fa-regular fa-star text-warning"></i>
                     <?php if ($count_review_needed > 0): ?>
                         <span class="shopee-status-badge"><?= $count_review_needed ?></span>
                     <?php endif; ?>
                 </div>
                 <span class="shopee-status-label">Beri Ulasan</span>
-            </a>
-
-            <a href="<?= BASE_URL ?>/user/requests.php" class="shopee-status-item">
-                <div class="shopee-status-icon-box">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
-                <span class="shopee-status-label">Semua Pesanan</span>
             </a>
         </div>
     </div>
