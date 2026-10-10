@@ -436,9 +436,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                         <div class="row g-2.5">
                             <div class="col-md-6 mb-2">
-                                <label class="form-label mb-1 small fw-bold text-dark">Kecamatan Domisili / Layanan (Inhu) <span class="text-danger">*</span></label>
-                                <select name="district_id" id="district_select" class="form-select form-select-sm rounded-3 py-1.5 px-2.5" required>
-                                    <option value="">-- Pilih Kecamatan --</option>
+                                <label class="form-label mb-1 small fw-bold text-dark">Kecamatan Domisili / Layanan (Inhu)</label>
+                                <select name="district_id" id="district_select" class="form-select form-select-sm rounded-3 py-1.5 px-2.5">
+                                    <option value="">-- Pilih Kecamatan (Opsional) --</option>
                                     <?php foreach ($districts as $dist): ?>
                                         <option value="<?= $dist['id'] ?>" <?= (($provider['district_id'] ?? 0) == $dist['id']) ? 'selected' : '' ?>>
                                             Kec. <?= e($dist['name']) ?>
@@ -448,12 +448,12 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
 
                             <div class="col-md-6 mb-2">
-                                <label class="form-label mb-1 small fw-bold text-dark">Desa / Kelurahan <span class="text-danger">*</span></label>
-                                <select name="village_id" id="village_select" class="form-select form-select-sm rounded-3 py-1.5 px-2.5" <?= empty($current_villages) ? 'disabled' : '' ?> required>
+                                <label class="form-label mb-1 small fw-bold text-dark">Desa / Kelurahan</label>
+                                <select name="village_id" id="village_select" class="form-select form-select-sm rounded-3 py-1.5 px-2.5" <?= empty($current_villages) ? 'disabled' : '' ?>>
                                     <?php if (empty($current_villages)): ?>
                                         <option value="">-- Pilih Kecamatan Dahulu --</option>
                                     <?php else: ?>
-                                        <option value="">-- Pilih Desa / Kelurahan --</option>
+                                        <option value="">-- Pilih Desa / Kelurahan (Opsional) --</option>
                                         <?php foreach ($current_villages as $vil): ?>
                                             <option value="<?= $vil['id'] ?>" <?= (($provider['village_id'] ?? 0) == $vil['id']) ? 'selected' : '' ?>>
                                                 <?= e($vil['name']) ?> <?= !empty($vil['postal_code']) ? '(' . e($vil['postal_code']) . ')' : '' ?>
@@ -651,6 +651,50 @@ function previewProviderPhoto(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formProviderProfile');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const bName = form.querySelector('input[name="business_name"]');
+            const catId = form.querySelector('select[name="category_id"]');
+            const phone = form.querySelector('input[name="phone"]');
+
+            if (!bName || !bName.value.trim()) {
+                e.preventDefault();
+                const tab1 = document.getElementById('tab-info-btn');
+                if (tab1) tab1.click();
+                if (bName) bName.focus();
+                alert('Nama Usaha / Merek Layanan Jasa wajib diisi.');
+                return false;
+            }
+
+            if (!catId || !catId.value) {
+                e.preventDefault();
+                const tab1 = document.getElementById('tab-info-btn');
+                if (tab1) tab1.click();
+                if (catId) catId.focus();
+                alert('Kategori Utama Keahlian wajib dipilih.');
+                return false;
+            }
+
+            if (!phone || !phone.value.trim()) {
+                e.preventDefault();
+                const tab1 = document.getElementById('tab-info-btn');
+                if (tab1) tab1.click();
+                if (phone) phone.focus();
+                alert('Nomor WhatsApp Usaha wajib diisi.');
+                return false;
+            }
+
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn && !btn.disabled) {
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan Perubahan Profil...';
+                btn.style.opacity = '0.85';
+            }
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
