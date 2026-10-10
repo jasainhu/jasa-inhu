@@ -267,9 +267,18 @@ if (is_logged_in() && !empty($current_user)) {
                                                 </a>
                                             <?php endif; ?>
                                         <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
-                                            <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2" style="font-size: 0.65rem;">
-                                                <i class="fa-solid fa-wrench me-1"></i> Mitra Jasa Inhu
-                                            </span>
+                                            <?php 
+                                            $header_active_mode = function_exists('get_active_profile_mode') ? get_active_profile_mode() : ($current_user['role_name'] ?? 'penyedia');
+                                            ?>
+                                            <?php if ($header_active_mode === 'pengguna'): ?>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-0.5 px-2" style="font-size: 0.65rem;">
+                                                    <i class="fa-solid fa-user me-1"></i> Mode Pengguna Biasa
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2" style="font-size: 0.65rem;">
+                                                    <i class="fa-solid fa-wrench me-1"></i> Mitra Jasa Inhu
+                                                </span>
+                                            <?php endif; ?>
                                         <?php elseif ($current_user['role_name'] === 'admin'): ?>
                                             <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-0.5 px-2" style="font-size: 0.65rem;">
                                                 <i class="fa-solid fa-shield-halved me-1"></i> Administrator
@@ -280,21 +289,78 @@ if (is_logged_in() && !empty($current_user)) {
                             </div>
                         </li>
 
-                        <!-- Menu Navigasi Berdasarkan Role (Pusat Akun & Pengaturan) -->
+                        <!-- Menu Navigasi Berdasarkan Role & Mode Aktif -->
                         <?php if ($current_user['role_name'] === 'admin'): ?>
                             <li>
                                 <a class="dropdown-item" href="<?= BASE_URL ?>/admin/index.php">
                                     <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Admin
                                 </a>
                             </li>
-                        <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
+                        <?php elseif ($current_user['role_name'] === 'penyedia' && ($header_active_mode ?? '') === 'penyedia'): ?>
                             <li>
                                 <a class="dropdown-item" href="<?= BASE_URL ?>/provider/index.php">
                                     <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Mitra Jasa
                                 </a>
                             </li>
                         <?php endif; ?>
-                        <?php if ($current_user['role_name'] === 'pengguna'): ?>
+
+                        <?php if ($current_user['role_name'] === 'penyedia'): ?>
+                            <?php if (($header_active_mode ?? '') === 'pengguna'): ?>
+                                <li>
+                                    <a class="dropdown-item fw-bold text-dark bg-warning-subtle py-2 border-bottom" href="<?= BASE_URL ?>/switch_mode.php?to=penyedia">
+                                        <i class="fa-solid fa-repeat me-2 text-warning"></i> Beralih ke Profil Mitra Jasa
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/user/profile.php">
+                                        <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Alamat
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/user/requests.php">
+                                        <i class="fa-solid fa-clipboard-list me-2 text-teal"></i> Pesanan Saya
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank">
+                                        <i class="fa-solid fa-headset me-2 text-info"></i> Pusat Bantuan CS
+                                    </a>
+                                </li>
+                            <?php else: ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/wallet.php">
+                                        <i class="fa-solid fa-wallet me-2 text-warning"></i> Dompet & Saldo Deposit
+                                    </a>
+                                </li>
+                                <?php if ($header_provider_id > 0): ?>
+                                    <li>
+                                        <a class="dropdown-item fw-semibold text-teal" href="<?= BASE_URL ?>/provider_detail.php?id=<?= $header_provider_id ?>" target="_blank">
+                                            <i class="fa-solid fa-store me-2 text-teal"></i> Lihat Profil Publik Saya ↗
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/leads.php">
+                                        <i class="fa-solid fa-briefcase me-2 text-secondary"></i> Pekerjaan Masuk
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/portfolio.php">
+                                        <i class="fa-solid fa-camera me-2 text-teal"></i> Portofolio Hasil Kerja
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/profile.php">
+                                        <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Tarif Jasa
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-primary" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
+                                        <i class="fa-solid fa-user me-2 text-primary"></i> Beralih ke Profil Pengguna Biasa
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        <?php elseif ($current_user['role_name'] === 'pengguna'): ?>
                             <li>
                                 <a class="dropdown-item" href="<?= BASE_URL ?>/user/profile.php">
                                     <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Alamat
@@ -308,34 +374,6 @@ if (is_logged_in() && !empty($current_user)) {
                             <li>
                                 <a class="dropdown-item" href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank">
                                     <i class="fa-solid fa-headset me-2 text-info"></i> Pusat Bantuan CS
-                                </a>
-                            </li>
-                        <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/wallet.php">
-                                    <i class="fa-solid fa-wallet me-2 text-warning"></i> Dompet & Saldo Deposit
-                                </a>
-                            </li>
-                            <?php if ($header_provider_id > 0): ?>
-                                <li>
-                                    <a class="dropdown-item fw-semibold text-teal" href="<?= BASE_URL ?>/provider_detail.php?id=<?= $header_provider_id ?>" target="_blank">
-                                        <i class="fa-solid fa-store me-2 text-teal"></i> Lihat Profil Publik Saya ↗
-                                    </a>
-                                </li>
-                            <?php endif; ?>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/leads.php">
-                                    <i class="fa-solid fa-briefcase me-2 text-secondary"></i> Pekerjaan Masuk
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/portfolio.php">
-                                    <i class="fa-solid fa-camera me-2 text-teal"></i> Portofolio Hasil Kerja
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/profile.php">
-                                    <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Tarif Jasa
                                 </a>
                             </li>
                         <?php elseif ($current_user['role_name'] === 'admin'): ?>
@@ -534,9 +572,15 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                                 </a>
                                             <?php endif; ?>
                                         <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
-                                            <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2" style="font-size: 0.62rem;">
-                                                <i class="fa-solid fa-wrench me-1"></i> Mitra Jasa Inhu
-                                            </span>
+                                            <?php if (($header_active_mode ?? '') === 'pengguna'): ?>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-0.5 px-2" style="font-size: 0.62rem;">
+                                                    <i class="fa-solid fa-user me-1"></i> Mode Pengguna
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2" style="font-size: 0.62rem;">
+                                                    <i class="fa-solid fa-wrench me-1"></i> Mitra Jasa Inhu
+                                                </span>
+                                            <?php endif; ?>
                                         <?php elseif ($current_user['role_name'] === 'admin'): ?>
                                             <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-0.5 px-2" style="font-size: 0.62rem;">
                                                 <i class="fa-solid fa-shield-halved me-1"></i> Administrator
@@ -547,14 +591,14 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                             </div>
                         </li>
 
-                        <!-- Menu Navigasi Sesuai Role -->
+                        <!-- Menu Navigasi Sesuai Role & Mode Aktif -->
                         <?php if ($current_user['role_name'] === 'admin'): ?>
                             <li>
                                 <a class="dropdown-item" href="<?= BASE_URL ?>/admin/index.php">
                                     <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Admin
                                 </a>
                             </li>
-                        <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
+                        <?php elseif ($current_user['role_name'] === 'penyedia' && ($header_active_mode ?? '') === 'penyedia'): ?>
                             <li>
                                 <a class="dropdown-item" href="<?= BASE_URL ?>/provider/index.php">
                                     <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Mitra
@@ -562,7 +606,51 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                             </li>
                         <?php endif; ?>
 
-                        <?php if ($current_user['role_name'] === 'pengguna'): ?>
+                        <?php if ($current_user['role_name'] === 'penyedia'): ?>
+                            <?php if (($header_active_mode ?? '') === 'pengguna'): ?>
+                                <li>
+                                    <a class="dropdown-item fw-bold text-dark bg-warning-subtle py-2 border-bottom" href="<?= BASE_URL ?>/switch_mode.php?to=penyedia">
+                                        <i class="fa-solid fa-repeat me-2 text-warning"></i> Beralih ke Profil Mitra Jasa
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/user/profile.php">
+                                        <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Alamat
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/user/requests.php">
+                                        <i class="fa-solid fa-clipboard-list me-2 text-teal"></i> Pesanan Saya
+                                    </a>
+                                </li>
+                            <?php else: ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/profile.php">
+                                        <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Tarif Jasa
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/wallet.php">
+                                        <i class="fa-solid fa-wallet me-2 text-warning"></i> Dompet & Saldo Deposit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/leads.php">
+                                        <i class="fa-solid fa-briefcase me-2 text-teal"></i> Pekerjaan Masuk (Leads)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/portfolio.php">
+                                        <i class="fa-solid fa-camera me-2 text-secondary"></i> Portofolio Hasil Kerja
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-primary" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
+                                        <i class="fa-solid fa-user me-2 text-primary"></i> Beralih ke Profil Pengguna Biasa
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        <?php elseif ($current_user['role_name'] === 'pengguna'): ?>
                             <li>
                                 <a class="dropdown-item" href="<?= BASE_URL ?>/user/profile.php">
                                     <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Alamat
@@ -571,27 +659,6 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                             <li>
                                 <a class="dropdown-item" href="<?= BASE_URL ?>/user/requests.php">
                                     <i class="fa-solid fa-clipboard-list me-2 text-teal"></i> Pesanan Saya
-                                </a>
-                            </li>
-                        <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/profile.php">
-                                    <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Tarif Jasa
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/wallet.php">
-                                    <i class="fa-solid fa-wallet me-2 text-warning"></i> Dompet & Saldo Deposit
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/leads.php">
-                                    <i class="fa-solid fa-briefcase me-2 text-teal"></i> Pekerjaan Masuk (Leads)
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/portfolio.php">
-                                    <i class="fa-solid fa-camera me-2 text-secondary"></i> Portofolio Hasil Kerja
                                 </a>
                             </li>
                         <?php elseif ($current_user['role_name'] === 'admin'): ?>

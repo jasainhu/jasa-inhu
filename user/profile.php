@@ -22,6 +22,11 @@ if (is_array($flashData) && ($flashData['type'] ?? '') === 'danger') {
 }
 $active_tab = $_GET['tab'] ?? 'profile';
 
+// Pastikan mode profil aktif tersimpan sebagai pengguna biasa saat mengakses halaman ini
+if (($user['role_name'] ?? '') === 'penyedia') {
+    $_SESSION['active_profile_mode'] = 'pengguna';
+}
+
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validate_csrf()) {
@@ -607,21 +612,21 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php elseif ($user['role_name'] === 'penyedia'): ?>
         <div class="mx-3 mb-3">
-            <div class="p-3 rounded-4 border bg-white shadow-xs d-flex align-items-center justify-content-between gap-3">
+            <div class="p-3 rounded-4 border border-warning-subtle bg-warning-subtle shadow-xs d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 42px; height: 42px;">
-                        <i class="fa-solid fa-briefcase"></i>
+                    <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 42px; height: 42px;">
+                        <i class="fa-solid fa-store fs-5"></i>
                     </div>
                     <div>
                         <div class="d-flex align-items-center gap-1.5 mb-0.5">
-                            <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.85rem;">Dashboard Mitra Jasa</h6>
-                            <span class="badge rounded-pill bg-success-subtle text-success px-1.5 py-0.5 fw-bold" style="font-size: 0.62rem;">Mitra Aktif</span>
+                            <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.85rem;">Akun Mitra Jasa Anda</h6>
+                            <span class="badge rounded-pill bg-warning text-dark px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">Mitra Terdaftar</span>
                         </div>
-                        <div class="text-muted" style="font-size: 0.72rem;">Kelola layanan, tarif & terima pesanan pelanggan.</div>
+                        <div class="text-muted" style="font-size: 0.72rem;">Beralih kembali ke halaman profil & dashboard usaha mitra Anda.</div>
                     </div>
                 </div>
-                <a href="<?= BASE_URL ?>/provider/index.php" class="btn btn-outline-success btn-sm fw-bold px-3 py-1.5 rounded-3 text-nowrap" style="font-size: 0.75rem;">
-                    Buka Dashboard &rsaquo;
+                <a href="<?= BASE_URL ?>/switch_mode.php?to=penyedia" class="btn btn-warning btn-sm fw-bold px-3 py-2 rounded-3 text-nowrap shadow-xs text-dark" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-repeat me-1"></i> Beralih ke Mitra
                 </a>
             </div>
         </div>
@@ -661,6 +666,19 @@ require_once __DIR__ . '/../includes/header.php';
                 <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
             </div>
         </a>
+        <?php if ($user['role_name'] === 'penyedia'): ?>
+        <!-- Menu Beralih ke Profil Mitra di Mobile -->
+        <a href="<?= BASE_URL ?>/switch_mode.php?to=penyedia" class="shopee-list-item bg-warning-subtle text-warning-emphasis">
+            <div class="shopee-list-item-left">
+                <i class="fa-solid fa-store shopee-list-icon text-warning"></i>
+                <span class="fw-bold">Beralih ke Profil Mitra Jasa</span>
+            </div>
+            <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-warning text-dark py-0.5 px-2 rounded-pill small" style="font-size: 0.68rem;">Mode Mitra</span>
+                <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+            </div>
+        </a>
+        <?php endif; ?>
     </div>
 
     <!-- Tombol Buka Pengaturan Cepat di Mobile -->
@@ -728,6 +746,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <a href="javascript:void(0)" class="shopee-nav-sub-item text-dark" data-bs-toggle="modal" data-bs-target="#notificationSettingsModal">
                         <i class="fa-solid fa-bell me-1 text-warning"></i> Notifikasi & Suara
                     </a>
+                    <?php if ($user['role_name'] === 'penyedia'): ?>
+                        <a href="<?= BASE_URL ?>/switch_mode.php?to=penyedia" class="shopee-nav-sub-item fw-bold text-warning-emphasis">
+                            <i class="fa-solid fa-store me-1 text-warning"></i> Beralih ke Profil Mitra
+                        </a>
+                    <?php endif; ?>
                 </nav>
 
                 <!-- Menu Item: Pesanan Saya -->
@@ -778,16 +801,16 @@ require_once __DIR__ . '/../includes/header.php';
                         </button>
                     </div>
                 <?php elseif ($user['role_name'] === 'penyedia'): ?>
-                    <div class="mt-3 p-3 rounded-3 border bg-light text-start">
+                    <div class="mt-3 p-3 rounded-3 border border-warning-subtle bg-warning-subtle text-start shadow-xs">
                         <div class="d-flex align-items-center gap-2 mb-1.5">
-                            <i class="fa-solid fa-briefcase text-success"></i>
-                            <span class="fw-bold text-dark small" style="font-size: 0.8rem;">Mode Mitra Aktif</span>
+                            <i class="fa-solid fa-store text-warning fs-5"></i>
+                            <span class="fw-bold text-dark small" style="font-size: 0.82rem;">Akun Mitra Terdaftar</span>
                         </div>
                         <p class="text-muted mb-2.5" style="font-size: 0.72rem; line-height: 1.4;">
-                            Kelola pesanan masuk & dompet saldo dari panel khusus mitra.
+                            Anda saat ini sedang dalam <strong>Mode Pengguna Biasa</strong>. Ingin kembali mengelola layanan jasa & pesanan pelanggan?
                         </p>
-                        <a href="<?= BASE_URL ?>/provider/index.php" class="btn btn-outline-success btn-sm w-100 fw-bold py-1.5 rounded-2" style="font-size: 0.75rem;">
-                            Buka Dashboard Mitra &rsaquo;
+                        <a href="<?= BASE_URL ?>/switch_mode.php?to=penyedia" class="btn btn-warning btn-sm w-100 fw-bold py-2 rounded-2 shadow-xs text-dark" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-repeat me-1"></i> Beralih ke Profil Mitra &rsaquo;
                         </a>
                     </div>
                 <?php endif; ?>

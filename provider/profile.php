@@ -15,6 +15,7 @@ require_role('penyedia');
 $user = current_user();
 $db = get_db();
 $error = '';
+$_SESSION['active_profile_mode'] = 'penyedia';
 
 $stmtProv = $db->prepare("
     SELECT sp.*, sc.name as category_name, sc.icon as category_icon, 
@@ -629,7 +630,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
             </a>
 
-            <a href="<?= BASE_URL ?>/user/profile.php" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2.5 px-3">
+            <a href="<?= BASE_URL ?>/switch_mode.php?to=pengguna" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2.5 px-3">
                 <div class="d-flex align-items-center gap-2.5">
                     <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.85rem;">
                         <i class="fa-solid fa-user"></i>

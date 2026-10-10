@@ -106,7 +106,8 @@
     </a>
 
     <?php if (function_exists('is_logged_in') && is_logged_in()): ?>
-        <?php if (has_role('penyedia')): ?>
+        <?php $active_nav_mode = function_exists('get_active_profile_mode') ? get_active_profile_mode() : (has_role('penyedia') ? 'penyedia' : (has_role('admin') ? 'admin' : 'pengguna')); ?>
+        <?php if ($active_nav_mode === 'penyedia'): ?>
             <a href="<?= BASE_URL ?>/provider/index.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'provider/index.php') ? 'active' : '' ?>">
                 <i class="fa-solid fa-clipboard-list"></i>
                 <span>Orderan</span>
@@ -115,11 +116,11 @@
                 <i class="fa-solid fa-comments"></i>
                 <span>Obrolan</span>
             </a>
-            <a href="<?= BASE_URL ?>/provider/profile.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'profile.php') ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/provider/profile.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'provider/profile.php') ? 'active' : '' ?>">
                 <i class="fa-solid fa-user-gear"></i>
                 <span>Profil</span>
             </a>
-        <?php elseif (has_role('admin')): ?>
+        <?php elseif ($active_nav_mode === 'admin'): ?>
             <a href="<?= BASE_URL ?>/admin/index.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', '/admin/index.php') ? 'active' : '' ?>">
                 <i class="fa-solid fa-gauge-high"></i>
                 <span>Dashboard</span>
@@ -128,7 +129,7 @@
                 <i class="fa-solid fa-rectangle-ad"></i>
                 <span>Banner</span>
             </a>
-            <a href="<?= BASE_URL ?>/admin/profile.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'profile.php') ? 'active' : '' ?>">
+            <a href="<?= BASE_URL ?>/admin/profile.php" class="mobile-nav-item <?= str_contains($_SERVER['REQUEST_URI'] ?? '', 'admin/profile.php') ? 'active' : '' ?>">
                 <i class="fa-solid fa-user-shield"></i>
                 <span>Profil</span>
             </a>

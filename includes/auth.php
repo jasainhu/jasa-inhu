@@ -90,12 +90,38 @@ function require_role($roles, string $fallback = '/'): void {
 }
 
 /**
+ * Mendapatkan mode profil aktif (penyedia, pengguna, atau admin)
+ * Akun mitra yang beralih ke mode pelanggan biasa akan mengembalikan 'pengguna'
+ */
+function get_active_profile_mode(): string {
+    if (!is_logged_in()) {
+        return 'guest';
+    }
+    $real_role = strtolower((string)($_SESSION['user_role'] ?? 'pengguna'));
+    if ($real_role === 'penyedia') {
+        return ($_SESSION['active_profile_mode'] ?? 'penyedia') === 'pengguna' ? 'pengguna' : 'penyedia';
+    }
+    return $real_role;
+}
+
+/**
+ * Mengatur mode profil aktif
+ */
+function set_active_profile_mode(string $mode): void {
+    if (in_array($mode, ['pengguna', 'penyedia'])) {
+        $_SESSION['active_profile_mode'] = $mode;
+    }
+}
+
+/**
  * URL dashboard berdasarkan role (untuk menu profil/navigasi eksplisit)
  */
 function get_dashboard_url_for_role(string $role): string {
+    if (strtolower($role) === 'penyedia') {
+        return get_active_profile_mode() === 'pengguna' ? '/user/profile.php' : '/provider/index.php';
+    }
     return match (strtolower($role)) {
         'admin'    => '/admin/index.php',
-        'penyedia' => '/provider/index.php',
         default    => '/user/profile.php'
     };
 }

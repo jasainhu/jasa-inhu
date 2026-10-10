@@ -8,7 +8,7 @@ require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-require_role('pengguna');
+require_role(['pengguna', 'penyedia']);
 
 // Alihkan pengguna biasa langsung ke Profil Saya
 redirect('/user/profile.php');

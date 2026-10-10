@@ -10,7 +10,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-require_role('pengguna');
+require_role(['pengguna', 'penyedia']);
 
 $user = current_user();
 $db = get_db();
