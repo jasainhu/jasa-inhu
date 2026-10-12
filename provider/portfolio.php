@@ -53,51 +53,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 @mkdir($portfolioDir, 0777, true);
             }
 
-            // Upload Image After
-            $fileAfter = $_FILES['image_after'];
-            $extAfter = strtolower(pathinfo($fileAfter['name'], PATHINFO_EXTENSION));
+            try {
+                $pathAfter = save_uploaded_media($_FILES['image_after'], 'portfolios', 'after_' . $provider['id'], 1200, 82);
+                $pathBefore = null;
 
-            if (!in_array($extAfter, $allowed)) {
-                $error = 'Format foto hasil pengerjaan harus JPG, PNG, atau WebP.';
-            } elseif ($fileAfter['size'] > $max_size) {
-                $error = 'Ukuran foto hasil pengerjaan terlalu besar (Maks 10MB).';
-            } else {
-                $filenameAfter = 'after_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extAfter;
-                $targetAfter = $portfolioDir . '/' . $filenameAfter;
-
-                if (move_uploaded_file($fileAfter['tmp_name'], $targetAfter)) {
-                    $pathAfter = 'uploads/portfolios/' . $filenameAfter;
-                    $pathBefore = null;
-
-                    // Handle Optional Image Before
-                    if (isset($_FILES['image_before']) && $_FILES['image_before']['error'] === UPLOAD_ERR_OK) {
-                        $fileBefore = $_FILES['image_before'];
-                        $extBefore = strtolower(pathinfo($fileBefore['name'], PATHINFO_EXTENSION));
-                        if (in_array($extBefore, $allowed) && $fileBefore['size'] <= $max_size) {
-                            $filenameBefore = 'before_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extBefore;
-                            $targetBefore = $portfolioDir . '/' . $filenameBefore;
-                            if (move_uploaded_file($fileBefore['tmp_name'], $targetBefore)) {
-                                $pathBefore = 'uploads/portfolios/' . $filenameBefore;
-                            }
-                        }
-                    }
-
-                    try {
-                        $stmtIns = $db->prepare("
-                            INSERT INTO provider_portfolios 
-                            (provider_id, title, description, image_before, image_after, service_date, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, NOW())
-                        ");
-                        $stmtIns->execute([$provider['id'], $title, $description, $pathBefore, $pathAfter, $service_date]);
-
-                        set_flash('success', 'Foto hasil kerja berhasil ditambahkan ke portofolio Anda!');
-                        redirect('/provider/portfolio.php');
-                    } catch (Exception $e) {
-                        $error = 'Gagal menyimpan portofolio: ' . $e->getMessage();
-                    }
-                } else {
-                    $error = 'Gagal mengunggah file foto. Pastikan izin folder uploads aktif.';
+                if (isset($_FILES['image_before']) && $_FILES['image_before']['error'] === UPLOAD_ERR_OK) {
+                    $pathBefore = save_uploaded_media($_FILES['image_before'], 'portfolios', 'before_' . $provider['id'], 1200, 82);
                 }
+
+                $stmtIns = $db->prepare("
+                    INSERT INTO provider_portfolios 
+                    (provider_id, title, description, image_before, image_after, service_date, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, NOW())
+                ");
+                $stmtIns->execute([$provider['id'], $title, $description, $pathBefore, $pathAfter, $service_date]);
+
+                set_flash('success', 'Foto hasil kerja berhasil ditambahkan ke portofolio Anda!');
+                redirect('/provider/portfolio.php');
+            } catch (Exception $e) {
+                $error = 'Gagal menyimpan portofolio: ' . $e->getMessage();
             }
         }
     }
@@ -169,16 +143,16 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border shadow-sm rounded-4 overflow-hidden bg-white">
                         <!-- Before & After or Single Image View -->
-                        <?php if (!empty($p['image_before']) && file_exists(__DIR__ . '/../' . $p['image_before'])): ?>
+                        <?php if (has_media($p['image_before'] ?? '')): ?>
                             <div class="row g-0 border-bottom" style="height: 190px;">
                                 <div class="col-6 position-relative border-end overflow-hidden">
-                                    <img src="<?= BASE_URL ?>/<?= e($p['image_before']) ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover">
+                                    <img src="<?= e(get_media_url($p['image_before'])) ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover">
                                     <span class="badge bg-danger position-absolute top-0 start-0 m-2 fw-bold" style="font-size: 0.65rem;">
                                         SEBELUM
                                     </span>
                                 </div>
                                 <div class="col-6 position-relative overflow-hidden">
-                                    <img src="<?= BASE_URL ?>/<?= e($p['image_after']) ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover">
+                                    <img src="<?= e(get_media_url($p['image_after'])) ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover">
                                     <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">
                                         SESUDAH
                                     </span>
@@ -186,7 +160,7 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                         <?php else: ?>
                             <div class="position-relative overflow-hidden border-bottom" style="height: 190px;">
-                                <img src="<?= BASE_URL ?>/<?= e($p['image_after']) ?>" alt="<?= e($p['title']) ?>" class="w-100 h-100 object-fit-cover">
+                                <img src="<?= e(get_media_url($p['image_after'])) ?>" alt="<?= e($p['title']) ?>" class="w-100 h-100 object-fit-cover">
                                 <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">
                                     HASIL PENGERJAAN
                                 </span>

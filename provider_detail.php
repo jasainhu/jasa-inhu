@@ -166,8 +166,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
                 <!-- Cover Photo Banner -->
                 <div class="position-relative" style="height: 220px; background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
-                    <?php if (!empty($provider['image_url']) && file_exists(__DIR__ . '/' . $provider['image_url'])): ?>
-                        <img src="<?= BASE_URL ?>/<?= e($provider['image_url']) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover" style="opacity: 0.85;">
+                    <?php if (has_media($provider['image_url'] ?? '')): ?>
+                        <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover" style="opacity: 0.85;">
                     <?php else: ?>
                         <div class="w-100 h-100 d-flex align-items-center justify-content-center text-white opacity-40">
                             <i class="fa-solid <?= e($provider['category_icon'] ?: 'fa-wrench') ?>" style="font-size: 5rem;"></i>
@@ -367,11 +367,11 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="col-md-6">
                                 <div class="card border rounded-3 overflow-hidden shadow-xs h-100">
                                     <div class="position-relative" style="height: 180px; background: #f1f5f9;">
-                                        <?php if (!empty($port['after_image_url']) && file_exists(__DIR__ . '/' . $port['after_image_url'])): ?>
-                                            <img src="<?= BASE_URL ?>/<?= e($port['after_image_url']) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover">
+                                        <?php if (has_media($port['after_image_url'] ?? '')): ?>
+                                            <img src="<?= e(get_media_url($port['after_image_url'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover">
                                             <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs">Hasil Selesai</span>
-                                        <?php elseif (!empty($port['before_image_url']) && file_exists(__DIR__ . '/' . $port['before_image_url'])): ?>
-                                            <img src="<?= BASE_URL ?>/<?= e($port['before_image_url']) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover">
+                                        <?php elseif (has_media($port['before_image_url'] ?? '')): ?>
+                                            <img src="<?= e(get_media_url($port['before_image_url'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover">
                                         <?php else: ?>
                                             <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">
                                                 <i class="fa-solid fa-camera fs-2 opacity-50"></i>

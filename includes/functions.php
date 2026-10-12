@@ -279,6 +279,164 @@ function save_avatar_upload(array $file, int $userId): string {
 }
 
 /**
+ * Mendapatkan URL Media (Foto Usaha, Portofolio, KTP, Banner, Bukti Transfer, dll)
+ * Mendukung Data URI Base64, External URL (http/https), dan File Lokal
+ */
+function get_media_url(?string $path, string $default = ''): string {
+    if (empty($path)) {
+        return $default;
+    }
+    // Jika Base64 Data URI atau External URL langsung kembalikan as-is
+    if (str_starts_with($path, 'data:') || str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        return $path;
+    }
+    return BASE_URL . '/' . ltrim($path, '/');
+}
+
+/**
+ * Cek apakah media ada / valid untuk ditampilkan
+ */
+function has_media(?string $path): bool {
+    if (empty($path)) {
+        return false;
+    }
+    if (str_starts_with($path, 'data:') || str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        return true;
+    }
+    $localFile = dirname(__DIR__) . '/' . ltrim($path, '/');
+    return file_exists($localFile);
+}
+
+/**
+ * Menyimpan upload media secara universal:
+ * - Kompatibel Serverless / Vercel (Read-only filesystem) -> otomatis fallback simpan ke Base64 Data URI
+ * - Kompatibel Server Standar / VPS / cPanel / Localhost -> simpan ke folder uploads/...
+ * - Otomatis kompresi gambar dengan GD agar hemat kuota & database
+ */
+function save_uploaded_media(array $file, string $subfolder, string $prefix = 'media', int $maxDim = 1200, int $quality = 82, bool $allowPdf = false): string {
+    if (empty($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) {
+        $errCode = $file['error'] ?? UPLOAD_ERR_NO_FILE;
+        throw new Exception('File gagal diunggah (Kode status: ' . $errCode . ').');
+    }
+
+    $fileTmp = $file['tmp_name'];
+    $fileSize = $file['size'];
+    $fileExt = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+
+    $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
+    if ($allowPdf) {
+        $allowedExts[] = 'pdf';
+    }
+
+    if (!in_array($fileExt, $allowedExts)) {
+        throw new Exception('Format file tidak didukung. Gunakan: ' . implode(', ', array_map('strtoupper', $allowedExts)));
+    }
+
+    if ($fileSize > 12 * 1024 * 1024) {
+        throw new Exception('Ukuran file maksimal 12 MB.');
+    }
+
+    $uploadDir = dirname(__DIR__) . '/uploads/' . trim($subfolder, '/');
+    $isDirWritable = false;
+
+    // Cek apakah direktori bisa dibuat / ditulis
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0777, true);
+    }
+    if (is_dir($uploadDir) && is_writable($uploadDir)) {
+        $isDirWritable = true;
+    }
+
+    $newFileName = $prefix . '_' . time() . '_' . rand(100, 999) . '.' . ($fileExt === 'pdf' ? 'pdf' : 'jpg');
+    $targetPath = $uploadDir . '/' . $newFileName;
+
+    // 1. Kasus Berkas PDF
+    if ($fileExt === 'pdf') {
+        if ($isDirWritable && @move_uploaded_file($fileTmp, $targetPath)) {
+            return 'uploads/' . trim($subfolder, '/') . '/' . $newFileName;
+        }
+        $raw = @file_get_contents($fileTmp);
+        if ($raw !== false) {
+            return 'data:application/pdf;base64,' . base64_encode($raw);
+        }
+        throw new Exception('Gagal memproses berkas PDF.');
+    }
+
+    // 2. Kasus Gambar (Gunakan GD untuk resize proporsional & kompresi)
+    if (function_exists('imagecreatefromstring')) {
+        $rawContent = @file_get_contents($fileTmp);
+        if ($rawContent !== false) {
+            $img = @imagecreatefromstring($rawContent);
+            if ($img !== false) {
+                // Auto koreksi orientasi jika EXIF tersedia
+                if (function_exists('exif_read_data')) {
+                    $exif = @exif_read_data($fileTmp);
+                    if (!empty($exif['Orientation'])) {
+                        switch ($exif['Orientation']) {
+                            case 8: $img = imagerotate($img, 90, 0); break;
+                            case 3: $img = imagerotate($img, 180, 0); break;
+                            case 6: $img = imagerotate($img, -90, 0); break;
+                        }
+                    }
+                }
+
+                $origW = imagesx($img);
+                $origH = imagesy($img);
+
+                // Hitung dimensi baru proporsional jika melebihi batas maksimal
+                if ($origW > $maxDim || $origH > $maxDim) {
+                    if ($origW >= $origH) {
+                        $newW = $maxDim;
+                        $newH = (int)round(($origH / $origW) * $maxDim);
+                    } else {
+                        $newH = $maxDim;
+                        $newW = (int)round(($origW / $origH) * $maxDim);
+                    }
+                } else {
+                    $newW = $origW;
+                    $newH = $origH;
+                }
+
+                $resized = imagecreatetruecolor($newW, $newH);
+                imagealphablending($resized, false);
+                imagesavealpha($resized, true);
+                $white = imagecolorallocate($resized, 255, 255, 255);
+                imagefilledrectangle($resized, 0, 0, $newW, $newH, $white);
+                imagecopyresampled($resized, $img, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+
+                ob_start();
+                imagejpeg($resized, null, $quality);
+                $compressedJpeg = ob_get_clean();
+                imagedestroy($resized);
+                imagedestroy($img);
+
+                if (!empty($compressedJpeg)) {
+                    // Coba simpan fisik jika direktori server writable
+                    if ($isDirWritable && @file_put_contents($targetPath, $compressedJpeg) !== false) {
+                        return 'uploads/' . trim($subfolder, '/') . '/' . $newFileName;
+                    }
+                    // Serverless fallback: Kembalikan Base64 Data URI
+                    return 'data:image/jpeg;base64,' . base64_encode($compressedJpeg);
+                }
+            }
+        }
+    }
+
+    // 3. Fallback jika GD tidak ada atau gagal
+    if ($isDirWritable && @move_uploaded_file($fileTmp, $targetPath)) {
+        return 'uploads/' . trim($subfolder, '/') . '/' . $newFileName;
+    }
+
+    $rawContent = @file_get_contents($fileTmp);
+    if ($rawContent !== false) {
+        $mime = ($fileExt === 'png') ? 'image/png' : (($fileExt === 'webp') ? 'image/webp' : 'image/jpeg');
+        return 'data:' . $mime . ';base64,' . base64_encode($rawContent);
+    }
+
+    throw new Exception('Gagal memproses file unggahan.');
+}
+
+/**
  * Ambil daftar semua kecamatan di Inhu
  */
 function get_all_districts(): array {

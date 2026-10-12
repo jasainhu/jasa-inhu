@@ -260,9 +260,9 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="carousel-inner rounded-3 rounded-md-4 shadow-sm overflow-hidden hero-carousel-inner h-100">
                             <?php foreach ($banners as $idx => $b): ?>
                                 <div class="carousel-item h-100 <?= $idx === 0 ? 'active' : '' ?>">
-                                    <?php if (!empty($b['image_url']) && file_exists(__DIR__ . '/' . $b['image_url'])): ?>
+                                    <?php if (has_media($b['image_url'] ?? '')): ?>
                                         <div class="banner-slide-wrapper position-relative h-100 w-100 overflow-hidden">
-                                            <img src="<?= BASE_URL ?>/<?= e($b['image_url']) ?>" class="d-block w-100 h-100 banner-img-responsive" alt="Banner Promo">
+                                            <img src="<?= e(get_media_url($b['image_url'])) ?>" class="d-block w-100 h-100 banner-img-responsive" alt="Banner Promo">
                                             <?php if (!empty($b['show_overlay'])): ?>
                                                 <div class="banner-slide-overlay d-flex flex-column justify-content-center p-2 p-md-4 text-white">
                                                     <span class="badge py-1 px-2 fw-bold mb-1 align-self-start" style="background-color: <?= e($b['badge_color'] ?: '#0d9488') ?>; font-size: 0.65rem;">
@@ -315,11 +315,11 @@ require_once __DIR__ . '/includes/header.php';
                     <?php if (!empty($side_top_banner)): ?>
                         <?php 
                         $st_link = !empty($side_top_banner['link_url']) ? e($side_top_banner['link_url']) : '#';
-                        $st_has_img = !empty($side_top_banner['image_url']) && file_exists(__DIR__ . '/' . $side_top_banner['image_url']);
+                        $st_has_img = has_media($side_top_banner['image_url'] ?? '');
                         ?>
                         <a href="<?= $st_link ?>" class="shopee-side-banner shadow-sm <?= !$st_has_img ? 'shopee-side-banner-emergency' : '' ?>" style="<?= (!$st_has_img && !empty($side_top_banner['badge_color'])) ? 'background: linear-gradient(135deg, #0f172a 0%, ' . e($side_top_banner['badge_color']) . ' 100%);' : '' ?>">
                             <?php if ($st_has_img): ?>
-                                <img src="<?= BASE_URL ?>/<?= e($side_top_banner['image_url']) ?>" alt="<?= e($side_top_banner['title']) ?>" class="shopee-side-banner-img">
+                                <img src="<?= e(get_media_url($side_top_banner['image_url'])) ?>" alt="<?= e($side_top_banner['title']) ?>" class="shopee-side-banner-img">
                                 <?php if (!empty($side_top_banner['show_overlay'])): ?>
                                     <div class="position-relative z-1 d-flex flex-column justify-content-between h-100 p-1.5 p-md-3" style="background: linear-gradient(to right, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.3) 100%);">
                                         <div>
@@ -363,11 +363,11 @@ require_once __DIR__ . '/includes/header.php';
                     <?php if (!empty($side_bottom_banner)): ?>
                         <?php 
                         $sb_link = !empty($side_bottom_banner['link_url']) ? e($side_bottom_banner['link_url']) : '#';
-                        $sb_has_img = !empty($side_bottom_banner['image_url']) && file_exists(__DIR__ . '/' . $side_bottom_banner['image_url']);
+                        $sb_has_img = has_media($side_bottom_banner['image_url'] ?? '');
                         ?>
                         <a href="<?= $sb_link ?>" class="shopee-side-banner shadow-sm <?= !$sb_has_img ? 'shopee-side-banner-partner' : '' ?>" style="<?= (!$sb_has_img && !empty($side_bottom_banner['badge_color'])) ? 'background: linear-gradient(135deg, #042f2e 0%, ' . e($side_bottom_banner['badge_color']) . ' 100%);' : '' ?>">
                             <?php if ($sb_has_img): ?>
-                                <img src="<?= BASE_URL ?>/<?= e($side_bottom_banner['image_url']) ?>" alt="<?= e($side_bottom_banner['title']) ?>" class="shopee-side-banner-img">
+                                <img src="<?= e(get_media_url($side_bottom_banner['image_url'])) ?>" alt="<?= e($side_bottom_banner['title']) ?>" class="shopee-side-banner-img">
                                 <?php if (!empty($side_bottom_banner['show_overlay'])): ?>
                                     <div class="position-relative z-1 d-flex flex-column justify-content-between h-100 p-1.5 p-md-3" style="background: linear-gradient(to right, rgba(4,47,46,0.88) 0%, rgba(4,47,46,0.3) 100%);">
                                         <div>
@@ -514,8 +514,8 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="provider-card-modern h-100 rounded-3 rounded-md-4 border bg-white shadow-sm overflow-hidden d-flex flex-column">
                             <!-- Cover Foto Usaha / Workshop (Dengan Fallback Cantik) -->
                             <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="provider-cover-wrap position-relative d-block text-decoration-none">
-                                <?php if (!empty($prov['image_url']) && file_exists(__DIR__ . '/' . $prov['image_url'])): ?>
-                                    <img src="<?= BASE_URL ?>/<?= e($prov['image_url']) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img">
+                                <?php if (has_media($prov['image_url'] ?? '')): ?>
+                                    <img src="<?= e(get_media_url($prov['image_url'])) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img">
                                 <?php else: ?>
                                     <div class="provider-cover-fallback d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0d9488 0%, #0f172a 100%);">
                                         <div class="text-center text-white p-2 p-md-3">

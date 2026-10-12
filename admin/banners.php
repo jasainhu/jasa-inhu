@@ -33,43 +33,12 @@ function handle_banner_upload(?array $file, ?string &$error_msg): ?string {
         return null;
     }
 
-    $max_size = 10 * 1024 * 1024; // 10MB
-    if ($file['size'] > $max_size) {
-        $error_msg = 'Ukuran file gambar banner maksimal 10MB.';
+    try {
+        return save_uploaded_media($file, 'banners', 'banner', 1400, 85);
+    } catch (Exception $e) {
+        $error_msg = $e->getMessage();
         return null;
     }
-
-    $allowed_types = ['image/jpeg', 'image/png', 'image/webp'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
-
-    if (!in_array($mime, $allowed_types)) {
-        $error_msg = 'Format gambar harus JPG, PNG, atau WebP.';
-        return null;
-    }
-
-    $ext = match ($mime) {
-        'image/jpeg' => 'jpg',
-        'image/png'  => 'png',
-        'image/webp' => 'webp',
-        default      => 'jpg'
-    };
-
-    $target_dir = __DIR__ . '/../uploads/banners';
-    if (!is_dir($target_dir)) {
-        mkdir($target_dir, 0777, true);
-    }
-
-    $filename = 'banner_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-    $target_path = $target_dir . '/' . $filename;
-
-    if (move_uploaded_file($file['tmp_name'], $target_path)) {
-        return 'uploads/banners/' . $filename;
-    }
-
-    $error_msg = 'Gagal menyimpan file gambar ke server.';
-    return null;
 }
 
 // Handle Form POST

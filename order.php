@@ -146,8 +146,8 @@ require_once __DIR__ . '/includes/header.php';
     <div class="card border-0 shadow-sm p-4 mb-4 text-white" style="background: linear-gradient(135deg, var(--dark) 0%, #0f766e 100%); border-radius: 16px;">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">
-                <?php if (!empty($provider['image_url']) && file_exists(__DIR__ . '/' . $provider['image_url'])): ?>
-                    <img src="<?= BASE_URL ?>/<?= e($provider['image_url']) ?>" alt="<?= e($provider['business_name']) ?>" style="width: 68px; height: 68px; object-fit: cover; border-radius: 16px; border: 2px solid rgba(255,255,255,0.3);" class="shadow-sm">
+                <?php if (has_media($provider['image_url'] ?? '')): ?>
+                    <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="<?= e($provider['business_name']) ?>" style="width: 68px; height: 68px; object-fit: cover; border-radius: 16px; border: 2px solid rgba(255,255,255,0.3);" class="shadow-sm">
                 <?php else: ?>
                     <div class="provider-avatar" style="width: 64px; height: 64px; font-size: 1.6rem; border-radius: 16px; background: rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center;">
                         <i class="fa-solid <?= e($provider['category_icon']) ?>"></i>

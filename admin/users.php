@@ -432,9 +432,14 @@ require_once __DIR__ . '/includes/header.php';
                                         </span>
                                     <?php endif; ?>
 
-                                    <?php if (!empty($u['id_card_image']) && file_exists(__DIR__ . '/../' . $u['id_card_image'])): ?>
-                                        <a href="<?= BASE_URL ?>/<?= e($u['id_card_image']) ?>" target="_blank" class="badge bg-info-subtle text-info-emphasis border border-info-subtle text-decoration-none py-0.5 px-1.5" style="font-size: 0.68rem;">
+                                    <?php if (has_media($u['id_card_image'] ?? '')): ?>
+                                        <a href="<?= e(get_media_url($u['id_card_image'])) ?>" target="_blank" class="badge bg-info-subtle text-info-emphasis border border-info-subtle text-decoration-none py-0.5 px-1.5" style="font-size: 0.68rem;">
                                             <i class="fa-solid fa-id-card me-0.5"></i> Foto KTP ↗
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if (has_media($u['certificate_url'] ?? '')): ?>
+                                        <a href="<?= e(get_media_url($u['certificate_url'])) ?>" target="_blank" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none py-0.5 px-1.5" style="font-size: 0.68rem;">
+                                            <i class="fa-solid fa-file-shield me-0.5"></i> Berkas STR ↗
                                         </a>
                                     <?php endif; ?>
                                 </div>

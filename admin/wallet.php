@@ -283,8 +283,8 @@ $recent_transactions = $stmtRecentTx->fetchAll();
                             </td>
                             <td><?= e($pt['payment_method']) ?></td>
                             <td>
-                                <?php if (!empty($pt['proof_image']) && file_exists(__DIR__ . '/../' . $pt['proof_image'])): ?>
-                                    <a href="<?= BASE_URL ?>/<?= e($pt['proof_image']) ?>" target="_blank" class="btn btn-sm btn-outline-teal py-0.5 px-2">
+                                <?php if (has_media($pt['proof_image'] ?? '')): ?>
+                                    <a href="<?= e(get_media_url($pt['proof_image'])) ?>" target="_blank" class="btn btn-sm btn-outline-teal py-0.5 px-2">
                                         <i class="fa-solid fa-image me-1"></i> Lihat Struk
                                     </a>
                                 <?php else: ?>

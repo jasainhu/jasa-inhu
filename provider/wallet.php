@@ -52,20 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 try {
                     $proof_image = null;
                     if (!empty($_FILES['proof_image']['name']) && $_FILES['proof_image']['error'] !== UPLOAD_ERR_NO_FILE) {
-                        $errCode = $_FILES['proof_image']['error'];
-                        if ($errCode === UPLOAD_ERR_OK) {
-                            $ext = strtolower(pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION));
-                            $allowed = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
-                            if (in_array($ext, $allowed) && $_FILES['proof_image']['size'] <= 10 * 1024 * 1024) {
-                                $uploadDir = __DIR__ . '/../uploads/topups/';
-                                if (!is_dir($uploadDir)) {
-                                    @mkdir($uploadDir, 0777, true);
-                                }
-                                $filename = 'topup_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $ext;
-                                if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $uploadDir . $filename)) {
-                                    $proof_image = 'uploads/topups/' . $filename;
-                                }
-                            }
+                        try {
+                            $proof_image = save_uploaded_media($_FILES['proof_image'], 'topups', 'topup_' . $provider['id'], 1200, 85);
+                        } catch (Exception $e) {
+                            // Abaikan error jika bukti transfer opsional saat buat tiket
                         }
                     }
 

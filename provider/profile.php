@@ -69,112 +69,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Handle image upload jika ada file foto baru
+        // Handle image upload jika ada file foto tempat usaha / profil baru
         if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-            $errCode = $_FILES['image']['error'];
-            if ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE) {
-                $error = 'Ukuran foto profil/tempat usaha terlalu besar melebihi batas upload server.';
-                $active_tab = 'tab-info';
-            } elseif ($errCode !== UPLOAD_ERR_OK) {
-                $error = 'Gagal mengunggah foto profil/tempat usaha (Error: ' . $errCode . ').';
-                $active_tab = 'tab-info';
-            } else {
-                $file = $_FILES['image'];
-                $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
-                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-                if (!in_array($ext, $allowed_exts)) {
-                    $error = 'Format file tidak didukung. Gunakan JPG, PNG, atau WebP.';
-                    $active_tab = 'tab-info';
-                } elseif ($file['size'] > 10 * 1024 * 1024) {
-                    $error = 'Ukuran file foto terlalu besar. Maksimal 10MB.';
-                    $active_tab = 'tab-info';
-                } else {
-                    $filename = 'provider_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $ext;
-                    $targetPath = __DIR__ . '/../uploads/providers/' . $filename;
-                    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                        if (!empty($provider['image_url']) && file_exists(__DIR__ . '/../' . $provider['image_url'])) {
-                            @unlink(__DIR__ . '/../' . $provider['image_url']);
-                        }
-                        $image_url = 'uploads/providers/' . $filename;
-                    } else {
-                        $error = 'Gagal menyimpan foto profil ke direktori server.';
-                        $active_tab = 'tab-info';
-                    }
+            try {
+                $newImageUrl = save_uploaded_media($_FILES['image'], 'providers', 'provider_' . $provider['id'], 1200, 82);
+                if (!empty($provider['image_url']) && !str_starts_with($provider['image_url'], 'data:') && file_exists(__DIR__ . '/../' . $provider['image_url'])) {
+                    @unlink(__DIR__ . '/../' . $provider['image_url']);
                 }
+                $image_url = $newImageUrl;
+            } catch (Exception $e) {
+                $error = 'Gagal mengunggah foto tempat usaha: ' . $e->getMessage();
+                $active_tab = 'tab-info';
             }
         }
 
         // Handle certificate/STR upload (Opsional khusus tenaga medis/homecare)
         if (empty($error) && isset($_FILES['certificate']) && $_FILES['certificate']['error'] !== UPLOAD_ERR_NO_FILE) {
-            $errCode = $_FILES['certificate']['error'];
-            if ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE) {
-                $error = 'Ukuran berkas sertifikat/STR terlalu besar melebihi batas upload server.';
-                $active_tab = 'tab-ktp';
-            } elseif ($errCode !== UPLOAD_ERR_OK) {
-                $error = 'Gagal mengunggah sertifikat/STR (Error: ' . $errCode . ').';
-                $active_tab = 'tab-ktp';
-            } else {
-                $fileCert = $_FILES['certificate'];
-                $allowed_cert_exts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
-                $extCert = strtolower(pathinfo($fileCert['name'], PATHINFO_EXTENSION));
-
-                if (!in_array($extCert, $allowed_cert_exts)) {
-                    $error = 'Format sertifikat/STR tidak didukung. Gunakan JPG, PNG, WebP, atau PDF.';
-                    $active_tab = 'tab-ktp';
-                } elseif ($fileCert['size'] > 10 * 1024 * 1024) {
-                    $error = 'Ukuran berkas sertifikat/STR maksimal 10MB.';
-                    $active_tab = 'tab-ktp';
-                } else {
-                    $filenameCert = 'cert_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extCert;
-                    $targetPathCert = __DIR__ . '/../uploads/certificates/' . $filenameCert;
-                    if (move_uploaded_file($fileCert['tmp_name'], $targetPathCert)) {
-                        if (!empty($provider['certificate_url']) && file_exists(__DIR__ . '/../' . $provider['certificate_url'])) {
-                            @unlink(__DIR__ . '/../' . $provider['certificate_url']);
-                        }
-                        $certificate_url = 'uploads/certificates/' . $filenameCert;
-                    } else {
-                        $error = 'Gagal menyimpan berkas sertifikat ke server.';
-                        $active_tab = 'tab-ktp';
-                    }
+            try {
+                $newCertUrl = save_uploaded_media($_FILES['certificate'], 'certificates', 'cert_' . $provider['id'], 1400, 85, true);
+                if (!empty($provider['certificate_url']) && !str_starts_with($provider['certificate_url'], 'data:') && file_exists(__DIR__ . '/../' . $provider['certificate_url'])) {
+                    @unlink(__DIR__ . '/../' . $provider['certificate_url']);
                 }
+                $certificate_url = $newCertUrl;
+            } catch (Exception $e) {
+                $error = 'Gagal mengunggah sertifikat/STR: ' . $e->getMessage();
+                $active_tab = 'tab-ktp';
             }
         }
 
         // Handle Foto KTP Upload (Untuk Verifikasi Identitas)
         if (empty($error) && isset($_FILES['id_card_image']) && $_FILES['id_card_image']['error'] !== UPLOAD_ERR_NO_FILE) {
-            $errCode = $_FILES['id_card_image']['error'];
-            if ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE) {
-                $error = 'Ukuran berkas foto KTP terlalu besar melebihi batas upload server. Silakan coba kembali, foto akan dikompresi otomatis.';
-                $active_tab = 'tab-ktp';
-            } elseif ($errCode !== UPLOAD_ERR_OK) {
-                $error = 'Gagal mengunggah foto KTP (Kode status: ' . $errCode . '). Silakan pilih ulang foto.';
-                $active_tab = 'tab-ktp';
-            } else {
-                $fileKtp = $_FILES['id_card_image'];
-                $allowed_ktp_exts = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
-                $extKtp = strtolower(pathinfo($fileKtp['name'], PATHINFO_EXTENSION));
-
-                if (!in_array($extKtp, $allowed_ktp_exts)) {
-                    $error = 'Format foto KTP tidak didukung. Gunakan file JPG, PNG, atau WebP.';
-                    $active_tab = 'tab-ktp';
-                } elseif ($fileKtp['size'] > 10 * 1024 * 1024) {
-                    $error = 'Ukuran berkas foto KTP maksimal 10MB.';
-                    $active_tab = 'tab-ktp';
-                } else {
-                    $filenameKtp = 'ktp_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extKtp;
-                    $targetPathKtp = __DIR__ . '/../uploads/ktp/' . $filenameKtp;
-                    if (move_uploaded_file($fileKtp['tmp_name'], $targetPathKtp)) {
-                        if (!empty($provider['id_card_image']) && file_exists(__DIR__ . '/../' . $provider['id_card_image'])) {
-                            @unlink(__DIR__ . '/../' . $provider['id_card_image']);
-                        }
-                        $id_card_image = 'uploads/ktp/' . $filenameKtp;
-                        $active_tab = 'tab-ktp';
-                    } else {
-                        $error = 'Gagal menyimpan foto KTP ke folder server. Pastikan hak akses folder uploads/ktp tersedia.';
-                        $active_tab = 'tab-ktp';
-                    }
+            try {
+                $newKtpUrl = save_uploaded_media($_FILES['id_card_image'], 'ktp', 'ktp_' . $provider['id'], 1600, 85, false);
+                if (!empty($provider['id_card_image']) && !str_starts_with($provider['id_card_image'], 'data:') && file_exists(__DIR__ . '/../' . $provider['id_card_image'])) {
+                    @unlink(__DIR__ . '/../' . $provider['id_card_image']);
                 }
+                $id_card_image = $newKtpUrl;
+                $active_tab = 'tab-ktp';
+            } catch (Exception $e) {
+                $error = 'Gagal mengunggah foto KTP: ' . $e->getMessage();
+                $active_tab = 'tab-ktp';
             }
         }
 
@@ -275,8 +209,8 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- Foto Profil / Usaha -->
                 <div class="position-relative flex-shrink-0">
                     <div class="rounded-4 overflow-hidden border border-2 border-white shadow-xs" style="width: 76px; height: 76px; background: #e2e8f0;">
-                        <?php if (!empty($provider['image_url']) && file_exists(__DIR__ . '/../' . $provider['image_url'])): ?>
-                            <img src="<?= BASE_URL ?>/<?= e($provider['image_url']) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
+                        <?php if (has_media($provider['image_url'] ?? '')): ?>
+                            <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
                         <?php else: ?>
                             <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-25 text-white">
                                 <i class="fa-solid fa-store fs-3"></i>
@@ -413,8 +347,8 @@ require_once __DIR__ . '/../includes/header.php';
 
                             <div class="d-flex align-items-center gap-3">
                                 <div id="imagePreviewContainer" class="position-relative rounded-3 overflow-hidden border shadow-xs flex-shrink-0" style="width: 100px; height: 75px; background: #e2e8f0;">
-                                    <?php if (!empty($provider['image_url']) && file_exists(__DIR__ . '/../' . $provider['image_url'])): ?>
-                                        <img id="imagePreview" src="<?= BASE_URL ?>/<?= e($provider['image_url']) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
+                                    <?php if (has_media($provider['image_url'] ?? '')): ?>
+                                        <img id="imagePreview" src="<?= e(get_media_url($provider['image_url'])) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
                                     <?php else: ?>
                                         <div id="imagePlaceholder" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted">
                                             <i class="fa-solid fa-image fs-4 mb-0.5 opacity-50"></i>
@@ -571,12 +505,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="file" name="id_card_image" id="idCardImageInput" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,image/*">
                                 <div id="ktpCompressStatus"></div>
                                 <div id="ktpPreviewContainer" class="mt-2 position-relative rounded-3 overflow-hidden border shadow-xs <?= empty($provider['id_card_image']) ? 'd-none' : '' ?>" style="max-width: 260px; height: 160px; background: #f1f5f9;">
-                                    <img id="ktpPreviewImg" src="<?= !empty($provider['id_card_image']) ? BASE_URL . '/' . e($provider['id_card_image']) : '' ?>" alt="Foto KTP" class="w-100 h-100 object-fit-cover">
+                                    <img id="ktpPreviewImg" src="<?= !empty($provider['id_card_image']) ? e(get_media_url($provider['id_card_image'])) : '' ?>" alt="Foto KTP" class="w-100 h-100 object-fit-cover">
                                 </div>
-                                <?php if (!empty($provider['id_card_image']) && file_exists(__DIR__ . '/../' . $provider['id_card_image'])): ?>
+                                <?php if (has_media($provider['id_card_image'] ?? '')): ?>
                                     <div class="mt-1 small d-flex align-items-center justify-content-between" style="font-size: 0.72rem;">
-                                        <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan di server</span>
-                                        <a href="<?= BASE_URL ?>/<?= e($provider['id_card_image']) ?>" target="_blank" class="fw-semibold text-teal text-decoration-none">
+                                        <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan aman</span>
+                                        <a href="<?= e(get_media_url($provider['id_card_image'])) ?>" target="_blank" class="fw-semibold text-teal text-decoration-none">
                                             <i class="fa-solid fa-eye me-0.5"></i> Lihat Foto ↗
                                         </a>
                                     </div>
@@ -616,6 +550,13 @@ require_once __DIR__ . '/../includes/header.php';
                                     <div class="col-md-6 mb-1">
                                         <label class="form-label mb-1 small fw-bold">Scan Dokumen STR (JPG, PNG, PDF)</label>
                                         <input type="file" name="certificate" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,application/pdf">
+                                        <?php if (has_media($provider['certificate_url'] ?? '')): ?>
+                                            <div class="mt-1 small">
+                                                <a href="<?= e(get_media_url($provider['certificate_url'])) ?>" target="_blank" class="fw-semibold text-teal text-decoration-none" style="font-size: 0.72rem;">
+                                                    <i class="fa-solid fa-file-shield me-1"></i> Lihat Berkas STR Tersimpan ↗
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>

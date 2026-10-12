@@ -133,7 +133,7 @@ try {
     $tender_banner = null;
 }
 
-$has_banner_img = !empty($tender_banner['image_url']) && file_exists(__DIR__ . '/' . $tender_banner['image_url']);
+$has_banner_img = has_media($tender_banner['image_url'] ?? '');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -144,14 +144,14 @@ require_once __DIR__ . '/includes/header.php';
         <div class="mb-4 rounded-4 overflow-hidden shadow-sm">
             <?php if (!empty($tender_banner['link_url'])): ?>
                 <a href="<?= e($tender_banner['link_url']) ?>" target="_blank">
-                    <img src="<?= BASE_URL ?>/<?= e($tender_banner['image_url']) ?>" alt="<?= e($tender_banner['title']) ?>" class="w-100 object-fit-cover rounded-4" style="max-height: 360px;">
+                    <img src="<?= e(get_media_url($tender_banner['image_url'])) ?>" alt="<?= e($tender_banner['title']) ?>" class="w-100 object-fit-cover rounded-4" style="max-height: 360px;">
                 </a>
             <?php else: ?>
-                <img src="<?= BASE_URL ?>/<?= e($tender_banner['image_url']) ?>" alt="<?= e($tender_banner['title']) ?>" class="w-100 object-fit-cover rounded-4" style="max-height: 360px;">
+                <img src="<?= e(get_media_url($tender_banner['image_url'])) ?>" alt="<?= e($tender_banner['title']) ?>" class="w-100 object-fit-cover rounded-4" style="max-height: 360px;">
             <?php endif; ?>
         </div>
     <?php elseif ($has_banner_img && !empty($tender_banner['show_overlay'])): ?>
-        <div class="card border-0 shadow-sm p-4 p-md-5 mb-4 text-white overflow-hidden position-relative" style="background: linear-gradient(135deg, rgba(13, 148, 136, 0.90) 0%, rgba(4, 47, 46, 0.95) 100%), url('<?= BASE_URL ?>/<?= e($tender_banner['image_url']) ?>') center/cover no-repeat; border-radius: 20px;">
+        <div class="card border-0 shadow-sm p-4 p-md-5 mb-4 text-white overflow-hidden position-relative" style="background: linear-gradient(135deg, rgba(13, 148, 136, 0.90) 0%, rgba(4, 47, 46, 0.95) 100%), url('<?= e(get_media_url($tender_banner['image_url'])) ?>') center/cover no-repeat; border-radius: 20px;">
             <div class="position-absolute end-0 top-0 bottom-0 opacity-10 d-none d-lg-block p-4" style="pointer-events: none;">
                 <i class="fa-solid fa-bullhorn" style="font-size: 16rem; transform: rotate(-15deg);"></i>
             </div>

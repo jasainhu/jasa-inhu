@@ -28,6 +28,7 @@ try {
         "ALTER TABLE provider_portfolios MODIFY COLUMN image_after MEDIUMTEXT NULL",
         "ALTER TABLE provider_portfolios MODIFY COLUMN image_before MEDIUMTEXT NULL",
         "ALTER TABLE wallet_topup_requests MODIFY COLUMN proof_image MEDIUMTEXT NULL",
+        "ALTER TABLE banners MODIFY COLUMN image_url MEDIUMTEXT NULL",
     ];
 
     foreach ($queries as $q) {

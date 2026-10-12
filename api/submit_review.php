@@ -48,22 +48,10 @@ if (is_array($raw_tags)) {
 // Handle upload foto bukti hasil kerja (opsional)
 $photo_url = null;
 if (!empty($_FILES['photo']['name']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-    $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $_FILES['photo']['tmp_name']);
-    finfo_close($finfo);
-
-    if (in_array($mime, $allowed_types) && $_FILES['photo']['size'] <= 5 * 1024 * 1024) {
-        $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = 'review_' . $request_id . '_' . time() . '.' . strtolower($ext);
-        $uploadDir = __DIR__ . '/../uploads/reviews';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        $dest = $uploadDir . '/' . $filename;
-        if (move_uploaded_file($_FILES['photo']['tmp_name'], $dest)) {
-            $photo_url = 'uploads/reviews/' . $filename;
-        }
+    try {
+        $photo_url = save_uploaded_media($_FILES['photo'], 'reviews', 'review_' . $request_id, 1000, 80);
+    } catch (Exception $e) {
+        // Foto review bersifat opsional
     }
 }
 

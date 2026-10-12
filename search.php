@@ -310,8 +310,8 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
                     <div class="provider-card-modern h-100 rounded-3 rounded-md-4 border bg-white shadow-sm overflow-hidden d-flex flex-column">
                         <!-- Cover Foto Usaha / Workshop (Dengan Fallback Cantik) -->
                         <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="provider-cover-wrap position-relative d-block text-decoration-none">
-                            <?php if (!empty($prov['image_url']) && file_exists(__DIR__ . '/' . $prov['image_url'])): ?>
-                                <img src="<?= BASE_URL ?>/<?= e($prov['image_url']) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img">
+                            <?php if (has_media($prov['image_url'] ?? '')): ?>
+                                <img src="<?= e(get_media_url($prov['image_url'])) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img">
                             <?php else: ?>
                                 <div class="provider-cover-fallback d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0d9488 0%, #0f172a 100%);">
                                     <div class="text-center text-white p-2 p-md-3">
