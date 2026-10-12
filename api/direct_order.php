@@ -42,6 +42,10 @@ $provider_id = (int)($_POST['provider_id'] ?? 0);
 $problem = trim($_POST['problem'] ?? '');
 $address = trim($_POST['address'] ?? '');
 $preferred_time = trim($_POST['preferred_time'] ?? 'Hari ini / Segera');
+$order_for = trim($_POST['order_for'] ?? 'self');
+$recipient_name = trim($_POST['recipient_name'] ?? '');
+$recipient_phone = trim($_POST['recipient_phone'] ?? '');
+$maps_url = trim($_POST['maps_url'] ?? '');
 
 if ($provider_id <= 0) {
     echo json_encode(['success' => false, 'message' => 'Penyedia jasa tidak valid.']);
@@ -80,8 +84,18 @@ try {
 
     $title = mb_substr($problem, 0, 100);
     $full_desc = "Kebutuhan / Keluhan:\n" . $problem;
+
+    if ($order_for === 'other' && !empty($recipient_name)) {
+        $full_desc .= "\n\n[Pemesanan untuk Kerabat / Orang Lain]";
+        $full_desc .= "\nPenerima di Lokasi: " . $recipient_name . (!empty($recipient_phone) ? " (" . $recipient_phone . ")" : "");
+        $full_desc .= "\nAkun Pemesan: " . $user['name'] . " (" . $user['phone'] . ")";
+    }
+
     if (!empty($address)) {
         $full_desc .= "\n\nAlamat & Patokan:\n" . $address;
+    }
+    if (!empty($maps_url)) {
+        $full_desc .= "\nTitik Navigasi GPS: " . $maps_url;
     }
     if (!empty($preferred_time)) {
         $full_desc .= "\n\nWaktu yang Diinginkan:\n" . $preferred_time;
@@ -131,13 +145,21 @@ try {
         $cleanPhone = '62' . $cleanPhone;
     }
 
+    $targetName = ($order_for === 'other' && !empty($recipient_name)) ? $recipient_name . " (Dipesankan oleh {$user['name']})" : $user['name'];
+    $targetPhone = ($order_for === 'other' && !empty($recipient_phone)) ? $recipient_phone : $user['phone'];
+
     $waMessage = 
         "Halo *{$provider['business_name']}*, saya memesan jasa Anda via platform *JASA INHU* (No. Pesanan: #{$request_id}):\n\n" .
-        "👤 *Pemesan*: {$user['name']}\n" .
-        "📞 *No. Kontak*: {$user['phone']}\n" .
+        "👤 *Penerima Jasa*: {$targetName}\n" .
+        "📞 *No. Kontak WhatsApp*: {$targetPhone}\n" .
         "🔧 *Kebutuhan Jasa*: {$problem}\n" .
-        "📍 *Alamat/Patokan*: " . ($address ?: 'Sesuai kesepakatan') . "\n" .
-        "⏰ *Waktu*: {$preferred_time}\n\n" .
+        "📍 *Alamat/Lokasi*: " . ($address ?: 'Sesuai kesepakatan') . "\n";
+    
+    if (!empty($maps_url)) {
+        $waMessage .= "🗺️ *Titik GPS Navigasi*: {$maps_url}\n";
+    }
+
+    $waMessage .= "⏰ *Waktu*: {$preferred_time}\n\n" .
         "Mohon konfirmasi ketersediaan Anda. Terima kasih!";
 
     $waUrl = "https://wa.me/{$cleanPhone}?text=" . urlencode($waMessage);

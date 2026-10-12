@@ -866,195 +866,299 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- 7. Modal Pesan Jasa Langsung (1-Click Instant Order Modal) -->
+<!-- 7. Modal Pesan Jasa Langsung Modern (1-Click Instant Order Modal) -->
+<?php
+$user_saved_address = '';
+if (!empty($current_user)) {
+    $addr_parts = [];
+    if (!empty($current_user['address'])) $addr_parts[] = $current_user['address'];
+    if (!empty($current_user['village_name'])) $addr_parts[] = 'Desa ' . $current_user['village_name'];
+    if (!empty($current_user['district_name'])) $addr_parts[] = 'Kec. ' . $current_user['district_name'];
+    $user_saved_address = implode(', ', $addr_parts);
+}
+?>
 <div class="modal fade" id="directQuickOrderModal" tabindex="-1" aria-labelledby="directQuickOrderModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <!-- Header Modal -->
-            <div class="modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
-                <div class="d-flex align-items-center gap-2.5">
-                    <div class="rounded-circle bg-white text-teal d-flex align-items-center justify-content-center shadow-xs" style="width: 42px; height: 42px; font-size: 1.25rem;">
-                        <i class="fa-solid fa-bolt text-warning"></i>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 530px;">
+        <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden">
+            <!-- Header Modal Modern dengan Gradien & Mini Provider Card -->
+            <div class="modal-header border-0 text-white p-3 p-md-3.5 position-relative overflow-hidden" style="background: linear-gradient(135deg, #0d9488 0%, #064e3b 100%);">
+                <div class="position-absolute end-0 top-0 bottom-0 opacity-10 d-none d-sm-block pe-3 pt-2" style="pointer-events: none;">
+                    <i class="fa-solid fa-bolt" style="font-size: 8rem; transform: rotate(-15deg);"></i>
+                </div>
+                <div class="position-relative z-1 w-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-white bg-opacity-20 text-white backdrop-blur rounded-pill px-2.5 py-1 small fw-bold">
+                            <i class="fa-solid fa-bolt text-warning me-1"></i> Pesan Jasa Kilat
+                        </span>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div>
-                        <h5 class="modal-title fw-bold mb-0 text-white" id="directQuickOrderModalLabel">Pesan Jasa Langsung</h5>
-                        <span class="text-white-50 small" style="font-size: 0.78rem;">Proses kilat tanpa reload &bull; Langsung ke teknisi</span>
+
+                    <!-- Mini Provider Card di Header -->
+                    <div class="d-flex align-items-center gap-2.5 p-2.5 rounded-3 bg-white bg-opacity-10 backdrop-blur border border-white border-opacity-20">
+                        <div class="rounded-3 overflow-hidden bg-white shadow-xs flex-shrink-0 d-flex align-items-center justify-content-center text-teal" style="width: 48px; height: 48px;">
+                            <i class="fa-solid fa-store fs-4" id="quickOrderModalProvIcon"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <h6 class="fw-bold text-white mb-0 text-truncate fs-6" id="quickOrderModalProviderName">Nama Mitra</h6>
+                            <div class="text-white-50 small d-flex align-items-center gap-1.5 flex-wrap" style="font-size: 0.74rem;">
+                                <span><i class="fa-solid fa-tag text-warning me-0.5"></i> <span id="quickOrderModalCategory">Kategori</span></span>
+                                <span>&bull;</span>
+                                <span><i class="fa-solid fa-location-dot text-danger me-0.5"></i> Kec. <span id="quickOrderModalDistrict">Kecamatan</span></span>
+                            </div>
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            <span class="badge bg-white text-teal fw-bold rounded-pill px-2 py-1 shadow-xs" style="font-size: 0.72rem;" id="quickOrderModalRate">Tarif Fleksibel</span>
+                        </div>
                     </div>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Body Modal: Form Input State -->
-            <div class="modal-body p-4" id="quickOrderFormBody">
-                <!-- Info Mitra yang Dipilih -->
-                <div class="p-3 rounded-3 bg-light border mb-3">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="badge bg-teal-subtle text-teal fw-bold px-2 py-0.5" style="font-size: 0.7rem;">
-                            <i class="fa-solid fa-circle-check me-1"></i> MITRA TERDAFTAR INHU
-                        </span>
-                        <span class="badge bg-white border text-teal fw-semibold" id="quickOrderModalRate" style="font-size: 0.72rem;"></span>
-                    </div>
-                    <h6 class="fw-bold text-dark mb-0 fs-6" id="quickOrderModalProviderName">Nama Mitra</h6>
-                    <div class="text-muted small" style="font-size: 0.78rem;">
-                        <span id="quickOrderModalCategory">Kategori</span> &bull; <i class="fa-solid fa-location-dot text-danger ms-1"></i> <span id="quickOrderModalDistrict">Kecamatan</span>
-                    </div>
-                    <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center">
-                        <a href="#" id="quickOrderViewProfileBtn" target="_blank" class="small text-teal text-decoration-none fw-semibold">
-                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Lihat Deskripsi & Testimoni Pelanggan ↗
-                        </a>
-                    </div>
-                </div>
-
+            <div class="modal-body p-3 p-md-3.5" id="quickOrderFormBody" style="background: #f8fafc;">
+                
                 <!-- Alert Error Asinkron -->
-                <div id="quickOrderAlert" class="alert alert-danger d-none py-2 px-3 small align-items-center mb-3 rounded-3" role="alert">
-                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                <div id="quickOrderAlert" class="alert alert-danger d-none py-2.5 px-3 small align-items-center mb-3 rounded-3 shadow-xs border-0" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2 fs-6"></i>
                     <span id="quickOrderAlertText"></span>
                 </div>
 
                 <?php if (!is_logged_in()): ?>
                     <!-- State: Belum Login -->
-                    <div class="alert alert-warning border-0 p-3 rounded-3 mb-3">
-                        <div class="d-flex gap-2">
-                            <i class="fa-solid fa-lock text-warning fs-5 mt-1"></i>
-                            <div>
-                                <div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Masuk Akun untuk Memesan</div>
-                                <p class="text-muted small mb-2" style="line-height: 1.45;">
-                                    Agar pesanan Anda tercatat dan teknisi dapat menghubungi nomor Anda, silakan masuk terlebih dahulu (tersedia akun demo 1-klik).
-                                </p>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <button type="button" class="btn btn-sm btn-primary-custom fw-bold px-3 py-1.5" onclick="switchToLoginFromQuickOrder()">
-                                        <i class="fa-solid fa-right-to-bracket me-1"></i> Masuk Sekarang (1 Klik)
-                                    </button>
-                                    <a href="<?= BASE_URL ?>/register.php" class="btn btn-sm btn-outline-secondary fw-semibold px-2.5 py-1.5">
-                                        <i class="fa-solid fa-user-plus me-1"></i> Daftar Akun Baru
-                                    </a>
-                                </div>
+                    <div class="card border-0 shadow-xs rounded-4 p-3 mb-3 bg-white">
+                        <div class="d-flex gap-3 align-items-center">
+                            <div class="rounded-circle bg-warning bg-opacity-15 text-warning d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                                <i class="fa-solid fa-user-lock fs-5"></i>
                             </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark small">Masuk untuk Menyelesaikan Pesanan</div>
+                                <div class="text-muted" style="font-size: 0.74rem;">Mitra memerlukan kontak Anda untuk konfirmasi jadwal pengerjaan di Inhu.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                            <button type="button" class="btn btn-sm btn-teal flex-fill fw-bold py-1.5 rounded-pill shadow-xs" onclick="switchToLoginFromQuickOrder()">
+                                <i class="fa-solid fa-right-to-bracket me-1"></i> Masuk Sekarang
+                            </button>
+                            <a href="<?= BASE_URL ?>/register.php" class="btn btn-sm btn-outline-secondary flex-fill fw-semibold py-1.5 rounded-pill">
+                                Daftar Baru
+                            </a>
                         </div>
                     </div>
                 <?php else: ?>
-                    <!-- Info Pemesan Terverifikasi -->
-                    <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 bg-light border mb-3">
-                        <div class="small">
-                            <span class="text-muted">Pemesan:</span> <strong><?= e($current_user['name']) ?></strong> <span class="text-muted">(<?= e($current_user['phone']) ?>)</span>
+                    <!-- 1. SEGMENTED SWITCH: PESAN UNTUK SAYA SENDIRI vs ORANG LAIN -->
+                    <div class="mb-3">
+                        <div class="d-flex p-1 rounded-pill border shadow-2xs" style="background: #e2e8f0;">
+                            <button type="button" class="btn btn-sm flex-fill rounded-pill py-1.5 fw-bold bg-white text-teal shadow-xs transition-all" id="modeSelfBtnIndex" onclick="setOrderRecipientModeIndex('self')">
+                                <i class="fa-solid fa-house-user me-1"></i> Untuk Saya Sendiri
+                            </button>
+                            <button type="button" class="btn btn-sm flex-fill rounded-pill py-1.5 fw-semibold text-secondary transition-all" id="modeOtherBtnIndex" onclick="setOrderRecipientModeIndex('other')">
+                                <i class="fa-solid fa-user-group me-1"></i> Pesan untuk Orang Lain
+                            </button>
                         </div>
-                        <span class="badge bg-success-subtle text-success small fw-semibold">
-                            <i class="fa-solid fa-user-check me-1"></i> Aktif
+                    </div>
+
+                    <!-- Detail Pemesan: Untuk Saya Sendiri -->
+                    <div id="orderSelfRecipientBoxIndex" class="p-2.5 px-3 rounded-3 bg-white border shadow-2xs mb-3 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle bg-teal bg-opacity-10 text-teal d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                            <div class="small">
+                                <span class="text-muted" style="font-size: 0.72rem;">Kontak Pemesan:</span>
+                                <div class="fw-bold text-dark lh-1"><?= e($current_user['name']) ?> <span class="fw-normal text-muted">(<?= e($current_user['phone']) ?>)</span></div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success rounded-pill fw-semibold" style="font-size: 0.68rem;">
+                            <i class="fa-solid fa-circle-check me-0.5"></i> Akun Anda
                         </span>
+                    </div>
+
+                    <!-- Detail Pemesan: Untuk Orang Lain / Kerabat (Hidden by default) -->
+                    <div id="orderOtherRecipientBoxIndex" class="card border border-teal-subtle shadow-xs rounded-3 p-3 mb-3 bg-white d-none">
+                        <div class="fw-bold text-teal small mb-2 d-flex align-items-center gap-1.5">
+                            <i class="fa-solid fa-user-pen"></i>
+                            <span>Data Kerabat / Orang yang Dituju di Inhu:</span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.72rem;">Nama Penerima Jasa <span class="text-danger">*</span></label>
+                                <input type="text" id="orderOtherNameIndex" class="form-control form-control-sm rounded-3 py-1.5" placeholder="Contoh: Ibu Rini / Teman">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.72rem;">No. WhatsApp Penerima <span class="text-danger">*</span></label>
+                                <input type="tel" id="orderOtherPhoneIndex" class="form-control form-control-sm rounded-3 py-1.5" placeholder="08xxxxxxxxxx">
+                            </div>
+                        </div>
+                        <div class="text-muted mt-1.5" style="font-size: 0.68rem;">
+                            <i class="fa-solid fa-info-circle me-0.5 text-teal"></i> Teknisi akan menghubungi nomor ini saat hendak tiba di lokasi.
+                        </div>
                     </div>
                 <?php endif; ?>
 
-                <!-- Form Ringkas (Hanya 2 Pertanyaan Inti) -->
                 <form id="directQuickOrderForm" onsubmit="event.preventDefault(); submitDirectQuickOrder();">
                     <input type="hidden" id="quickOrderProviderId" value="">
+                    <input type="hidden" id="quickOrderMapsUrlIndex" value="">
 
-                    <!-- Pertanyaan 1: Masalah / Kebutuhan -->
-                    <div class="mb-3">
-                        <label for="quickOrderProblem" class="form-label small fw-bold text-dark mb-1">
-                            1. Apa yang perlu diperbaiki / dikerjakan? <span class="text-danger">*</span>
+                    <!-- KEBUTUHAN JASA DENGAN QUICK CHIPS -->
+                    <div class="card border-0 shadow-2xs rounded-3 p-3 mb-3 bg-white">
+                        <label class="form-label fw-bold text-dark small mb-1.5 d-flex align-items-center justify-content-between" for="quickOrderProblem">
+                            <span><i class="fa-solid fa-clipboard-list text-teal me-1.5"></i> Apa yang perlu dikerjakan? <span class="text-danger">*</span></span>
+                            <span class="text-muted fw-normal" style="font-size: 0.68rem;">Pilih saran / ketik</span>
                         </label>
-                        <textarea id="quickOrderProblem" rows="3" class="form-control" placeholder="Contoh: AC kamar bocor menetes dan tidak dingin, tolong dicuci dan cek freon..." required <?= !is_logged_in() ? 'disabled' : '' ?>></textarea>
-                        
-                        <!-- Quick Suggestions / Chips -->
-                        <div class="d-flex flex-wrap gap-1 mt-1.5">
-                            <span class="text-muted small me-1" style="font-size: 0.72rem;">Saran cepat:</span>
-                            <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill" style="font-size: 0.72rem;" onclick="appendQuickProblem('Servis & Cuci Berkala')">Cuci/Servis</button>
-                            <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill" style="font-size: 0.72rem;" onclick="appendQuickProblem('Perbaikan Kerusakan')">Perbaikan Rusak</button>
-                            <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill" style="font-size: 0.72rem;" onclick="appendQuickProblem('Bongkar & Pasang')">Bongkar Pasang</button>
-                            <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill" style="font-size: 0.72rem;" onclick="appendQuickProblem('Panggilan Darurat / Cepat')">Darurat</button>
+
+                        <!-- Quick Suggestion Chips -->
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            <button type="button" class="btn btn-xs rounded-pill border bg-light text-secondary fw-semibold py-0.5 px-2 hover-chip" style="font-size: 0.68rem;" onclick="appendQuickProblemIndex('Servis & Cuci Berkala')">+ Cuci / Servis Berkala</button>
+                            <button type="button" class="btn btn-xs rounded-pill border bg-light text-secondary fw-semibold py-0.5 px-2 hover-chip" style="font-size: 0.68rem;" onclick="appendQuickProblemIndex('Perbaikan Kerusakan')">+ Perbaikan Kerusakan</button>
+                            <button type="button" class="btn btn-xs rounded-pill border bg-light text-secondary fw-semibold py-0.5 px-2 hover-chip" style="font-size: 0.68rem;" onclick="appendQuickProblemIndex('Pemeriksaan / Cek Dahulu')">+ Cek Dahulu</button>
+                            <button type="button" class="btn btn-xs rounded-pill border bg-light text-secondary fw-semibold py-0.5 px-2 hover-chip" style="font-size: 0.68rem;" onclick="appendQuickProblemIndex('Panggilan Darurat / Cepat')">+ Darurat / Cepat</button>
+                        </div>
+
+                        <textarea class="form-control border-light-subtle rounded-3" id="quickOrderProblem" rows="2" placeholder="Jelaskan kendala, kebutuhan, atau perbaikan yang dicari..." style="font-size: 0.82rem;" required <?= !is_logged_in() ? 'disabled' : '' ?>></textarea>
+                    </div>
+
+                    <!-- PATOKAN ALAMAT & GPS SMART DETECTION -->
+                    <div class="card border-0 shadow-2xs rounded-3 p-3 mb-3 bg-white">
+                        <div class="d-flex align-items-center justify-content-between mb-1.5 flex-wrap gap-1">
+                            <label class="form-label fw-bold text-dark small mb-0" for="quickOrderAddress">
+                                <i class="fa-solid fa-map-location-dot text-danger me-1"></i> Lokasi & Patokan Alamat <span class="text-danger">*</span>
+                            </label>
+                            
+                            <!-- SMART GPS BUTTON -->
+                            <button type="button" class="btn btn-xs btn-outline-teal rounded-pill px-2.5 py-1 fw-bold shadow-2xs d-flex align-items-center gap-1.5" id="btnDetectGpsIndex" onclick="detectUserGPSLocationIndex()" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-crosshairs text-teal"></i>
+                                <span>Deteksi GPS Saya (Otomatis)</span>
+                            </button>
+                        </div>
+
+                        <div class="position-relative">
+                            <input type="text" class="form-control border-light-subtle rounded-3 py-2" id="quickOrderAddress" placeholder="Ketik patokan jalan/rumah, atau klik tombol GPS di atas..." value="<?= e($user_saved_address) ?>" style="font-size: 0.82rem;" required <?= !is_logged_in() ? 'disabled' : '' ?>>
+                        </div>
+
+                        <!-- Status Notifikasi GPS Real-time -->
+                        <div id="gpsDetectionStatusIndex" class="<?= !empty($user_saved_address) ? '' : 'd-none' ?> mt-1.5 p-2 rounded-3 small border" style="font-size: 0.72rem; background: #f8fafc;">
+                            <?php if (!empty($user_saved_address)): ?>
+                                <span class="text-muted"><i class="fa-solid fa-house-chimney text-teal me-1"></i> Alamat otomatis terisi dari profil Anda. Boleh tambahkan nomor rumah/patokan jika perlu.</span>
+                            <?php endif; ?>
                         </div>
                     </div>
 
-                    <!-- Pertanyaan 2: Patokan Alamat & Waktu -->
-                    <div class="mb-3">
-                        <label for="quickOrderAddress" class="form-label small fw-bold text-dark mb-1">
-                            2. Patokan Alamat & Jadwal Pengerjaan <span class="text-danger">*</span>
+                    <!-- PILIHAN WAKTU / JADWAL PENGERJAAN (MODERN PILLS) -->
+                    <div class="card border-0 shadow-2xs rounded-3 p-3 mb-3 bg-white">
+                        <label class="form-label fw-bold text-dark small mb-2 d-flex align-items-center justify-content-between">
+                            <span><i class="fa-regular fa-calendar-check text-primary me-1.5"></i> Waktu Pengerjaan yang Diinginkan</span>
+                            <span class="text-teal small" style="font-size: 0.7rem;"><i class="fa-solid fa-handshake me-1"></i> Bayar di tempat usai kerja</span>
                         </label>
-                        <input type="text" id="quickOrderAddress" class="form-control form-control-sm mb-2" placeholder="Contoh: Belilas KM 4, Jl. Utama samping Masjid Baiturrahman" required <?= !is_logged_in() ? 'disabled' : '' ?>>
-                        
-                        <div class="row g-2">
-                            <div class="col-12 col-sm-7">
-                                <select id="quickOrderTime" class="form-select form-select-sm" <?= !is_logged_in() ? 'disabled' : '' ?>>
-                                    <option value="Hari ini (Segera / Urgent)">⚡ Hari ini (Segera / Urgent)</option>
-                                    <option value="Besok Pagi (08:00 - 12:00)" selected>🌅 Besok Pagi (08:00 - 12:00)</option>
-                                    <option value="Besok Siang / Sore (13:00 - 17:00)">☀️ Besok Siang / Sore (13:00 - 17:00)</option>
-                                    <option value="Akhir Pekan (Sabtu / Minggu)">📅 Akhir Pekan (Sabtu / Minggu)</option>
-                                    <option value="Waktu Fleksibel (Sesuai Kesepakatan)">🤝 Waktu Fleksibel</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-sm-5 d-flex align-items-center">
-                                <span class="text-muted small" style="font-size: 0.72rem;">
-                                    <i class="fa-solid fa-hand-holding-dollar text-teal me-1"></i> Bayar di tempat usai kerja
-                                </span>
-                            </div>
+
+                        <div class="d-flex flex-wrap gap-1.5" id="quickOrderTimePickerIndex">
+                            <label class="time-picker-pill active flex-fill text-center p-2 rounded-3 border">
+                                <input type="radio" name="order_time_radio_index" value="Hari ini secepatnya (Darurat / Mendesak)" class="d-none" checked onchange="selectOrderTimePillIndex(this)">
+                                <div class="fw-bold small text-dark" style="font-size: 0.78rem;"><i class="fa-solid fa-bolt text-warning me-1"></i> Secepatnya</div>
+                                <div class="text-muted" style="font-size: 0.65rem;">Mendesak / Hari Ini</div>
+                            </label>
+                            <label class="time-picker-pill flex-fill text-center p-2 rounded-3 border">
+                                <input type="radio" name="order_time_radio_index" value="Besok Pagi (08:00 - 12:00)" class="d-none" onchange="selectOrderTimePillIndex(this)">
+                                <div class="fw-bold small text-dark" style="font-size: 0.78rem;">🌅 Besok Pagi</div>
+                                <div class="text-muted" style="font-size: 0.65rem;">08:00 - 12:00</div>
+                            </label>
+                            <label class="time-picker-pill flex-fill text-center p-2 rounded-3 border">
+                                <input type="radio" name="order_time_radio_index" value="Besok Siang / Sore (13:00 - 17:00)" class="d-none" onchange="selectOrderTimePillIndex(this)">
+                                <div class="fw-bold small text-dark" style="font-size: 0.78rem;">🌇 Besok Siang</div>
+                                <div class="text-muted" style="font-size: 0.65rem;">13:00 - 17:00</div>
+                            </label>
+                            <label class="time-picker-pill flex-fill text-center p-2 rounded-3 border">
+                                <input type="radio" name="order_time_radio_index" value="Jadwal Fleksibel (Bisa diobrolkan di Chat)" class="d-none" onchange="selectOrderTimePillIndex(this)">
+                                <div class="fw-bold small text-dark" style="font-size: 0.78rem;">💬 Fleksibel</div>
+                                <div class="text-muted" style="font-size: 0.65rem;">Diskusi di Chat</div>
+                            </label>
                         </div>
+                        <input type="hidden" id="quickOrderTime" value="Hari ini secepatnya (Darurat / Mendesak)">
                     </div>
 
-                    <!-- Tombol Aksi Submit -->
-                    <div class="pt-2">
-                        <?php if (is_logged_in()): ?>
-                            <button type="button" id="btnSubmitQuickOrder" class="btn btn-primary-custom w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" onclick="submitDirectQuickOrder()">
-                                <i class="fa-solid fa-paper-plane" id="btnQuickOrderIcon"></i>
-                                <span id="btnQuickOrderText">Kirim Pesanan</span>
-                                <span id="btnQuickOrderSpinner" class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
-                            </button>
-                        <?php else: ?>
-                            <button type="button" class="btn btn-primary-custom w-100 py-2.5 fw-bold shadow-sm" onclick="switchToLoginFromQuickOrder()">
-                                <i class="fa-solid fa-right-to-bracket me-1"></i> Masuk untuk Kirim Pesanan
-                            </button>
-                        <?php endif; ?>
+                    <!-- TOMBOL KIRIM PESANAN -->
+                    <?php if (is_logged_in()): ?>
+                        <button type="button" id="btnSubmitQuickOrder" class="btn btn-teal w-100 py-2.5 fw-bold shadow-md rounded-pill d-flex align-items-center justify-content-center gap-2" style="font-size: 0.92rem; background: linear-gradient(135deg, #0d9488 0%, #065f46 100%);" onclick="submitDirectQuickOrder()">
+                            <span id="btnQuickOrderSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <i id="btnQuickOrderIcon" class="fa-solid fa-paper-plane"></i>
+                            <span id="btnQuickOrderText">Kirim Pesanan Sekarang 🚀</span>
+                        </button>
+                    <?php else: ?>
+                        <button type="button" class="btn btn-teal w-100 py-2.5 fw-bold shadow-md rounded-pill d-flex align-items-center justify-content-center gap-2" style="font-size: 0.92rem; background: linear-gradient(135deg, #0d9488 0%, #065f46 100%);" onclick="switchToLoginFromQuickOrder()">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> Masuk Akun untuk Kirim Pesanan
+                        </button>
+                    <?php endif; ?>
+
+                    <div class="text-center text-muted small mt-2" style="font-size: 0.7rem;">
+                        <i class="fa-solid fa-shield-halved text-success me-1"></i> Gratis tanpa biaya admin • Hubungkan langsung ke WhatsApp mitra
                     </div>
                 </form>
             </div>
 
-            <!-- Body Modal: Success Confirmation State -->
-            <div class="modal-body p-4 d-none" id="quickOrderSuccessBody">
-                <div class="text-center py-2">
-                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 68px; height: 68px; font-size: 2.2rem;">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
-                    <h4 class="fw-bold text-dark mb-1">Pesanan Jasa Diterima!</h4>
-                    <p class="text-muted small mb-3" id="quickOrderSuccessMsg">Pesanan Anda telah otomatis dicatat di sistem dan diteruskan ke teknisi.</p>
-                    
-                    <div class="p-3 bg-light rounded-3 border mb-3 text-start small">
-                        <div class="d-flex justify-content-between mb-1.5">
-                            <span class="text-muted">Nomor Pesanan:</span>
-                            <strong id="quickOrderSuccessId" class="text-teal font-monospace fs-6">#---</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mb-1.5">
-                            <span class="text-muted">Mitra Tujuan:</span>
-                            <strong id="quickOrderSuccessProv">---</strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Status:</span>
-                            <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i> Menunggu Konfirmasi Mitra</span>
-                        </div>
-                    </div>
+            <!-- Body Modal: State Sukses -->
+            <div class="modal-body p-4 text-center d-none" id="quickOrderSuccessBody">
+                <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center p-3 mb-3" style="width: 72px; height: 72px;">
+                    <i class="fa-solid fa-circle-check fs-1"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Pesanan Berhasil Terkirim!</h5>
+                <p class="text-muted small mb-3" id="quickOrderSuccessMsg">
+                    Pesanan Anda telah diteruskan langsung ke mitra.
+                </p>
 
-                    <div class="alert alert-teal-subtle text-teal border-0 p-2.5 small rounded-3 mb-3 text-start" style="background-color: #f0fdfa; color: #0d9488;">
-                        <i class="fa-solid fa-comments me-1.5"></i>
-                        <strong>Pesanan Terkirim!</strong> Anda dapat langsung koordinasi detail perbaikan melalui obrolan di aplikasi:
+                <div class="p-3 bg-light rounded-3 border text-start mb-3 small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Nomor Pesanan:</span>
+                        <strong class="text-teal" id="quickOrderSuccessId">#</strong>
                     </div>
-
-                    <a href="#" id="quickOrderSuccessChatBtn" class="btn btn-teal text-white w-100 py-2.5 fw-bold shadow-sm mb-2 d-flex align-items-center justify-content-center gap-2">
-                        <i class="fa-solid fa-comments fs-5"></i>
-                        <span>Buka Obrolan di Aplikasi</span>
-                    </a>
-
-                    <div class="d-flex gap-2 mt-2">
-                        <a href="<?= BASE_URL ?>/user/requests.php" class="btn btn-outline-secondary w-50 py-2 fw-semibold small">
-                            <i class="fa-solid fa-clipboard-list me-1"></i> Pesanan Saya
-                        </a>
-                        <button type="button" class="btn btn-light border w-50 py-2 fw-semibold small" data-bs-dismiss="modal">
-                            Selesai & Tutup
-                        </button>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Penyedia Jasa:</span>
+                        <strong class="text-dark" id="quickOrderSuccessProv"></strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Status:</span>
+                        <span class="badge text-bg-warning">Menunggu Konfirmasi Mitra</span>
                     </div>
                 </div>
-            </div>
 
+                <div class="d-flex flex-column gap-2">
+                    <a href="#" id="quickOrderSuccessWaBtn" target="_blank" class="btn btn-success text-white w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2 rounded-pill">
+                        <i class="fa-brands fa-whatsapp fs-5"></i> <span>Kirim Detail ke WhatsApp Mitra ↗</span>
+                    </a>
+                    <a href="#" id="quickOrderSuccessChatBtn" class="btn btn-teal text-white w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1.5 rounded-pill">
+                        <i class="fa-solid fa-comments fs-5"></i> <span>Buka Obrolan di Aplikasi</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>/user/requests.php" class="btn btn-outline-secondary w-100 btn-sm py-2 fw-semibold rounded-pill">
+                        <i class="fa-solid fa-clock-rotate-left me-1"></i> Lacak Status di Menu Pesanan Saya
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+.time-picker-pill {
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.2s ease;
+    border-color: #e2e8f0 !important;
+}
+.time-picker-pill:hover {
+    border-color: #0d9488 !important;
+    background: #f0fdfa;
+}
+.time-picker-pill.active {
+    border-color: #0d9488 !important;
+    background: #f0fdfa;
+    box-shadow: 0 0 0 1.5px #0d9488;
+}
+.hover-chip {
+    transition: all 0.15s ease;
+}
+.hover-chip:hover {
+    background-color: #0d9488 !important;
+    color: #fff !important;
+    border-color: #0d9488 !important;
+}
+</style>
 
 <script>
 // Data Portofolio Lengkap dari PHP
@@ -1169,25 +1273,141 @@ function openDirectQuickOrderModal(prov) {
     document.getElementById('quickOrderModalDistrict').textContent = prov.district;
     document.getElementById('quickOrderModalRate').textContent = prov.rate;
 
-    const profileLink = document.getElementById('quickOrderViewProfileBtn');
-    if (profileLink) {
-        profileLink.href = window.BASE_URL + '/provider_detail.php?id=' + prov.id;
+    const iconEl = document.getElementById('quickOrderModalProvIcon');
+    if (iconEl && prov.icon) {
+        iconEl.className = 'fa-solid ' + prov.icon + ' fs-4';
     }
+
+    setOrderRecipientModeIndex('self');
 
     const modalEl = document.getElementById('directQuickOrderModal');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
 }
 
-function appendQuickProblem(text) {
+let orderRecipientModeIndex = 'self';
+
+function setOrderRecipientModeIndex(mode) {
+    orderRecipientModeIndex = mode;
+    const selfBtn = document.getElementById('modeSelfBtnIndex');
+    const otherBtn = document.getElementById('modeOtherBtnIndex');
+    const otherForm = document.getElementById('orderOtherRecipientBoxIndex');
+    const selfInfo = document.getElementById('orderSelfRecipientBoxIndex');
+
+    if (mode === 'other') {
+        if (selfBtn) {
+            selfBtn.classList.remove('bg-white', 'text-teal', 'shadow-xs', 'fw-bold');
+            selfBtn.classList.add('text-secondary', 'fw-semibold');
+        }
+        if (otherBtn) {
+            otherBtn.classList.remove('text-secondary', 'fw-semibold');
+            otherBtn.classList.add('bg-white', 'text-teal', 'shadow-xs', 'fw-bold');
+        }
+        if (otherForm) otherForm.classList.remove('d-none');
+        if (selfInfo) selfInfo.classList.add('d-none');
+    } else {
+        if (otherBtn) {
+            otherBtn.classList.remove('bg-white', 'text-teal', 'shadow-xs', 'fw-bold');
+            otherBtn.classList.add('text-secondary', 'fw-semibold');
+        }
+        if (selfBtn) {
+            selfBtn.classList.remove('text-secondary', 'fw-semibold');
+            selfBtn.classList.add('bg-white', 'text-teal', 'shadow-xs', 'fw-bold');
+        }
+        if (otherForm) otherForm.classList.add('d-none');
+        if (selfInfo) selfInfo.classList.remove('d-none');
+    }
+}
+
+function appendQuickProblemIndex(text) {
     const area = document.getElementById('quickOrderProblem');
     if (!area) return;
     if (area.value.trim() === '') {
-        area.value = text + ': ';
-    } else {
+        area.value = text;
+    } else if (!area.value.includes(text)) {
         area.value = area.value.trim() + ', ' + text;
     }
     area.focus();
+}
+
+function selectOrderTimePillIndex(radioInput) {
+    document.querySelectorAll('#quickOrderTimePickerIndex .time-picker-pill').forEach(pill => {
+        pill.classList.remove('active');
+    });
+    radioInput.closest('.time-picker-pill').classList.add('active');
+    document.getElementById('quickOrderTime').value = radioInput.value;
+}
+
+function detectUserGPSLocationIndex() {
+    const btn = document.getElementById('btnDetectGpsIndex');
+    const statusBox = document.getElementById('gpsDetectionStatusIndex');
+    const addressInput = document.getElementById('quickOrderAddress');
+    const hiddenMapsUrl = document.getElementById('quickOrderMapsUrlIndex');
+
+    if (!navigator.geolocation) {
+        alert("Perangkat atau browser Anda tidak mendukung akses GPS.");
+        return;
+    }
+
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mencari GPS...';
+
+    statusBox.classList.remove('d-none');
+    statusBox.className = 'mt-1.5 p-2 rounded-3 small bg-light border text-muted d-flex align-items-center gap-2';
+    statusBox.innerHTML = '<span class="spinner-border spinner-border-sm text-teal"></span> <span>Sedang menghubungkan ke satelit GPS HP Anda...</span>';
+
+    navigator.geolocation.getCurrentPosition(
+        async function(pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const acc = Math.round(pos.coords.accuracy || 15);
+            const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+            hiddenMapsUrl.value = mapsUrl;
+
+            let placeName = '';
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.display_name) {
+                        const parts = data.display_name.split(',');
+                        placeName = parts.slice(0, 4).join(',').trim();
+                    }
+                }
+            } catch(e) {}
+
+            const gpsLabel = placeName ? `${placeName}` : `Lokasi Saya (GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+            addressInput.value = gpsLabel;
+
+            statusBox.className = 'mt-1.5 p-2 rounded-3 small bg-success-subtle border border-success-subtle text-success d-flex align-items-center justify-content-between flex-wrap gap-1';
+            statusBox.innerHTML = `
+                <div>
+                    <i class="fa-solid fa-circle-check me-1"></i>
+                    <strong>GPS Terkunci (±${acc}m):</strong> Lokasi Anda berhasil diambil otomatis.
+                </div>
+                <a href="${mapsUrl}" target="_blank" class="fw-semibold text-teal text-decoration-none">
+                    <i class="fa-solid fa-map-pin me-0.5"></i> Cek di Maps ↗
+                </a>
+            `;
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-check text-success me-1"></i> GPS Terkunci';
+            setTimeout(() => { btn.innerHTML = origHtml; }, 3500);
+        },
+        function(err) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            statusBox.className = 'mt-1.5 p-2 rounded-3 small bg-warning-subtle border border-warning-subtle text-dark';
+            let errMsg = "Izin lokasi tidak diberikan. Silakan ketik patokan alamat secara manual.";
+            if (err.code === 1) errMsg = "Akses lokasi ditolak. Silakan izinkan lokasi di browser atau ketik patokan alamat.";
+            else if (err.code === 2) errMsg = "Sinyal GPS tidak ditemukan. Silakan ketik patokan alamat.";
+            statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> ${errMsg}`;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
 }
 
 function switchToLoginFromQuickOrder() {
@@ -1223,6 +1443,7 @@ function submitDirectQuickOrder() {
     const problem = document.getElementById('quickOrderProblem').value.trim();
     const address = document.getElementById('quickOrderAddress').value.trim();
     const preferredTime = document.getElementById('quickOrderTime').value;
+    const mapsUrl = document.getElementById('quickOrderMapsUrlIndex') ? document.getElementById('quickOrderMapsUrlIndex').value : '';
 
     const alertEl = document.getElementById('quickOrderAlert');
     const alertText = document.getElementById('quickOrderAlertText');
@@ -1235,10 +1456,25 @@ function submitDirectQuickOrder() {
     }
 
     if (!address) {
-        alertText.textContent = "Mohon cantumkan patokan alamat pengerjaan jasa di Inhu.";
+        alertText.textContent = "Mohon cantumkan patokan alamat atau klik tombol Deteksi GPS.";
         alertEl.classList.remove('d-none');
         document.getElementById('quickOrderAddress').focus();
         return;
+    }
+
+    let otherName = '';
+    let otherPhone = '';
+    if (orderRecipientModeIndex === 'other') {
+        const nameEl = document.getElementById('orderOtherNameIndex');
+        const phoneEl = document.getElementById('orderOtherPhoneIndex');
+        otherName = nameEl ? nameEl.value.trim() : '';
+        otherPhone = phoneEl ? phoneEl.value.trim() : '';
+        if (!otherName) {
+            alertText.textContent = "Mohon cantumkan nama kerabat/orang yang memesan.";
+            alertEl.classList.remove('d-none');
+            if (nameEl) nameEl.focus();
+            return;
+        }
     }
 
     alertEl.classList.add('d-none');
@@ -1260,6 +1496,14 @@ function submitDirectQuickOrder() {
     formData.append('problem', problem);
     formData.append('address', address);
     formData.append('preferred_time', preferredTime);
+    formData.append('order_for', orderRecipientModeIndex);
+    if (orderRecipientModeIndex === 'other') {
+        formData.append('recipient_name', otherName);
+        formData.append('recipient_phone', otherPhone);
+    }
+    if (mapsUrl) {
+        formData.append('maps_url', mapsUrl);
+    }
 
     fetch(window.BASE_URL + '/api/direct_order.php', {
         method: 'POST',
@@ -1271,7 +1515,7 @@ function submitDirectQuickOrder() {
     .then(res => res.json())
     .then(data => {
         if (btnSubmit) btnSubmit.disabled = false;
-        if (btnText) btnText.textContent = "Kirim Pesanan";
+        if (btnText) btnText.textContent = "Kirim Pesanan Sekarang 🚀";
         if (btnSpinner) btnSpinner.classList.add('d-none');
         if (btnIcon) btnIcon.classList.remove('d-none');
 
@@ -1284,9 +1528,13 @@ function submitDirectQuickOrder() {
             document.getElementById('quickOrderSuccessMsg').textContent = data.message;
             document.getElementById('quickOrderSuccessChatBtn').href = data.chat_url || (window.BASE_URL + '/chat.php?provider_id=' + provId);
             
+            const waBtn = document.getElementById('quickOrderSuccessWaBtn');
+            if (waBtn && data.whatsapp_url) {
+                waBtn.href = data.whatsapp_url;
+            }
+
             // Clear inputs for next time
             document.getElementById('quickOrderProblem').value = '';
-            document.getElementById('quickOrderAddress').value = '';
         } else {
             if (data.need_login) {
                 switchToLoginFromQuickOrder();
@@ -1298,7 +1546,7 @@ function submitDirectQuickOrder() {
     })
     .catch(err => {
         if (btnSubmit) btnSubmit.disabled = false;
-        if (btnText) btnText.textContent = "Kirim Pesanan";
+        if (btnText) btnText.textContent = "Kirim Pesanan Sekarang 🚀";
         if (btnSpinner) btnSpinner.classList.add('d-none');
         if (btnIcon) btnIcon.classList.remove('d-none');
 
