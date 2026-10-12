@@ -60,6 +60,7 @@ $header_unread_notifs = 0;
 $header_unread_chats = 0;
 $header_provider_id = 0;
 $header_first_name = '';
+$header_recent_notifs = [];
 
 if (is_logged_in() && !empty($current_user)) {
     $db_hdr = get_db();
@@ -71,6 +72,13 @@ if (is_logged_in() && !empty($current_user)) {
     try {
         $header_unread_notifs = (int)$db_hdr->query("SELECT COUNT(*) FROM notifications WHERE user_id = {$current_user['id']} AND is_read = 0")->fetchColumn();
     } catch (Exception $e) {}
+    try {
+        $stmtHNotifs = $db_hdr->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 15");
+        $stmtHNotifs->execute([$current_user['id']]);
+        $header_recent_notifs = $stmtHNotifs->fetchAll();
+    } catch (Exception $e) {
+        $header_recent_notifs = [];
+    }
     try {
         $stmtUChat = $db_hdr->prepare("SELECT COUNT(*) FROM chat_messages WHERE receiver_id = ? AND is_read = 0");
         $stmtUChat->execute([$current_user['id']]);
@@ -184,7 +192,7 @@ if (is_logged_in() && !empty($current_user)) {
                         <div class="d-flex align-items-center justify-content-between px-3 py-2.5 bg-light border-bottom">
                             <span class="fw-bold small text-dark"><i class="fa-solid fa-bell text-teal me-1.5"></i> Pemberitahuan</span>
                             <?php if ($header_unread_notifs > 0): ?>
-                                <button type="button" class="btn btn-link p-0 text-teal small fw-semibold text-decoration-none" style="font-size: 0.74rem;" onclick="markAllNotificationsRead(event)">
+                                <button type="button" class="btn btn-link btn-mark-all-notifs p-0 text-teal small fw-semibold text-decoration-none" style="font-size: 0.74rem;" onclick="markAllNotificationsRead(event)">
                                     <i class="fa-solid fa-check-double me-1"></i> Tandai Dibaca
                                 </button>
                             <?php endif; ?>
@@ -192,10 +200,32 @@ if (is_logged_in() && !empty($current_user)) {
 
                         <div class="notif-list-container" style="max-height: 320px; overflow-y: auto;">
                             <?php if (!empty($header_recent_notifs)): ?>
-                                <?php foreach ($header_recent_notifs as $hn): ?>
-                                    <a href="<?= BASE_URL . ($hn['link'] ? (str_starts_with($hn['link'], '/') ? $hn['link'] : '/' . $hn['link']) : '#') ?>" class="notif-item <?= !$hn['is_read'] ? 'unread' : '' ?>">
+                                <?php foreach ($header_recent_notifs as $hn): 
+                                    $n_url = '#';
+                                    if (!empty($hn['link'])) {
+                                        if (str_starts_with($hn['link'], 'http://') || str_starts_with($hn['link'], 'https://')) {
+                                            $n_url = $hn['link'];
+                                        } elseif (str_starts_with($hn['link'], '/')) {
+                                            $n_url = BASE_URL . $hn['link'];
+                                        } else {
+                                            $n_url = BASE_URL . '/' . $hn['link'];
+                                        }
+                                    }
+                                    $n_title_low = strtolower($hn['title']);
+                                ?>
+                                    <a href="<?= e($n_url) ?>" class="notif-item <?= !$hn['is_read'] ? 'unread' : '' ?>" onclick="markSingleNotificationRead(event, <?= (int)$hn['id'] ?>)">
                                         <div class="notif-icon-circle">
-                                            <i class="fa-solid <?= str_contains(strtolower($hn['title']), 'pesanan') ? 'fa-clipboard-check text-success' : (str_contains(strtolower($hn['title']), 'selamat datang') ? 'fa-champagne-glasses text-warning' : 'fa-bell text-teal') ?>"></i>
+                                            <?php if (str_contains($n_title_low, 'pesanan') || str_contains($n_title_low, 'order')): ?>
+                                                <i class="fa-solid fa-clipboard-check text-success"></i>
+                                            <?php elseif (str_contains($n_title_low, 'selamat')): ?>
+                                                <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
+                                            <?php elseif (str_contains($n_title_low, 'chat') || str_contains($n_title_low, 'pesan') || str_contains($n_title_low, 'diskusi')): ?>
+                                                <i class="fa-solid fa-comment-dots text-teal"></i>
+                                            <?php elseif (str_contains($n_title_low, 'saldo') || str_contains($n_title_low, 'dompet')): ?>
+                                                <i class="fa-solid fa-wallet text-primary"></i>
+                                            <?php else: ?>
+                                                <i class="fa-solid fa-bell text-teal"></i>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="flex-grow-1 overflow-hidden">
                                             <div class="d-flex align-items-center justify-content-between mb-0.5">
@@ -434,13 +464,38 @@ function markAllNotificationsRead(e) {
             if (mBadge) mBadge.remove();
             document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
             document.querySelectorAll('.notif-item .badge.bg-teal').forEach(el => el.remove());
-            if (e && e.target) {
-                const markBtn = e.target.closest('button');
-                if (markBtn) markBtn.remove();
-            }
+            document.querySelectorAll('.btn-mark-all-notifs').forEach(el => el.remove());
         }
     })
     .catch(() => {});
+}
+
+function markSingleNotificationRead(e, id) {
+    if (!id) return;
+    const item = e.currentTarget || (e.target ? e.target.closest('.notif-item') : null);
+    if (item && item.classList.contains('unread')) {
+        item.classList.remove('unread');
+        const dot = item.querySelector('.badge.bg-teal');
+        if (dot) dot.remove();
+        
+        // Cek sisa unread di dropdown
+        const remainingUnread = document.querySelectorAll('.notif-item.unread').length;
+        if (remainingUnread === 0) {
+            const badge = document.getElementById('headerNotifBadge');
+            if (badge) badge.remove();
+            const mBadge = document.getElementById('mobileHeaderNotifBadge');
+            if (mBadge) mBadge.remove();
+            document.querySelectorAll('.btn-mark-all-notifs').forEach(el => el.remove());
+        }
+    }
+    fetch(window.APP_BASE_URL + '/api/mark_notifications_read.php', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest' 
+        },
+        body: 'id=' + encodeURIComponent(id)
+    }).catch(() => {});
 }
 </script>
 
@@ -490,7 +545,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                         <div class="d-flex align-items-center justify-content-between px-3 py-2.5 bg-light border-bottom">
                             <span class="fw-bold small text-dark"><i class="fa-solid fa-bell text-teal me-1.5"></i> Pemberitahuan</span>
                             <?php if ($header_unread_notifs > 0): ?>
-                                <button type="button" class="btn btn-link p-0 text-teal small fw-semibold text-decoration-none" style="font-size: 0.74rem;" onclick="markAllNotificationsRead(event)">
+                                <button type="button" class="btn btn-link btn-mark-all-notifs p-0 text-teal small fw-semibold text-decoration-none" style="font-size: 0.74rem;" onclick="markAllNotificationsRead(event)">
                                     <i class="fa-solid fa-check-double me-1"></i> Tandai Dibaca
                                 </button>
                             <?php endif; ?>
@@ -498,16 +553,38 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
 
                         <div class="notif-list-container" style="max-height: 300px; overflow-y: auto;">
                             <?php if (!empty($header_recent_notifs)): ?>
-                                <?php foreach ($header_recent_notifs as $hn): ?>
-                                    <a href="<?= BASE_URL . ($hn['link'] ? (str_starts_with($hn['link'], '/') ? $hn['link'] : '/' . $hn['link']) : '#') ?>" class="notif-item <?= !$hn['is_read'] ? 'unread' : '' ?>">
+                                <?php foreach ($header_recent_notifs as $hn): 
+                                    $n_url = '#';
+                                    if (!empty($hn['link'])) {
+                                        if (str_starts_with($hn['link'], 'http://') || str_starts_with($hn['link'], 'https://')) {
+                                            $n_url = $hn['link'];
+                                        } elseif (str_starts_with($hn['link'], '/')) {
+                                            $n_url = BASE_URL . $hn['link'];
+                                        } else {
+                                            $n_url = BASE_URL . '/' . $hn['link'];
+                                        }
+                                    }
+                                    $n_title_low = strtolower($hn['title']);
+                                ?>
+                                    <a href="<?= e($n_url) ?>" class="notif-item <?= !$hn['is_read'] ? 'unread' : '' ?>" onclick="markSingleNotificationRead(event, <?= (int)$hn['id'] ?>)">
                                         <div class="notif-icon-circle">
-                                            <i class="fa-solid <?= str_contains(strtolower($hn['title']), 'pesanan') ? 'fa-clipboard-check text-success' : (str_contains(strtolower($hn['title']), 'selamat datang') ? 'fa-champagne-glasses text-warning' : 'fa-bell text-teal') ?>"></i>
+                                            <?php if (str_contains($n_title_low, 'pesanan') || str_contains($n_title_low, 'order')): ?>
+                                                <i class="fa-solid fa-clipboard-check text-success"></i>
+                                            <?php elseif (str_contains($n_title_low, 'selamat')): ?>
+                                                <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
+                                            <?php elseif (str_contains($n_title_low, 'chat') || str_contains($n_title_low, 'pesan') || str_contains($n_title_low, 'diskusi')): ?>
+                                                <i class="fa-solid fa-comment-dots text-teal"></i>
+                                            <?php elseif (str_contains($n_title_low, 'saldo') || str_contains($n_title_low, 'dompet')): ?>
+                                                <i class="fa-solid fa-wallet text-primary"></i>
+                                            <?php else: ?>
+                                                <i class="fa-solid fa-bell text-teal"></i>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="flex-grow-1 overflow-hidden">
                                             <div class="d-flex align-items-center justify-content-between mb-0.5">
                                                 <div class="fw-bold small text-dark text-truncate" style="font-size: 0.82rem;"><?= e($hn['title']) ?></div>
                                                 <?php if (!$hn['is_read']): ?>
-                                                    <span class="badge rounded-circle bg-teal p-1 ms-1" style="width: 6px; height: 6px;"></span>
+                                                    <span class="badge rounded-circle bg-teal p-1 ms-1" style="width: 6px; height: 6px;" title="Belum dibaca"></span>
                                                 <?php endif; ?>
                                             </div>
                                             <div class="text-muted small lh-sm text-truncate" style="font-size: 0.76rem;"><?= e($hn['message']) ?></div>

@@ -20,12 +20,20 @@ $user = current_user();
 $db = get_db();
 
 try {
-    $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?");
-    $stmt->execute([$user['id']]);
+    $notif_id = (int)($_POST['id'] ?? 0);
+    if ($notif_id > 0) {
+        $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$notif_id, $user['id']]);
+        $message = 'Notifikasi telah ditandai dibaca.';
+    } else {
+        $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?");
+        $stmt->execute([$user['id']]);
+        $message = 'Semua notifikasi telah ditandai dibaca.';
+    }
 
     echo json_encode([
         'success' => true,
-        'message' => 'Semua notifikasi telah ditandai dibaca.'
+        'message' => $message
     ]);
 } catch (Exception $e) {
     http_response_code(500);
