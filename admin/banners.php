@@ -19,13 +19,23 @@ $error = '';
 
 // Helper upload gambar banner
 function handle_banner_upload(?array $file, ?string &$error_msg): ?string {
-    if (!$file || empty($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) {
+    if (!$file || empty($file['name'])) {
         return null;
     }
 
-    $max_size = 3 * 1024 * 1024; // 3MB
+    if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
+        $error_msg = 'Ukuran file gambar banner melebihi batas upload server PHP.';
+        return null;
+    }
+
+    if ($file['error'] !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+        $error_msg = 'Gagal mengunggah gambar banner (Kode status: ' . ($file['error'] ?? 'unknown') . ').';
+        return null;
+    }
+
+    $max_size = 10 * 1024 * 1024; // 10MB
     if ($file['size'] > $max_size) {
-        $error_msg = 'Ukuran file gambar maksimal 3MB.';
+        $error_msg = 'Ukuran file gambar banner maksimal 10MB.';
         return null;
     }
 

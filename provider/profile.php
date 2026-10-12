@@ -53,72 +53,127 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $address = trim($_POST['address'] ?? '');
         $id_card_number = trim($_POST['id_card_number'] ?? ($provider['id_card_number'] ?? ''));
 
+        $active_tab = trim($_POST['active_tab'] ?? 'tab-info');
         $image_url = $provider['image_url'] ?? '';
         $certificate_url = $provider['certificate_url'] ?? '';
         $id_card_image = $provider['id_card_image'] ?? '';
 
-        // Handle image upload jika ada file foto baru
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $file = $_FILES['image'];
-            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp'];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        // Pastikan folder penyimpanan berkas selalu tersedia di server
+        foreach ([
+            __DIR__ . '/../uploads/providers',
+            __DIR__ . '/../uploads/certificates',
+            __DIR__ . '/../uploads/ktp'
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0777, true);
+            }
+        }
 
-            if (!in_array($ext, $allowed_exts)) {
-                $error = 'Format file tidak didukung. Gunakan JPG, PNG, atau WebP.';
-            } elseif ($file['size'] > 3 * 1024 * 1024) {
-                $error = 'Ukuran file foto terlalu besar. Maksimal 3MB.';
+        // Handle image upload jika ada file foto baru
+        if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $errCode = $_FILES['image']['error'];
+            if ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE) {
+                $error = 'Ukuran foto profil/tempat usaha terlalu besar melebihi batas upload server.';
+                $active_tab = 'tab-info';
+            } elseif ($errCode !== UPLOAD_ERR_OK) {
+                $error = 'Gagal mengunggah foto profil/tempat usaha (Error: ' . $errCode . ').';
+                $active_tab = 'tab-info';
             } else {
-                $filename = 'provider_' . $provider['id'] . '_' . time() . '.' . $ext;
-                $targetPath = __DIR__ . '/../uploads/providers/' . $filename;
-                if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                    if (!empty($provider['image_url']) && file_exists(__DIR__ . '/../' . $provider['image_url'])) {
-                        @unlink(__DIR__ . '/../' . $provider['image_url']);
+                $file = $_FILES['image'];
+                $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+                if (!in_array($ext, $allowed_exts)) {
+                    $error = 'Format file tidak didukung. Gunakan JPG, PNG, atau WebP.';
+                    $active_tab = 'tab-info';
+                } elseif ($file['size'] > 10 * 1024 * 1024) {
+                    $error = 'Ukuran file foto terlalu besar. Maksimal 10MB.';
+                    $active_tab = 'tab-info';
+                } else {
+                    $filename = 'provider_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $ext;
+                    $targetPath = __DIR__ . '/../uploads/providers/' . $filename;
+                    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                        if (!empty($provider['image_url']) && file_exists(__DIR__ . '/../' . $provider['image_url'])) {
+                            @unlink(__DIR__ . '/../' . $provider['image_url']);
+                        }
+                        $image_url = 'uploads/providers/' . $filename;
+                    } else {
+                        $error = 'Gagal menyimpan foto profil ke direktori server.';
+                        $active_tab = 'tab-info';
                     }
-                    $image_url = 'uploads/providers/' . $filename;
                 }
             }
         }
 
         // Handle certificate/STR upload (Opsional khusus tenaga medis/homecare)
-        if (empty($error) && isset($_FILES['certificate']) && $_FILES['certificate']['error'] === UPLOAD_ERR_OK) {
-            $fileCert = $_FILES['certificate'];
-            $allowed_cert_exts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
-            $extCert = strtolower(pathinfo($fileCert['name'], PATHINFO_EXTENSION));
-
-            if (!in_array($extCert, $allowed_cert_exts)) {
-                $error = 'Format sertifikat/STR tidak didukung. Gunakan JPG, PNG, WebP, atau PDF.';
-            } elseif ($fileCert['size'] > 4 * 1024 * 1024) {
-                $error = 'Ukuran berkas sertifikat/STR maksimal 4MB.';
+        if (empty($error) && isset($_FILES['certificate']) && $_FILES['certificate']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $errCode = $_FILES['certificate']['error'];
+            if ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE) {
+                $error = 'Ukuran berkas sertifikat/STR terlalu besar melebihi batas upload server.';
+                $active_tab = 'tab-ktp';
+            } elseif ($errCode !== UPLOAD_ERR_OK) {
+                $error = 'Gagal mengunggah sertifikat/STR (Error: ' . $errCode . ').';
+                $active_tab = 'tab-ktp';
             } else {
-                $filenameCert = 'cert_' . $provider['id'] . '_' . time() . '.' . $extCert;
-                $targetPathCert = __DIR__ . '/../uploads/certificates/' . $filenameCert;
-                if (move_uploaded_file($fileCert['tmp_name'], $targetPathCert)) {
-                    if (!empty($provider['certificate_url']) && file_exists(__DIR__ . '/../' . $provider['certificate_url'])) {
-                        @unlink(__DIR__ . '/../' . $provider['certificate_url']);
+                $fileCert = $_FILES['certificate'];
+                $allowed_cert_exts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+                $extCert = strtolower(pathinfo($fileCert['name'], PATHINFO_EXTENSION));
+
+                if (!in_array($extCert, $allowed_cert_exts)) {
+                    $error = 'Format sertifikat/STR tidak didukung. Gunakan JPG, PNG, WebP, atau PDF.';
+                    $active_tab = 'tab-ktp';
+                } elseif ($fileCert['size'] > 10 * 1024 * 1024) {
+                    $error = 'Ukuran berkas sertifikat/STR maksimal 10MB.';
+                    $active_tab = 'tab-ktp';
+                } else {
+                    $filenameCert = 'cert_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extCert;
+                    $targetPathCert = __DIR__ . '/../uploads/certificates/' . $filenameCert;
+                    if (move_uploaded_file($fileCert['tmp_name'], $targetPathCert)) {
+                        if (!empty($provider['certificate_url']) && file_exists(__DIR__ . '/../' . $provider['certificate_url'])) {
+                            @unlink(__DIR__ . '/../' . $provider['certificate_url']);
+                        }
+                        $certificate_url = 'uploads/certificates/' . $filenameCert;
+                    } else {
+                        $error = 'Gagal menyimpan berkas sertifikat ke server.';
+                        $active_tab = 'tab-ktp';
                     }
-                    $certificate_url = 'uploads/certificates/' . $filenameCert;
                 }
             }
         }
 
         // Handle Foto KTP Upload (Untuk Verifikasi Identitas)
-        if (empty($error) && isset($_FILES['id_card_image']) && $_FILES['id_card_image']['error'] === UPLOAD_ERR_OK) {
-            $fileKtp = $_FILES['id_card_image'];
-            $allowed_ktp_exts = ['jpg', 'jpeg', 'png', 'webp'];
-            $extKtp = strtolower(pathinfo($fileKtp['name'], PATHINFO_EXTENSION));
-
-            if (!in_array($extKtp, $allowed_ktp_exts)) {
-                $error = 'Format foto KTP tidak didukung. Gunakan file JPG, PNG, atau WebP.';
-            } elseif ($fileKtp['size'] > 4 * 1024 * 1024) {
-                $error = 'Ukuran berkas foto KTP maksimal 4MB.';
+        if (empty($error) && isset($_FILES['id_card_image']) && $_FILES['id_card_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $errCode = $_FILES['id_card_image']['error'];
+            if ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE) {
+                $error = 'Ukuran berkas foto KTP terlalu besar melebihi batas upload server. Silakan coba kembali, foto akan dikompresi otomatis.';
+                $active_tab = 'tab-ktp';
+            } elseif ($errCode !== UPLOAD_ERR_OK) {
+                $error = 'Gagal mengunggah foto KTP (Kode status: ' . $errCode . '). Silakan pilih ulang foto.';
+                $active_tab = 'tab-ktp';
             } else {
-                $filenameKtp = 'ktp_' . $provider['id'] . '_' . time() . '.' . $extKtp;
-                $targetPathKtp = __DIR__ . '/../uploads/ktp/' . $filenameKtp;
-                if (move_uploaded_file($fileKtp['tmp_name'], $targetPathKtp)) {
-                    if (!empty($provider['id_card_image']) && file_exists(__DIR__ . '/../' . $provider['id_card_image'])) {
-                        @unlink(__DIR__ . '/../' . $provider['id_card_image']);
+                $fileKtp = $_FILES['id_card_image'];
+                $allowed_ktp_exts = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
+                $extKtp = strtolower(pathinfo($fileKtp['name'], PATHINFO_EXTENSION));
+
+                if (!in_array($extKtp, $allowed_ktp_exts)) {
+                    $error = 'Format foto KTP tidak didukung. Gunakan file JPG, PNG, atau WebP.';
+                    $active_tab = 'tab-ktp';
+                } elseif ($fileKtp['size'] > 10 * 1024 * 1024) {
+                    $error = 'Ukuran berkas foto KTP maksimal 10MB.';
+                    $active_tab = 'tab-ktp';
+                } else {
+                    $filenameKtp = 'ktp_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extKtp;
+                    $targetPathKtp = __DIR__ . '/../uploads/ktp/' . $filenameKtp;
+                    if (move_uploaded_file($fileKtp['tmp_name'], $targetPathKtp)) {
+                        if (!empty($provider['id_card_image']) && file_exists(__DIR__ . '/../' . $provider['id_card_image'])) {
+                            @unlink(__DIR__ . '/../' . $provider['id_card_image']);
+                        }
+                        $id_card_image = 'uploads/ktp/' . $filenameKtp;
+                        $active_tab = 'tab-ktp';
+                    } else {
+                        $error = 'Gagal menyimpan foto KTP ke folder server. Pastikan hak akses folder uploads/ktp tersedia.';
+                        $active_tab = 'tab-ktp';
                     }
-                    $id_card_image = 'uploads/ktp/' . $filenameKtp;
                 }
             }
         }
@@ -126,6 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($error)) {
             if (empty($business_name) || empty($category_id)) {
                 $error = 'Nama usaha dan kategori utama wajib diisi.';
+                $active_tab = 'tab-info';
             } else {
                 try {
                     $db->beginTransaction();
@@ -156,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->commit();
 
                     set_flash('success', 'Profil usaha jasa, dokumen KTP, dan informasi operasional Anda berhasil diperbarui!');
-                    redirect('/provider/profile.php');
+                    redirect('/provider/profile.php' . (!empty($active_tab) ? '#' . $active_tab : ''));
                 } catch (Exception $e) {
                     $db->rollBack();
                     $error = 'Gagal menyimpan profil: ' . $e->getMessage();
@@ -302,6 +358,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-3">
         <form method="POST" action="<?= BASE_URL ?>/provider/profile.php" enctype="multipart/form-data" id="formProviderProfile">
             <?= csrf_field() ?>
+            <input type="hidden" name="active_tab" id="activeTabInput" value="<?= e($active_tab ?? 'tab-info') ?>">
 
             <!-- Nav Tabs Sederhana & Ramah -->
             <div class="p-2.5 bg-light border-bottom">
@@ -367,8 +424,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php endif; ?>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <input type="file" name="image" id="providerImageInput" class="form-control form-control-sm mb-1" accept="image/jpeg,image/png,image/webp" onchange="previewProviderPhoto(this)">
-                                    <div class="text-muted" style="font-size: 0.68rem;">Format: JPG, PNG, WebP (Maks. 3 MB). Disarankan foto horizontal.</div>
+                                    <input type="file" name="image" id="providerImageInput" class="form-control form-control-sm mb-1" accept="image/jpeg,image/png,image/webp,image/*" onchange="previewProviderPhoto(this)">
+                                    <div id="imageCompressStatus"></div>
+                                    <div class="text-muted" style="font-size: 0.68rem;">Format: JPG, PNG, WebP (Otomatis dikompresi). Disarankan foto horizontal.</div>
                                 </div>
                             </div>
                         </div>
@@ -510,10 +568,14 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                             <div class="col-md-6 mb-2">
                                 <label class="form-label mb-1 small fw-bold text-dark">Unggah Foto KTP Asli</label>
-                                <input type="file" name="id_card_image" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp">
+                                <input type="file" name="id_card_image" id="idCardImageInput" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,image/*">
+                                <div id="ktpCompressStatus"></div>
+                                <div id="ktpPreviewContainer" class="mt-2 position-relative rounded-3 overflow-hidden border shadow-xs <?= empty($provider['id_card_image']) ? 'd-none' : '' ?>" style="max-width: 260px; height: 160px; background: #f1f5f9;">
+                                    <img id="ktpPreviewImg" src="<?= !empty($provider['id_card_image']) ? BASE_URL . '/' . e($provider['id_card_image']) : '' ?>" alt="Foto KTP" class="w-100 h-100 object-fit-cover">
+                                </div>
                                 <?php if (!empty($provider['id_card_image']) && file_exists(__DIR__ . '/../' . $provider['id_card_image'])): ?>
                                     <div class="mt-1 small d-flex align-items-center justify-content-between" style="font-size: 0.72rem;">
-                                        <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan</span>
+                                        <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan di server</span>
                                         <a href="<?= BASE_URL ?>/<?= e($provider['id_card_image']) ?>" target="_blank" class="fw-semibold text-teal text-decoration-none">
                                             <i class="fa-solid fa-eye me-0.5"></i> Lihat Foto ↗
                                         </a>
@@ -680,6 +742,57 @@ function previewProviderPhoto(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // 1. Tab Persistence & Switcher
+    const activeTabInput = document.getElementById('activeTabInput');
+    const tabButtons = document.querySelectorAll('#profileTabs button[data-bs-toggle="pill"]');
+    
+    tabButtons.forEach(btn => {
+        btn.addEventListener('shown.bs.tab', function(e) {
+            const targetId = (e.target.getAttribute('data-bs-target') || '').replace('#', '');
+            if (activeTabInput && targetId) {
+                activeTabInput.value = targetId;
+            }
+            if (targetId && history.replaceState) {
+                history.replaceState(null, null, '#' + targetId);
+            }
+        });
+    });
+
+    // Pulihkan tab aktif dari hash URL atau input tersembunyi
+    const targetHash = window.location.hash.replace('#', '') || (activeTabInput ? activeTabInput.value : '');
+    if (targetHash) {
+        const targetBtn = document.querySelector(`button[data-bs-target="#${targetHash}"]`);
+        if (targetBtn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            const tabTrigger = new bootstrap.Tab(targetBtn);
+            tabTrigger.show();
+        }
+    }
+
+    // 2. Hubungkan Auto-Compressor Gambar
+    const ktpInput = document.getElementById('idCardImageInput');
+    if (ktpInput && window.attachAutoCompressor) {
+        window.attachAutoCompressor(ktpInput, {
+            previewEl: 'ktpPreviewImg',
+            previewContainer: 'ktpPreviewContainer',
+            statusEl: 'ktpCompressStatus',
+            maxWidth: 1600,
+            maxHeight: 1600,
+            quality: 0.85
+        });
+    }
+
+    const provPhotoInput = document.getElementById('providerImageInput');
+    if (provPhotoInput && window.attachAutoCompressor) {
+        window.attachAutoCompressor(provPhotoInput, {
+            previewEl: 'imagePreview',
+            statusEl: 'imageCompressStatus',
+            maxWidth: 1400,
+            maxHeight: 1400,
+            quality: 0.82
+        });
+    }
+
+    // 3. Validasi Form Sebelum Kirim
     const form = document.getElementById('formProviderProfile');
     if (form) {
         form.addEventListener('submit', function(e) {

@@ -37,11 +37,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         if (empty($title)) {
             $error = 'Judul pekerjaan atau nama proyek wajib diisi.';
-        } elseif (!isset($_FILES['image_after']) || $_FILES['image_after']['error'] !== UPLOAD_ERR_OK) {
+        } elseif (!isset($_FILES['image_after']) || $_FILES['image_after']['error'] === UPLOAD_ERR_NO_FILE) {
             $error = 'Foto hasil pengerjaan (sesudah) wajib diunggah.';
+        } elseif ($_FILES['image_after']['error'] === UPLOAD_ERR_INI_SIZE || $_FILES['image_after']['error'] === UPLOAD_ERR_FORM_SIZE) {
+            $error = 'Ukuran foto hasil pengerjaan terlalu besar melebihi batas upload server. Silakan coba kembali, foto akan dikompresi otomatis.';
+        } elseif ($_FILES['image_after']['error'] !== UPLOAD_ERR_OK) {
+            $error = 'Gagal mengunggah foto hasil pengerjaan (Kode error: ' . $_FILES['image_after']['error'] . '). Silakan pilih ulang foto.';
         } else {
-            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-            $max_size = 4 * 1024 * 1024; // 4MB
+            $allowed = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
+            $max_size = 10 * 1024 * 1024; // 10MB
+
+            // Pastikan folder uploads/portfolios tersedia
+            $portfolioDir = __DIR__ . '/../uploads/portfolios';
+            if (!is_dir($portfolioDir)) {
+                @mkdir($portfolioDir, 0777, true);
+            }
 
             // Upload Image After
             $fileAfter = $_FILES['image_after'];
@@ -50,10 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if (!in_array($extAfter, $allowed)) {
                 $error = 'Format foto hasil pengerjaan harus JPG, PNG, atau WebP.';
             } elseif ($fileAfter['size'] > $max_size) {
-                $error = 'Ukuran foto hasil pengerjaan terlalu besar (Maks 4MB).';
+                $error = 'Ukuran foto hasil pengerjaan terlalu besar (Maks 10MB).';
             } else {
                 $filenameAfter = 'after_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extAfter;
-                $targetAfter = __DIR__ . '/../uploads/portfolios/' . $filenameAfter;
+                $targetAfter = $portfolioDir . '/' . $filenameAfter;
 
                 if (move_uploaded_file($fileAfter['tmp_name'], $targetAfter)) {
                     $pathAfter = 'uploads/portfolios/' . $filenameAfter;
@@ -65,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         $extBefore = strtolower(pathinfo($fileBefore['name'], PATHINFO_EXTENSION));
                         if (in_array($extBefore, $allowed) && $fileBefore['size'] <= $max_size) {
                             $filenameBefore = 'before_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $extBefore;
-                            $targetBefore = __DIR__ . '/../uploads/portfolios/' . $filenameBefore;
+                            $targetBefore = $portfolioDir . '/' . $filenameBefore;
                             if (move_uploaded_file($fileBefore['tmp_name'], $targetBefore)) {
                                 $pathBefore = 'uploads/portfolios/' . $filenameBefore;
                             }
@@ -272,8 +282,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <label class="form-label small fw-bold text-success">
                                 <i class="fa-solid fa-circle-check me-1"></i> Foto Hasil Selesai (Sesudah) <span class="text-danger">*</span>
                             </label>
-                            <input type="file" name="image_after" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp" required>
-                            <div class="form-text small" style="font-size: 0.72rem;">Wajib diisi. Format JPG, PNG, WebP (Maks 4MB).</div>
+                            <input type="file" name="image_after" id="portfolioImageAfterInput" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp,image/*" required>
+                            <div id="portfolioAfterStatus"></div>
+                            <div class="form-text small" style="font-size: 0.72rem;">Wajib diisi. Format JPG, PNG, WebP (Otomatis dikompresi).</div>
                         </div>
 
                         <!-- Foto Sebelum (Opsional) -->
@@ -281,7 +292,8 @@ require_once __DIR__ . '/../includes/header.php';
                             <label class="form-label small fw-bold text-danger">
                                 <i class="fa-solid fa-clock-rotate-left me-1"></i> Foto Kondisi Awal (Sebelum) <span class="text-muted small fw-normal">(Opsional)</span>
                             </label>
-                            <input type="file" name="image_before" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp">
+                            <input type="file" name="image_before" id="portfolioImageBeforeInput" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp,image/*">
+                            <div id="portfolioBeforeStatus"></div>
                             <div class="form-text small" style="font-size: 0.72rem;">Opsional untuk perbandingan Sebelum vs Sesudah.</div>
                         </div>
                     </div>
@@ -308,5 +320,29 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const afterInput = document.getElementById('portfolioImageAfterInput');
+    if (afterInput && window.attachAutoCompressor) {
+        window.attachAutoCompressor(afterInput, {
+            statusEl: 'portfolioAfterStatus',
+            maxWidth: 1600,
+            maxHeight: 1600,
+            quality: 0.85
+        });
+    }
+
+    const beforeInput = document.getElementById('portfolioImageBeforeInput');
+    if (beforeInput && window.attachAutoCompressor) {
+        window.attachAutoCompressor(beforeInput, {
+            statusEl: 'portfolioBeforeStatus',
+            maxWidth: 1600,
+            maxHeight: 1600,
+            quality: 0.85
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

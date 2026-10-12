@@ -187,6 +187,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- SweetAlert2 Modern Popups -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Client-Side Image Compressor (Auto-compress kamera smartphone) -->
+<script src="<?= asset_url('js/image-compressor.js') ?>"></script>
 <!-- Custom App JS -->
 <script src="<?= asset_url('js/app.js') ?>"></script>
 </body>

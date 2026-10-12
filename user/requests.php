@@ -939,13 +939,16 @@ function toggleReviewTag(btn) {
     }
 }
 
-function previewReviewPhoto(input) {
+async function previewReviewPhoto(input) {
     if (input.files && input.files[0]) {
-        const file = input.files[0];
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Ukuran foto terlalu besar. Maksimum 5MB.');
-            input.value = '';
-            return;
+        let file = input.files[0];
+        if (window.compressImageFile) {
+            file = await window.compressImageFile(file, { maxWidth: 1400, maxHeight: 1400, quality: 0.82 });
+            if (window.DataTransfer) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                input.files = dt.files;
+            }
         }
         const reader = new FileReader();
         reader.onload = function(e) {

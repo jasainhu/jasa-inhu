@@ -51,17 +51,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             } else {
                 try {
                     $proof_image = null;
-                    if (!empty($_FILES['proof_image']['name']) && $_FILES['proof_image']['error'] === UPLOAD_ERR_OK) {
-                        $ext = strtolower(pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION));
-                        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-                        if (in_array($ext, $allowed)) {
-                            $uploadDir = __DIR__ . '/../uploads/topups/';
-                            if (!is_dir($uploadDir)) {
-                                mkdir($uploadDir, 0755, true);
-                            }
-                            $filename = 'topup_' . $provider['id'] . '_' . time() . '.' . $ext;
-                            if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $uploadDir . $filename)) {
-                                $proof_image = 'uploads/topups/' . $filename;
+                    if (!empty($_FILES['proof_image']['name']) && $_FILES['proof_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+                        $errCode = $_FILES['proof_image']['error'];
+                        if ($errCode === UPLOAD_ERR_OK) {
+                            $ext = strtolower(pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION));
+                            $allowed = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
+                            if (in_array($ext, $allowed) && $_FILES['proof_image']['size'] <= 10 * 1024 * 1024) {
+                                $uploadDir = __DIR__ . '/../uploads/topups/';
+                                if (!is_dir($uploadDir)) {
+                                    @mkdir($uploadDir, 0777, true);
+                                }
+                                $filename = 'topup_' . $provider['id'] . '_' . time() . '_' . rand(100, 999) . '.' . $ext;
+                                if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $uploadDir . $filename)) {
+                                    $proof_image = 'uploads/topups/' . $filename;
+                                }
                             }
                         }
                     }
@@ -513,7 +516,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <!-- Unggah Bukti Transfer (Opsional) -->
                     <div class="mb-2">
                         <label class="form-label small fw-semibold text-muted">Unggah Bukti Struk Transfer (Opsional):</label>
-                        <input type="file" name="proof_image" class="form-control form-control-sm" accept="image/*">
+                        <input type="file" name="proof_image" id="walletProofInput" class="form-control form-control-sm" accept="image/*">
+                        <div id="walletProofStatus"></div>
                         <span class="text-muted" style="font-size: 0.72rem;">Bisa juga langsung kirim foto struk ke WhatsApp Admin setelah klik tombol di bawah.</span>
                     </div>
                 </div>
@@ -535,6 +539,18 @@ function selectAmount(amt) {
     document.querySelectorAll('.quick-amount-btn').forEach(btn => btn.classList.remove('active'));
     event.currentTarget.classList.add('active');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const proofInput = document.getElementById('walletProofInput');
+    if (proofInput && window.attachAutoCompressor) {
+        window.attachAutoCompressor(proofInput, {
+            statusEl: 'walletProofStatus',
+            maxWidth: 1600,
+            maxHeight: 1600,
+            quality: 0.82
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
