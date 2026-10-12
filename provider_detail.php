@@ -196,9 +196,13 @@ require_once __DIR__ . '/includes/header.php';
                                         <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP
                                     </span>
                                 <?php endif; ?>
-                                <?php if (!empty($provider['credential_title'])): ?>
-                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle py-1 px-2.5 rounded-pill" title="Kualifikasi / Sertifikasi Terdaftar">
-                                        <i class="fa-solid fa-award me-1 text-teal"></i> <?= e($provider['credential_title']) ?>
+                                <?php 
+                                $is_medical = (isset($provider['category_slug']) && $provider['category_slug'] === 'medical') || (isset($provider['category_name']) && stripos($provider['category_name'], 'med') !== false) || (isset($provider['primary_category_id']) && (int)$provider['primary_category_id'] === 18);
+                                $has_str = has_media($provider['certificate_url'] ?? '') || !empty($provider['credential_title']);
+                                ?>
+                                <?php if ($has_str): ?>
+                                    <span class="badge <?= $is_medical ? 'bg-teal text-white shadow-2xs' : 'bg-info-subtle text-info-emphasis border border-info-subtle' ?> py-1 px-2.5 rounded-pill fw-semibold" title="<?= $is_medical ? 'Tenaga Medis dengan STR Terdaftar & Terverifikasi' : 'Kualifikasi Profesi / Sertifikasi Terdaftar' ?>">
+                                        <i class="fa-solid <?= $is_medical ? 'fa-user-doctor' : 'fa-award text-teal' ?> me-1"></i> <?= !empty($provider['credential_title']) ? e($provider['credential_title']) : ($is_medical ? 'Terverifikasi STR Medis' : 'Tersertifikasi Resmi') ?>
                                     </span>
                                 <?php endif; ?>
                             </div>
@@ -271,20 +275,20 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <!-- Lencana Kualifikasi Profesi / STR / Sertifikat (Jika Ada) -->
-                <?php if (!empty($provider['credential_title'])): ?>
+                <?php if ($has_str): ?>
                     <div class="p-3 my-3 rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: #f0fdfa; border-color: #99f6e4 !important;">
                         <div class="d-flex align-items-center gap-2.5">
                             <div class="rounded-circle bg-white text-teal d-flex align-items-center justify-content-center shadow-xs" style="width: 38px; height: 38px; font-size: 1.15rem; flex-shrink: 0;">
-                                <i class="fa-solid fa-award text-teal"></i>
+                                <i class="fa-solid <?= $is_medical ? 'fa-user-doctor' : 'fa-award' ?> text-teal"></i>
                             </div>
                             <div>
-                                <div class="fw-bold text-dark small">Kualifikasi Profesi & Sertifikasi:</div>
-                                <div class="text-teal small fw-semibold"><?= e($provider['credential_title']) ?></div>
+                                <div class="fw-bold text-dark small"><?= $is_medical ? 'Kualifikasi Tenaga Medis & STR:' : 'Kualifikasi Profesi & Sertifikasi:' ?></div>
+                                <div class="text-teal small fw-semibold"><?= e(!empty($provider['credential_title']) ? $provider['credential_title'] : ($is_medical ? 'Surat Tanda Registrasi (STR) Terlampir & Terdaftar' : 'Sertifikasi Keahlian Terdaftar')) ?></div>
                             </div>
                         </div>
-                        <?php if (!empty($provider['certificate_url']) && file_exists(__DIR__ . '/' . $provider['certificate_url'])): ?>
-                            <a href="<?= BASE_URL ?>/<?= e($provider['certificate_url']) ?>" target="_blank" class="btn btn-sm btn-outline-teal fw-semibold rounded-pill px-3 py-1">
-                                <i class="fa-solid fa-file-shield me-1"></i> Lihat Dokumen ↗
+                        <?php if (has_media($provider['certificate_url'] ?? '')): ?>
+                            <a href="<?= e(get_media_url($provider['certificate_url'])) ?>" target="_blank" class="btn btn-sm btn-outline-teal fw-semibold rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-file-shield me-1"></i> Lihat Dokumen <?= $is_medical ? 'STR' : 'Sertifikat' ?> ↗
                             </a>
                         <?php endif; ?>
                     </div>

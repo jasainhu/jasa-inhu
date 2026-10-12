@@ -238,6 +238,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 <i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Belum Verifikasi KTP
                             </span>
                         <?php endif; ?>
+
+                        <?php if (has_media($provider['certificate_url'] ?? '') || !empty($provider['credential_title'])): ?>
+                            <span class="badge bg-white text-teal rounded-pill px-2.5 py-1 fw-bold shadow-2xs" style="font-size: 0.7rem;">
+                                <i class="fa-solid fa-user-doctor text-teal me-1"></i> <?= !empty($provider['credential_title']) ? e($provider['credential_title']) : 'Terverifikasi STR Medis' ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
 
                     <div class="text-white-50 small mb-2.5 d-flex align-items-center gap-2 flex-wrap" style="font-size: 0.78rem;">

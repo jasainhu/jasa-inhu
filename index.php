@@ -529,7 +529,12 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="position-absolute top-0 start-0 m-1.5 m-md-3 d-flex flex-wrap gap-1">
                                     <?php if ($prov['is_verified']): ?>
                                         <span class="badge bg-white shadow-xs border fw-bold py-1 px-1.5 text-success" title="Identitas KTP & Lokasi Usaha Terverifikasi" style="font-size: 0.65rem;">
-                                            <i class="fa-solid fa-circle-check text-success"></i> <span class="d-none d-sm-inline">Terverifikasi</span>
+                                            <i class="fa-solid fa-circle-check text-success"></i> <span class="d-none d-sm-inline">KTP</span>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (has_media($prov['certificate_url'] ?? '') || !empty($prov['credential_title'])): ?>
+                                        <span class="badge bg-teal text-white shadow-xs fw-bold py-1 px-1.5" title="Tenaga Medis / Ahli Terverifikasi STR" style="font-size: 0.65rem;">
+                                            <i class="fa-solid <?= stripos($prov['category_name'] ?? '', 'med') !== false ? 'fa-user-doctor' : 'fa-award' ?>"></i> <span class="d-none d-sm-inline"><?= stripos($prov['category_name'] ?? '', 'med') !== false ? 'STR Medis' : 'Sertifikat' ?></span>
                                         </span>
                                     <?php endif; ?>
                                 </div>
