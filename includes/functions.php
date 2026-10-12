@@ -193,6 +193,9 @@ function get_avatar_url(?string $avatar): ?string {
     if (str_starts_with($avatar, 'data:image/') || str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
         return $avatar;
     }
+    if (str_starts_with($avatar, 'uploads/avatars/')) {
+        return BASE_URL . '/' . ltrim($avatar, '/');
+    }
     return BASE_URL . '/uploads/avatars/' . ltrim($avatar, '/');
 }
 
@@ -208,17 +211,25 @@ function save_avatar_upload(array $file, int $userId): string {
 
     $fileTmp = $file['tmp_name'];
     $fileSize = $file['size'];
-    $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
     $fileExt = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
 
     if (!in_array($fileExt, $allowedExts)) {
         throw new Exception('Format foto profil harus JPG, PNG, atau WEBP.');
     }
-    if ($fileSize > 5 * 1024 * 1024) {
-        throw new Exception('Ukuran foto profil maksimal 5 MB.');
+    if ($fileSize > 10 * 1024 * 1024) {
+        throw new Exception('Ukuran foto profil maksimal 10 MB.');
     }
 
-    // Gunakan ekstensi GD jika tersedia untuk kompresi dan auto-crop ke 200x200
+    $avatarDir = dirname(__DIR__) . '/uploads/avatars';
+    if (!is_dir($avatarDir)) {
+        @mkdir($avatarDir, 0777, true);
+    }
+
+    $newFileName = 'avatar_' . $userId . '_' . time() . '_' . rand(100, 999) . '.jpg';
+    $targetPath = $avatarDir . '/' . $newFileName;
+
+    // Gunakan ekstensi GD jika tersedia untuk kompresi dan auto-crop ke 250x250
     if (function_exists('imagecreatefromstring')) {
         $rawContent = @file_get_contents($fileTmp);
         if ($rawContent !== false) {
@@ -230,7 +241,7 @@ function save_avatar_upload(array $file, int $userId): string {
                 $cropX = (int)(($origW - $cropSize) / 2);
                 $cropY = (int)(($origH - $cropSize) / 2);
 
-                $targetSize = 200;
+                $targetSize = 250;
                 $thumb = imagecreatetruecolor($targetSize, $targetSize);
                 imagecopyresampled($thumb, $img, 0, 0, $cropX, $cropY, $targetSize, $targetSize, $cropSize, $cropSize);
 
@@ -241,29 +252,30 @@ function save_avatar_upload(array $file, int $userId): string {
                 imagedestroy($img);
 
                 if (!empty($compressedJpeg)) {
+                    // Prioritas 1: Simpan berkas fisik jika direktori writable (ukuran string hanya ~35 karakter)
+                    if (@file_put_contents($targetPath, $compressedJpeg) !== false) {
+                        return 'uploads/avatars/' . $newFileName;
+                    }
+                    // Prioritas 2 (Fallback untuk serverless/read-only): Simpan Base64 Data URI
                     return 'data:image/jpeg;base64,' . base64_encode($compressedJpeg);
                 }
             }
         }
     }
 
-    // Fallback jika GD tidak ada: langsung encode Base64 jika ukuran wajar (< 1.5MB)
+    // Fallback jika GD tidak tersedia: coba move_uploaded_file biasa
+    if (@move_uploaded_file($fileTmp, $targetPath)) {
+        return 'uploads/avatars/' . $newFileName;
+    }
+
+    // Fallback terakhir: Base64 raw
     $rawContent = @file_get_contents($fileTmp);
-    if ($rawContent !== false && strlen($rawContent) <= 1.5 * 1024 * 1024) {
+    if ($rawContent !== false) {
         $mime = ($fileExt === 'png') ? 'image/png' : (($fileExt === 'webp') ? 'image/webp' : 'image/jpeg');
         return 'data:' . $mime . ';base64,' . base64_encode($rawContent);
     }
 
-    // Fallback khusus lingkungan lokal jika writable
-    $targetDir = dirname(__DIR__) . '/uploads/avatars/';
-    if (@is_dir($targetDir) && @is_writable($targetDir)) {
-        $newFileName = 'avatar_' . $userId . '_' . time() . '.' . $fileExt;
-        if (@move_uploaded_file($fileTmp, $targetDir . $newFileName)) {
-            return $newFileName;
-        }
-    }
-
-    throw new Exception('Gagal memproses foto profil. Silakan pilih foto dengan resolusi lebih kecil.');
+    throw new Exception('Gagal memproses foto profil. Silakan pilih foto lain.');
 }
 
 /**

@@ -1537,31 +1537,29 @@ function previewAvatar(input, imgId, placeholderId) {
 }
 
 // Upload Avatar Langsung Sekali Klik Kamera
-function handleDirectAvatarUpload(input) {
+async function handleDirectAvatarUpload(input) {
     if (!input.files || !input.files[0]) return;
-    const file = input.files[0];
+    let file = input.files[0];
 
-    if (file.size > 5 * 1024 * 1024) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'File Terlalu Besar',
-            text: 'Ukuran foto maksimal 5 MB.'
-        });
-        input.value = '';
-        return;
+    Swal.fire({
+        title: 'Mengunggah Foto...',
+        text: 'Mengoptimalkan dan mengunggah foto profil',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    if (window.compressImageFile) {
+        try {
+            file = await window.compressImageFile(file, { maxWidth: 600, maxHeight: 600, quality: 0.85 });
+        } catch (e) {
+            console.warn('Gagal kompresi avatar di browser, memakai berkas asli:', e);
+        }
     }
 
     const formData = new FormData();
     formData.append('action', 'upload_avatar_ajax');
     formData.append('avatar', file);
     formData.append('csrf_token', '<?= csrf_token() ?>');
-
-    Swal.fire({
-        title: 'Mengunggah Foto...',
-        text: 'Mohon tunggu sebentar',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
 
     fetch(window.location.href, {
         method: 'POST',
