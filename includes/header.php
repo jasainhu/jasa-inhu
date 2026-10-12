@@ -84,9 +84,16 @@ if (is_logged_in() && !empty($current_user)) {
         $stmtUChat->execute([$current_user['id']]);
         $header_unread_chats = (int)$stmtUChat->fetchColumn();
     } catch (Exception $e) {}
+    $header_provider_wallet = 0;
     if (($current_user['role_name'] ?? '') === 'penyedia') {
         try {
-            $header_provider_id = (int)$db_hdr->query("SELECT id FROM service_providers WHERE user_id = {$current_user['id']} LIMIT 1")->fetchColumn();
+            $stmtProvHdr = $db_hdr->prepare("SELECT id, wallet_balance FROM service_providers WHERE user_id = ? LIMIT 1");
+            $stmtProvHdr->execute([$current_user['id']]);
+            $provHdrRow = $stmtProvHdr->fetch();
+            if ($provHdrRow) {
+                $header_provider_id = (int)$provHdrRow['id'];
+                $header_provider_wallet = (float)($provHdrRow['wallet_balance'] ?? 0);
+            }
         } catch (Exception $e) {}
     }
     $name_parts = explode(' ', trim($current_user['name']));
@@ -326,15 +333,7 @@ if (is_logged_in() && !empty($current_user)) {
                                     <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Admin
                                 </a>
                             </li>
-                        <?php elseif ($current_user['role_name'] === 'penyedia' && ($header_active_mode ?? '') === 'penyedia'): ?>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/index.php">
-                                    <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Mitra Jasa
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
-                        <?php if ($current_user['role_name'] === 'penyedia'): ?>
+                        <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
                             <?php if (($header_active_mode ?? '') === 'pengguna'): ?>
                                 <li>
                                     <a class="dropdown-item fw-bold text-dark bg-warning-subtle py-2 border-bottom" href="<?= BASE_URL ?>/switch_mode.php?to=penyedia">
@@ -357,36 +356,77 @@ if (is_logged_in() && !empty($current_user)) {
                                     </a>
                                 </li>
                             <?php else: ?>
+                                <!-- Grid 2x2 Menu Cepat Mitra Ala Gojek Superapp -->
+                                <li class="px-2 py-1.5">
+                                    <div class="row g-1.5 text-center">
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/index.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-gauge-high"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Dashboard</div>
+                                                <div class="text-muted" style="font-size: 0.62rem;">Statistik Mitra</div>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/leads.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-briefcase"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Pekerjaan</div>
+                                                <div class="text-teal fw-semibold" style="font-size: 0.62rem;">Order Masuk</div>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/wallet.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-wallet"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Dompet</div>
+                                                <div class="text-success fw-bold" style="font-size: 0.62rem;"><?= !empty($header_provider_wallet) ? format_rupiah($header_provider_wallet) : 'Rp 0' ?></div>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/portfolio.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-camera"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Portofolio</div>
+                                                <div class="text-muted" style="font-size: 0.62rem;">Galeri Kerja</div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li><hr class="dropdown-divider my-1.5 opacity-50"></li>
+
                                 <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/wallet.php">
-                                        <i class="fa-solid fa-wallet me-2 text-warning"></i> Dompet & Saldo Deposit
+                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between" href="<?= BASE_URL ?>/provider/profile.php">
+                                        <span class="d-flex align-items-center"><i class="fa-solid fa-user-gear me-2 text-secondary" style="width: 16px;"></i> Profil & Tarif Jasa</span>
+                                        <i class="fa-solid fa-chevron-right text-muted opacity-50" style="font-size: 0.65rem;"></i>
                                     </a>
                                 </li>
+
                                 <?php if ($header_provider_id > 0): ?>
                                     <li>
-                                        <a class="dropdown-item fw-semibold text-teal" href="<?= BASE_URL ?>/provider_detail.php?id=<?= $header_provider_id ?>" target="_blank">
-                                            <i class="fa-solid fa-store me-2 text-teal"></i> Lihat Profil Publik Saya ↗
+                                        <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between text-teal" href="<?= BASE_URL ?>/provider_detail.php?id=<?= $header_provider_id ?>" target="_blank">
+                                            <span class="d-flex align-items-center"><i class="fa-solid fa-store me-2 text-teal" style="width: 16px;"></i> Lihat Profil Publik Saya</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-teal opacity-75" style="font-size: 0.65rem;"></i>
                                         </a>
                                     </li>
                                 <?php endif; ?>
+
                                 <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/leads.php">
-                                        <i class="fa-solid fa-briefcase me-2 text-secondary"></i> Pekerjaan Masuk
+                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between text-primary fw-semibold" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
+                                        <span class="d-flex align-items-center"><i class="fa-solid fa-repeat me-2 text-primary" style="width: 16px;"></i> Beralih ke Akun Pengguna</span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.62rem;">Mode Warga</span>
                                     </a>
                                 </li>
+
                                 <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/portfolio.php">
-                                        <i class="fa-solid fa-camera me-2 text-teal"></i> Portofolio Hasil Kerja
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/profile.php">
-                                        <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Tarif Jasa
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item text-primary" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
-                                        <i class="fa-solid fa-user me-2 text-primary"></i> Beralih ke Profil Pengguna Biasa
+                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between" href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank">
+                                        <span class="d-flex align-items-center"><i class="fa-solid fa-headset me-2 text-info" style="width: 16px;"></i> Pusat Bantuan CS</span>
+                                        <i class="fa-brands fa-whatsapp text-success" style="font-size: 0.75rem;"></i>
                                     </a>
                                 </li>
                             <?php endif; ?>
@@ -620,7 +660,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                             <span><?= strtoupper(substr($current_user['name'], 0, 1)) ?></span>
                         <?php endif; ?>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-2 shadow-lg" aria-labelledby="mobileUserProfileDropdownBtn" style="min-width: 260px;">
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-2 shadow-lg" aria-labelledby="mobileUserProfileDropdownBtn" style="min-width: 285px;">
                         <!-- Header Kartu Profil Singkat -->
                         <li class="p-2.5 mb-1 rounded-3 bg-light border">
                             <div class="d-flex align-items-center gap-2">
@@ -668,15 +708,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                     <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Admin
                                 </a>
                             </li>
-                        <?php elseif ($current_user['role_name'] === 'penyedia' && ($header_active_mode ?? '') === 'penyedia'): ?>
-                            <li>
-                                <a class="dropdown-item" href="<?= BASE_URL ?>/provider/index.php">
-                                    <i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard Mitra
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
-                        <?php if ($current_user['role_name'] === 'penyedia'): ?>
+                        <?php elseif ($current_user['role_name'] === 'penyedia'): ?>
                             <?php if (($header_active_mode ?? '') === 'pengguna'): ?>
                                 <li>
                                     <a class="dropdown-item fw-bold text-dark bg-warning-subtle py-2 border-bottom" href="<?= BASE_URL ?>/switch_mode.php?to=penyedia">
@@ -694,29 +726,70 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                     </a>
                                 </li>
                             <?php else: ?>
+                                <!-- Grid 2x2 Menu Cepat Mitra Ala Gojek Superapp (Mobile) -->
+                                <li class="px-2 py-1.5">
+                                    <div class="row g-1.5 text-center">
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/index.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-gauge-high"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Dashboard</div>
+                                                <div class="text-muted" style="font-size: 0.62rem;">Statistik Mitra</div>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/leads.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-briefcase"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Pekerjaan</div>
+                                                <div class="text-teal fw-semibold" style="font-size: 0.62rem;">Order Masuk</div>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/wallet.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-wallet"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Dompet</div>
+                                                <div class="text-success fw-bold" style="font-size: 0.62rem;"><?= !empty($header_provider_wallet) ? format_rupiah($header_provider_wallet) : 'Rp 0' ?></div>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="<?= BASE_URL ?>/provider/portfolio.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                    <i class="fa-solid fa-camera"></i>
+                                                </div>
+                                                <div class="fw-bold" style="font-size: 0.72rem;">Portofolio</div>
+                                                <div class="text-muted" style="font-size: 0.62rem;">Galeri Kerja</div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li><hr class="dropdown-divider my-1.5 opacity-50"></li>
+
                                 <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/profile.php">
-                                        <i class="fa-solid fa-user-gear me-2 text-secondary"></i> Profil & Tarif Jasa
+                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between" href="<?= BASE_URL ?>/provider/profile.php">
+                                        <span class="d-flex align-items-center"><i class="fa-solid fa-user-gear me-2 text-secondary" style="width: 16px;"></i> Profil & Tarif Jasa</span>
+                                        <i class="fa-solid fa-chevron-right text-muted opacity-50" style="font-size: 0.65rem;"></i>
                                     </a>
                                 </li>
+
+                                <?php if ($header_provider_id > 0): ?>
+                                    <li>
+                                        <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between text-teal" href="<?= BASE_URL ?>/provider_detail.php?id=<?= $header_provider_id ?>" target="_blank">
+                                            <span class="d-flex align-items-center"><i class="fa-solid fa-store me-2 text-teal" style="width: 16px;"></i> Lihat Profil Publik Saya</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-teal opacity-75" style="font-size: 0.65rem;"></i>
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+
                                 <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/wallet.php">
-                                        <i class="fa-solid fa-wallet me-2 text-warning"></i> Dompet & Saldo Deposit
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/leads.php">
-                                        <i class="fa-solid fa-briefcase me-2 text-teal"></i> Pekerjaan Masuk (Leads)
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="<?= BASE_URL ?>/provider/portfolio.php">
-                                        <i class="fa-solid fa-camera me-2 text-secondary"></i> Portofolio Hasil Kerja
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item text-primary" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
-                                        <i class="fa-solid fa-user me-2 text-primary"></i> Beralih ke Profil Pengguna Biasa
+                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between text-primary fw-semibold" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
+                                        <span class="d-flex align-items-center"><i class="fa-solid fa-repeat me-2 text-primary" style="width: 16px;"></i> Beralih ke Akun Pengguna</span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.62rem;">Mode Warga</span>
                                     </a>
                                 </li>
                             <?php endif; ?>
