@@ -433,13 +433,23 @@ require_once __DIR__ . '/includes/header.php';
                                     <?php endif; ?>
 
                                     <?php if (has_media($u['id_card_image'] ?? '')): ?>
-                                        <a href="<?= e(get_media_url($u['id_card_image'])) ?>" target="_blank" class="badge bg-info-subtle text-info-emphasis border border-info-subtle text-decoration-none py-0.5 px-1.5" style="font-size: 0.68rem;">
-                                            <i class="fa-solid fa-id-card me-0.5"></i> Foto KTP ↗
+                                        <a href="<?= BASE_URL ?>/admin/view_doc.php?user_id=<?= $u['id'] ?>&type=ktp" 
+                                           onclick="openAdminDocPreview(event, <?= $u['id'] ?>, 'ktp', '<?= addslashes(htmlspecialchars($u['name'], ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['business_name'] ?? '', ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['id_card_number'] ?? '', ENT_QUOTES)) ?>', <?= !empty($u['is_verified']) ? 'true' : 'false' ?>)"
+                                           target="_blank" 
+                                           class="badge bg-info-subtle text-info-emphasis border border-info-subtle text-decoration-none py-1 px-2 cursor-pointer shadow-2xs d-inline-flex align-items-center" 
+                                           style="font-size: 0.68rem;"
+                                           title="Klik untuk pratinjau KTP dan verifikasi">
+                                            <i class="fa-solid fa-id-card me-1 text-info"></i> Foto KTP <i class="fa-solid fa-magnifying-glass-plus ms-1 opacity-75"></i>
                                         </a>
                                     <?php endif; ?>
                                     <?php if (has_media($u['certificate_url'] ?? '')): ?>
-                                        <a href="<?= e(get_media_url($u['certificate_url'])) ?>" target="_blank" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none py-0.5 px-1.5" style="font-size: 0.68rem;">
-                                            <i class="fa-solid fa-file-shield me-0.5"></i> Berkas STR ↗
+                                        <a href="<?= BASE_URL ?>/admin/view_doc.php?user_id=<?= $u['id'] ?>&type=str" 
+                                           onclick="openAdminDocPreview(event, <?= $u['id'] ?>, 'str', '<?= addslashes(htmlspecialchars($u['name'], ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['business_name'] ?? '', ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['credential_title'] ?? '', ENT_QUOTES)) ?>', <?= !empty($u['is_verified']) ? 'true' : 'false' ?>)"
+                                           target="_blank" 
+                                           class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none py-1 px-2 cursor-pointer shadow-2xs d-inline-flex align-items-center" 
+                                           style="font-size: 0.68rem;"
+                                           title="Klik untuk pratinjau berkas STR / Sertifikat">
+                                            <i class="fa-solid fa-file-shield me-1 text-primary"></i> Berkas STR <i class="fa-solid fa-magnifying-glass-plus ms-1 opacity-75"></i>
                                         </a>
                                     <?php endif; ?>
                                 </div>
@@ -790,6 +800,101 @@ function openBulkDeleteModal() {
     const modalEl = document.getElementById('bulkDeleteModal');
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
+}
+
+function openAdminDocPreview(e, userId, type, userName, businessName, metaInfo, isVerified) {
+    if (e) e.preventDefault();
+    
+    const docUrl = `<?= BASE_URL ?>/admin/view_doc.php?user_id=${userId}&type=${type}`;
+    const downloadUrl = `<?= BASE_URL ?>/admin/view_doc.php?user_id=${userId}&type=${type}&download=1`;
+    const isKtp = (type === 'ktp');
+    const titleText = isKtp ? `Foto KTP: ${userName}` : `Berkas STR / Sertifikat: ${userName}`;
+    const metaLabel = isKtp ? (metaInfo ? `<strong>NIK:</strong> <code>${metaInfo}</code>` : '<span class="text-danger fw-semibold">Belum mencantumkan nomor NIK</span>') : (metaInfo ? `<strong>Kualifikasi:</strong> ${metaInfo}` : 'STR Medis / Sertifikat Keahlian');
+
+    let verifyActionBtnHtml = '';
+    if (isKtp) {
+        if (!isVerified) {
+            verifyActionBtnHtml = `
+                <button type="button" class="btn btn-success fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 1)">
+                    <i class="fa-solid fa-circle-check"></i> <span>Setujui Verifikasi KTP</span>
+                </button>
+            `;
+        } else {
+            verifyActionBtnHtml = `
+                <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 0)">
+                    <i class="fa-solid fa-xmark"></i> <span>Batalkan Verifikasi KTP</span>
+                </button>
+            `;
+        }
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: `<div class="d-flex align-items-center gap-2 justify-content-center text-dark fs-5 fw-bold"><i class="fa-solid ${isKtp ? 'fa-id-card text-info' : 'fa-file-shield text-teal'}"></i> <span>${titleText}</span></div>`,
+            html: `
+                <div class="mb-2.5 text-muted small d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                    <span class="badge bg-light text-dark border px-2 py-1">${businessName || userName}</span>
+                    <span class="badge ${isVerified ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'} px-2 py-1">
+                        <i class="fa-solid ${isVerified ? 'fa-check-circle' : 'fa-clock'} me-1"></i> ${isVerified ? 'KTP Terverifikasi' : 'Menunggu Verifikasi'}
+                    </span>
+                    <span class="small">${metaLabel}</span>
+                </div>
+                <div class="position-relative rounded-3 border bg-dark bg-opacity-10 p-1 mb-3 overflow-hidden d-flex align-items-center justify-content-center" style="min-height: 250px; max-height: 480px;">
+                    <img src="${docUrl}" alt="Pratinjau Dokumen" class="img-fluid rounded-2 shadow-xs" style="max-height: 460px; object-fit: contain; width: auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'p-4 text-center\\'><i class=\\'fa-solid fa-file-pdf text-danger fs-1 mb-2\\'></i><div class=\\'fw-bold text-dark small mb-2\\'>Dokumen Berformat PDF / Non-Gambar</div><a href=\\'${docUrl}\\' target=\\'_blank\\' class=\\'btn btn-sm btn-primary rounded-pill px-3 py-1.5\\'><i class=\\'fa-solid fa-arrow-up-right-from-square me-1\\'></i> Buka Berkas PDF di Tab Baru</a></div>';">
+                </div>
+                <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                    ${verifyActionBtnHtml}
+                    <a href="${docUrl}" target="_blank" class="btn btn-primary fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tab Penuh</span>
+                    </a>
+                    <a href="${downloadUrl}" class="btn btn-outline-secondary fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> <span>Unduh</span>
+                    </a>
+                </div>
+            `,
+            width: '680px',
+            showConfirmButton: false,
+            showCloseButton: true,
+            customClass: {
+                popup: 'rounded-4 shadow-xl border-0 p-3 p-md-4'
+            }
+        });
+    } else {
+        window.open(docUrl, '_blank');
+    }
+}
+
+function submitVerifyFromModal(userId, newStatus) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= BASE_URL ?>/admin/users.php';
+    
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrf_token';
+    csrf.value = '<?= csrf_token() ?>';
+    form.appendChild(csrf);
+
+    const act = document.createElement('input');
+    act.type = 'hidden';
+    act.name = 'action';
+    act.value = 'toggle_ktp_verified';
+    form.appendChild(act);
+
+    const uid = document.createElement('input');
+    uid.type = 'hidden';
+    uid.name = 'user_id';
+    uid.value = userId;
+    form.appendChild(uid);
+
+    const st = document.createElement('input');
+    st.type = 'hidden';
+    st.name = 'new_status';
+    st.value = newStatus;
+    form.appendChild(st);
+
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>
 

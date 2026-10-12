@@ -516,7 +516,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <?php if (has_media($provider['id_card_image'] ?? '')): ?>
                                     <div class="mt-1 small d-flex align-items-center justify-content-between" style="font-size: 0.72rem;">
                                         <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan aman</span>
-                                        <a href="<?= e(get_media_url($provider['id_card_image'])) ?>" target="_blank" class="fw-semibold text-teal text-decoration-none">
+                                        <a href="<?= BASE_URL ?>/view_doc.php?user_id=<?= $user['id'] ?>&type=ktp" target="_blank" class="fw-semibold text-teal text-decoration-none">
                                             <i class="fa-solid fa-eye me-0.5"></i> Lihat Foto ↗
                                         </a>
                                     </div>
@@ -558,7 +558,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <input type="file" name="certificate" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,application/pdf">
                                         <?php if (has_media($provider['certificate_url'] ?? '')): ?>
                                             <div class="mt-1 small">
-                                                <a href="<?= e(get_media_url($provider['certificate_url'])) ?>" target="_blank" class="fw-semibold text-teal text-decoration-none" style="font-size: 0.72rem;">
+                                                <a href="<?= BASE_URL ?>/view_doc.php?user_id=<?= $user['id'] ?>&type=str" target="_blank" class="fw-semibold text-teal text-decoration-none" style="font-size: 0.72rem;">
                                                     <i class="fa-solid fa-file-shield me-1"></i> Lihat Berkas STR Tersimpan ↗
                                                 </a>
                                             </div>
