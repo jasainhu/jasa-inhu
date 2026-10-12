@@ -192,8 +192,8 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="d-flex align-items-center flex-wrap gap-2 mb-1.5">
                                 <h2 class="fw-bold text-dark mb-0 fs-3"><?= e($provider['business_name']) ?></h2>
                                 <?php if ($provider['is_verified']): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2.5 rounded-pill" title="KTP & Lokasi Usaha Terverifikasi Tim JASA INHU">
-                                        <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle py-1.5 px-2.5 rounded-pill cursor-pointer shadow-2xs d-inline-flex align-items-center" role="button" onclick="showVerificationInfoModal('ktp', '<?= addslashes($provider['business_name']) ?>')" title="Klik untuk info verifikasi resmi">
+                                        <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP <i class="fa-solid fa-circle-info ms-1.5 opacity-75" style="font-size: 0.68rem;"></i>
                                     </span>
                                 <?php endif; ?>
                                 <?php 
@@ -201,8 +201,8 @@ require_once __DIR__ . '/includes/header.php';
                                 $has_str = has_media($provider['certificate_url'] ?? '') || !empty($provider['credential_title']);
                                 ?>
                                 <?php if ($has_str): ?>
-                                    <span class="badge <?= $is_medical ? 'bg-teal text-white shadow-2xs' : 'bg-info-subtle text-info-emphasis border border-info-subtle' ?> py-1 px-2.5 rounded-pill fw-semibold" title="<?= $is_medical ? 'Tenaga Medis dengan STR Terdaftar & Terverifikasi' : 'Kualifikasi Profesi / Sertifikasi Terdaftar' ?>">
-                                        <i class="fa-solid <?= $is_medical ? 'fa-user-doctor' : 'fa-award text-teal' ?> me-1"></i> <?= !empty($provider['credential_title']) ? e($provider['credential_title']) : ($is_medical ? 'Terverifikasi STR Medis' : 'Tersertifikasi Resmi') ?>
+                                    <span class="badge <?= $is_medical ? 'bg-teal text-white shadow-2xs' : 'bg-info-subtle text-info-emphasis border border-info-subtle' ?> py-1.5 px-2.5 rounded-pill fw-semibold cursor-pointer d-inline-flex align-items-center" role="button" onclick="showVerificationInfoModal('str', '<?= addslashes($provider['business_name']) ?>')" title="Klik untuk info keabsahan STR resmi">
+                                        <i class="fa-solid <?= $is_medical ? 'fa-user-doctor' : 'fa-award text-teal' ?> me-1"></i> <?= !empty($provider['credential_title']) ? e($provider['credential_title']) : ($is_medical ? 'Terverifikasi STR Medis' : 'Tersertifikasi Resmi') ?> <i class="fa-solid fa-circle-info ms-1.5 opacity-75" style="font-size: 0.68rem;"></i>
                                     </span>
                                 <?php endif; ?>
                             </div>
@@ -978,6 +978,50 @@ if (str_contains($cat_slug, 'med')) {
 window.CSRF_TOKEN = '<?= csrf_token() ?>';
 window.IS_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
 window.BASE_URL = '<?= BASE_URL ?>';
+window.ADMIN_WA = '<?= get_setting("admin_wa", ADMIN_PHONE_WA) ?>';
+
+function showVerificationInfoModal(type, provName) {
+    let title = "Mitra Terverifikasi Resmi";
+    let text = "Dokumen resmi dan identitas mitra ini telah divalidasi oleh tim kurasi JASA INHU.";
+    let waText = encodeURIComponent(`Halo Admin JASA INHU, saya ingin konfirmasi keabsahan verifikasi resmi untuk mitra: ${provName || 'Mitra'}`);
+
+    if (type === 'str') {
+        title = "Terverifikasi STR Medis";
+        text = "Surat Tanda Registrasi (STR) tenaga medis ini telah diverifikasi keabsahannya oleh tim JASA INHU. Dokumen asli disimpan aman di arsip platform demi melindungi privasi tenaga kesehatan.";
+    } else if (type === 'ktp') {
+        title = "Identitas KTP & Usaha Terverifikasi";
+        text = "Identitas KTP dan domisili tempat usaha mitra telah divalidasi oleh tim verifikator JASA INHU di Kabupaten Indragiri Hulu.";
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: title,
+            html: `
+                <p class="text-muted small mb-3" style="font-size: 0.86rem; line-height: 1.5;">${text}</p>
+                <div class="p-2.5 rounded-3 bg-light border text-start small mb-3">
+                    <div class="d-flex align-items-center gap-1.5 text-dark fw-bold mb-1" style="font-size: 0.82rem;">
+                        <i class="fa-solid fa-shield-halved text-success"></i>
+                        <span>Jaminan Keamanan Platform JASA INHU</span>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.74rem; line-height: 1.4;">
+                        Jika Anda ragu atau ingin memastikan keabsahan surat izin mitra sebelum memesan, Anda dapat langsung menghubungi layanan verifikasi Admin resmi kami.
+                    </div>
+                </div>
+                <a href="https://wa.me/${window.ADMIN_WA}?text=${waText}" target="_blank" class="btn btn-success text-white w-100 py-2.5 fw-semibold rounded-pill shadow-xs d-flex align-items-center justify-content-center gap-2">
+                    <i class="fa-brands fa-whatsapp fs-5"></i> <span>Tanya / Konfirmasi ke Admin JASA INHU</span>
+                </a>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            customClass: {
+                popup: 'rounded-4 shadow-xl border-0'
+            }
+        });
+    } else {
+        alert(text + "\n\nHubungi Admin WA: +" + window.ADMIN_WA);
+    }
+}
 
 let orderRecipientMode = 'self';
 
