@@ -274,25 +274,6 @@ require_once __DIR__ . '/includes/header.php';
                     <?= e($provider['description'] ?: 'Penyedia jasa berpengalaman di bidang ' . $provider['category_name'] . ' yang siap melayani kebutuhan perbaikan, pemeliharaan, dan pengerjaan jasa untuk masyarakat di Kabupaten Indragiri Hulu.') ?>
                 </div>
 
-                <!-- Lencana Kualifikasi Profesi / STR / Sertifikat (Jika Ada) -->
-                <?php if ($has_str): ?>
-                    <div class="p-3 my-3 rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: #f0fdfa; border-color: #99f6e4 !important;">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <div class="rounded-circle bg-white text-teal d-flex align-items-center justify-content-center shadow-xs" style="width: 38px; height: 38px; font-size: 1.15rem; flex-shrink: 0;">
-                                <i class="fa-solid <?= $is_medical ? 'fa-user-doctor' : 'fa-award' ?> text-teal"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-dark small"><?= $is_medical ? 'Kualifikasi Tenaga Medis & STR:' : 'Kualifikasi Profesi & Sertifikasi:' ?></div>
-                                <div class="text-teal small fw-semibold"><?= e(!empty($provider['credential_title']) ? $provider['credential_title'] : ($is_medical ? 'Surat Tanda Registrasi (STR) Terlampir & Terdaftar' : 'Sertifikasi Keahlian Terdaftar')) ?></div>
-                            </div>
-                        </div>
-                        <?php if (has_media($provider['certificate_url'] ?? '')): ?>
-                            <a href="<?= e(get_media_url($provider['certificate_url'])) ?>" target="_blank" class="btn btn-sm btn-outline-teal fw-semibold rounded-pill px-3 py-1">
-                                <i class="fa-solid fa-file-shield me-1"></i> Lihat Dokumen <?= $is_medical ? 'STR' : 'Sertifikat' ?> ↗
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
 
                 <!-- Wilayah yang Dijangkau -->
                 <div class="mt-4 pt-3 border-top">
