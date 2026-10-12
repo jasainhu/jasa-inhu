@@ -282,7 +282,7 @@ if (is_logged_in() && !empty($current_user)) {
                         <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.65rem;"></i>
                     </button>
 
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-2" aria-labelledby="userProfileDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-2 shadow-lg" aria-labelledby="userProfileDropdown" style="min-width: 280px; max-height: calc(100dvh - 100px); overflow-y: auto;">
                         <!-- Header Kartu Profil -->
                         <li class="p-2.5 mb-1 rounded-3 bg-light border">
                             <div class="d-flex align-items-center gap-2">
@@ -357,42 +357,50 @@ if (is_logged_in() && !empty($current_user)) {
                                 </li>
                             <?php else: ?>
                                 <!-- Grid 2x2 Menu Cepat Mitra Ala Gojek Superapp -->
-                                <li class="px-2 py-1.5">
-                                    <div class="row g-1.5 text-center">
+                                <li class="px-2 py-1">
+                                    <div class="row g-1 text-center">
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/index.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/index.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-gauge-high"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Dashboard</div>
-                                                <div class="text-muted" style="font-size: 0.62rem;">Statistik Mitra</div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Dashboard</div>
+                                                    <div class="text-muted text-truncate" style="font-size: 0.58rem;">Statistik</div>
+                                                </div>
                                             </a>
                                         </div>
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/leads.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/leads.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-briefcase"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Pekerjaan</div>
-                                                <div class="text-teal fw-semibold" style="font-size: 0.62rem;">Order Masuk</div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Pekerjaan</div>
+                                                    <div class="text-teal fw-semibold text-truncate" style="font-size: 0.58rem;">Order Masuk</div>
+                                                </div>
                                             </a>
                                         </div>
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/wallet.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/wallet.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-wallet"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Dompet</div>
-                                                <div class="text-success fw-bold" style="font-size: 0.62rem;"><?= !empty($header_provider_wallet) ? format_rupiah($header_provider_wallet) : 'Rp 0' ?></div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Dompet</div>
+                                                    <div class="text-success fw-bold text-truncate" style="font-size: 0.58rem;"><?= !empty($header_provider_wallet) ? format_rupiah($header_provider_wallet) : 'Rp 0' ?></div>
+                                                </div>
                                             </a>
                                         </div>
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/portfolio.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/portfolio.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-camera"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Portofolio</div>
-                                                <div class="text-muted" style="font-size: 0.62rem;">Galeri Kerja</div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Portofolio</div>
+                                                    <div class="text-muted text-truncate" style="font-size: 0.58rem;">Hasil Kerja</div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -660,7 +668,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                             <span><?= strtoupper(substr($current_user['name'], 0, 1)) ?></span>
                         <?php endif; ?>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-2 shadow-lg" aria-labelledby="mobileUserProfileDropdownBtn" style="min-width: 285px;">
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-2 shadow-lg" aria-labelledby="mobileUserProfileDropdownBtn" style="min-width: 280px; max-height: calc(100dvh - 120px); overflow-y: auto; z-index: 1055 !important;">
                         <!-- Header Kartu Profil Singkat -->
                         <li class="p-2.5 mb-1 rounded-3 bg-light border">
                             <div class="d-flex align-items-center gap-2">
@@ -727,48 +735,56 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                 </li>
                             <?php else: ?>
                                 <!-- Grid 2x2 Menu Cepat Mitra Ala Gojek Superapp (Mobile) -->
-                                <li class="px-2 py-1.5">
-                                    <div class="row g-1.5 text-center">
+                                <li class="px-2 py-1">
+                                    <div class="row g-1 text-center">
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/index.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/index.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-gauge-high"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Dashboard</div>
-                                                <div class="text-muted" style="font-size: 0.62rem;">Statistik Mitra</div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Dashboard</div>
+                                                    <div class="text-muted text-truncate" style="font-size: 0.58rem;">Statistik</div>
+                                                </div>
                                             </a>
                                         </div>
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/leads.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/leads.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-briefcase"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Pekerjaan</div>
-                                                <div class="text-teal fw-semibold" style="font-size: 0.62rem;">Order Masuk</div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Pekerjaan</div>
+                                                    <div class="text-teal fw-semibold text-truncate" style="font-size: 0.58rem;">Order Masuk</div>
+                                                </div>
                                             </a>
                                         </div>
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/wallet.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/wallet.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-wallet"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Dompet</div>
-                                                <div class="text-success fw-bold" style="font-size: 0.62rem;"><?= !empty($header_provider_wallet) ? format_rupiah($header_provider_wallet) : 'Rp 0' ?></div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Dompet</div>
+                                                    <div class="text-success fw-bold text-truncate" style="font-size: 0.58rem;"><?= !empty($header_provider_wallet) ? format_rupiah($header_provider_wallet) : 'Rp 0' ?></div>
+                                                </div>
                                             </a>
                                         </div>
                                         <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/provider/portfolio.php" class="p-2 rounded-3 border bg-light bg-opacity-75 d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
-                                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                            <a href="<?= BASE_URL ?>/provider/portfolio.php" class="p-1.5 rounded-3 border bg-light bg-opacity-75 d-flex align-items-center gap-1.5 text-decoration-none text-dark h-100 transition-all hover-shadow-sm">
+                                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.82rem;">
                                                     <i class="fa-solid fa-camera"></i>
                                                 </div>
-                                                <div class="fw-bold" style="font-size: 0.72rem;">Portofolio</div>
-                                                <div class="text-muted" style="font-size: 0.62rem;">Galeri Kerja</div>
+                                                <div class="text-start overflow-hidden">
+                                                    <div class="fw-bold text-truncate" style="font-size: 0.72rem; line-height: 1.1;">Portofolio</div>
+                                                    <div class="text-muted text-truncate" style="font-size: 0.58rem;">Hasil Kerja</div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
                                 </li>
 
-                                <li><hr class="dropdown-divider my-1.5 opacity-50"></li>
+                                <li><hr class="dropdown-divider my-1 opacity-50"></li>
 
                                 <li>
                                     <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between" href="<?= BASE_URL ?>/provider/profile.php">
