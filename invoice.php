@@ -76,8 +76,14 @@ if (!$is_customer && !$is_provider && !$is_admin) {
     redirect('/');
 }
 
-// 3. Data format kwitansi
-$invoice_number = 'INV/INHU/' . date('Ymd', strtotime($request['created_at'])) . '/' . str_pad((string)$request['id'], 5, '0', STR_PAD_LEFT);
+// 3. Data format kwitansi berurutan rapi
+$order_seq = (int)$request['id'];
+if ($order_seq > 999) {
+    try {
+        $order_seq = (int)$db->query("SELECT COUNT(*) FROM service_requests WHERE id <= " . (int)$request['id'])->fetchColumn() ?: $order_seq;
+    } catch (Exception $e) {}
+}
+$invoice_number = 'INV/INHU/' . date('Ymd', strtotime($request['created_at'])) . '/' . str_pad((string)$order_seq, 4, '0', STR_PAD_LEFT);
 $total_amount = (!empty($request['final_price']) && (float)$request['final_price'] > 0) 
     ? (float)$request['final_price'] 
     : ($request['response_price'] ?: ($request['budget'] ?: 0));

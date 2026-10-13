@@ -103,11 +103,50 @@ function format_date(?string $datetime, bool $show_time = false): string {
 }
 
 /**
- * Format ID Pengguna / Mitra menjadi 3 digit (misal: #001, #002, dst)
+ * Format ID Pengguna / Mitra menjadi 3 digit berurutan (misal: #001, #002, dst)
+ * Mendukung arsitektur database terdistribusi (TiDB Cloud) agar nomor pengguna selalu rapi dan berurutan
  */
 function format_user_id($id): string {
     if (!$id) return '-';
-    return '#' . str_pad((string)$id, 3, '0', STR_PAD_LEFT);
+    $numId = (int)$id;
+    if ($numId <= 999) {
+        return '#' . str_pad((string)$numId, 3, '0', STR_PAD_LEFT);
+    }
+    
+    static $user_seq_cache = [];
+    if (!isset($user_seq_cache[$numId])) {
+        try {
+            $db = get_db();
+            $seq = (int)$db->query("SELECT COUNT(*) FROM users WHERE id <= " . $numId)->fetchColumn();
+            $user_seq_cache[$numId] = '#' . str_pad((string)($seq ?: $numId), 3, '0', STR_PAD_LEFT);
+        } catch (Exception $e) {
+            $user_seq_cache[$numId] = '#' . $numId;
+        }
+    }
+    return $user_seq_cache[$numId];
+}
+
+/**
+ * Format Nomor Urut Pesanan / Invoice agar selalu berurutan rapi (misal: #001, #002, dst)
+ */
+function format_order_id($id): string {
+    if (!$id) return '-';
+    $numId = (int)$id;
+    if ($numId <= 999) {
+        return '#' . str_pad((string)$numId, 3, '0', STR_PAD_LEFT);
+    }
+
+    static $order_seq_cache = [];
+    if (!isset($order_seq_cache[$numId])) {
+        try {
+            $db = get_db();
+            $seq = (int)$db->query("SELECT COUNT(*) FROM service_requests WHERE id <= " . $numId)->fetchColumn();
+            $order_seq_cache[$numId] = '#' . str_pad((string)($seq ?: $numId), 3, '0', STR_PAD_LEFT);
+        } catch (Exception $e) {
+            $order_seq_cache[$numId] = '#' . $numId;
+        }
+    }
+    return $order_seq_cache[$numId];
 }
 
 /**
