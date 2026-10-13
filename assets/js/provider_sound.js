@@ -141,6 +141,9 @@ if (typeof window.AppNotification === 'undefined') {
                 message = 'Suara notifikasi aktif dan siap membunyikan orderan masuk dari warga Inhu!';
             }
 
+            // Tampilkan juga notifikasi sistem di bilah atas HP jika diizinkan
+            triggerSystemNotification(title, message);
+
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'success',
@@ -181,22 +184,69 @@ if (typeof window.AppNotification === 'undefined') {
             });
         }
 
+        // Menampilkan notifikasi sistem HP (Mendukung Android Chrome via ServiceWorker & Desktop)
+        function triggerSystemNotification(title, body) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+            const iconUrl = (window.APP_BASE_URL || window.BASE_URL || '') + '/assets/images/logo.png';
+            const options = {
+                body: body,
+                icon: iconUrl,
+                badge: iconUrl,
+                vibrate: [300, 150, 300, 150, 450],
+                tag: 'jasa-inhu-order-' + Date.now(),
+                renotify: true
+            };
+
+            // Di Android Chrome, wajib memakai serviceWorkerRegistration.showNotification()
+            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+                navigator.serviceWorker.ready.then(reg => {
+                    if (reg && typeof reg.showNotification === 'function') {
+                        reg.showNotification(title, options);
+                    } else {
+                        try { new Notification(title, options); } catch(e) {}
+                    }
+                }).catch(() => {
+                    try { new Notification(title, options); } catch(e) {}
+                });
+            } else {
+                try {
+                    new Notification(title, options);
+                } catch(e) {}
+            }
+        }
+
         // Izin Notifikasi Pop-up HP (Browser Push Notification)
         function requestBrowserNotification(role = 'provider') {
             if (!('Notification' in window)) {
-                alert('Browser perangkat Anda tidak mendukung Web Notification.');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Browser Tidak Mendukung',
+                        text: 'Browser perangkat Anda tidak mendukung Web Notification.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                } else {
+                    alert('Browser perangkat Anda tidak mendukung Web Notification.');
+                }
                 return;
             }
 
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
-                    new Notification('JASA INHU - Notifikasi Aktif!', {
-                        body: 'Notifikasi sistem Jasa Inhu kini akan langsung muncul di layar HP Anda.',
-                        icon: '/assets/images/logo.png'
-                    });
+                    triggerSystemNotification('JASA INHU - Notifikasi Aktif!', 'Notifikasi sistem Jasa Inhu kini akan langsung muncul di bilah notifikasi HP Anda.');
                     testSound(role);
                 } else {
-                    alert('Izin notifikasi belum diaktifkan. Anda bisa mengaktifkannya melalui Izin Situs di browser.');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Izin Belum Diberikan',
+                            html: 'Untuk memunculkan notifikasi di bilah atas HP, klik ikon <strong>Gembok / Pengaturan Situs</strong> di samping bilah alamat browser, lalu ubah <strong>Notifikasi</strong> menjadi <strong>Izinkan (Allow)</strong>.',
+                            confirmButtonColor: '#0d9488'
+                        });
+                    } else {
+                        alert('Izin notifikasi belum diaktifkan. Anda bisa mengaktifkannya melalui Izin Situs di browser.');
+                    }
                 }
             });
         }
@@ -232,12 +282,10 @@ if (typeof window.AppNotification === 'undefined') {
                             if (!isFirstLoad) {
                                 playOrderIncomingMelody();
 
-                                if ('Notification' in window && Notification.permission === 'granted') {
-                                    new Notification('🔔 Ada Pesanan Jasa Baru!', {
-                                        body: `Dari: ${data.latest_order.customer_name} - "${data.latest_order.title}"`,
-                                        icon: '/assets/images/logo.png'
-                                    });
-                                }
+                                triggerSystemNotification(
+                                    '🔔 Ada Pesanan Jasa Baru!',
+                                    `Dari: ${data.latest_order.customer_name} - "${data.latest_order.title}"`
+                                );
 
                                 if (typeof Swal !== 'undefined') {
                                     Swal.fire({

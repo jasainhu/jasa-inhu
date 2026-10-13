@@ -135,6 +135,16 @@ try {
     $stmtNotif = $db->prepare("INSERT INTO notifications (user_id, title, message, link, created_at) VALUES (?, ?, ?, ?, NOW())");
     $stmtNotif->execute([$provider['user_id'], $notifTitle, $notifMsg, '/provider/index.php']);
 
+    // Kirim notifikasi WhatsApp otomatis ke HP Mitra jika nomor tersedia & gateway aktif
+    if (!empty($provider['provider_phone'])) {
+        $autoWaMsg = "🔔 *PESANAN JASA BARU DARI WARGA!* (No: #{$request_id})\n\n" .
+                     "Halo *{$provider['business_name']}*, ada pesanan baru dari *{$user['name']}*:\n" .
+                     "📌 *Layanan*: {$problem}\n" .
+                     "📍 *Lokasi*: " . ($address ?: 'Sesuai kesepakatan') . "\n\n" .
+                     "Segera cek aplikasi Jasa Inhu: " . BASE_URL . "/provider/index.php";
+        send_wa_notification($provider['provider_phone'], $autoWaMsg, 'new_order', $request_id, $provider['business_name']);
+    }
+
     $db->commit();
 
     // Buat format pesan WhatsApp resmi ke nomor mitra

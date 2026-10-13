@@ -99,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $user['id'], $provider['primary_category_id'], $provider['id'],
                     $district_id, $village_id, $title, $description, $budget, $address_detail, $urgency
                 ]);
+                $request_id = (int)$db->lastInsertId();
+
                 // 2. Catat ke Timeline Garis Waktu Pesanan
                 add_order_timeline_event(
                     $request_id,
@@ -113,6 +115,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $notifMsg = "Warga " . $user['name'] . " telah memesan jasa langsung ke usaha Anda untuk: '" . $title . "'.";
                 $stmtNotif = $db->prepare("INSERT INTO notifications (user_id, title, message, link, created_at) VALUES (?, ?, ?, ?, NOW())");
                 $stmtNotif->execute([$provider['user_id'], $notifTitle, $notifMsg, '/provider/index.php']);
+
+                // 4. Kirim notifikasi WhatsApp otomatis ke HP Mitra jika nomor tersedia
+                if (!empty($provider['provider_phone'])) {
+                    $waMsg = "🔔 *PESANAN JASA BARU MASUK!* (No: #{$request_id})\n\n" .
+                             "Halo *{$provider['business_name']}*, warga atas nama *{$user['name']}* memesan jasa Anda untuk:\n" .
+                             "📌 *Pekerjaan*: {$title}\n" .
+                             "📍 *Alamat*: " . ($address_detail ?: 'Sesuai kesepakatan') . "\n\n" .
+                             "Segera buka dashboard mitra Jasa Inhu untuk menanggapi: " . BASE_URL . "/provider/index.php";
+                    send_wa_notification($provider['provider_phone'], $waMsg, 'new_order', $request_id, $provider['business_name']);
+                }
 
                 $db->commit();
 
