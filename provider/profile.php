@@ -333,11 +333,11 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Mini Stats Bar 3-Kolom -->
         <div class="bg-black bg-opacity-20 px-3 py-2.5 border-top border-white border-opacity-10">
             <div class="row g-2 text-center align-items-center">
-                <div class="col-4 border-end border-white border-opacity-15">
+                <div class="col-4 border-end border-white border-opacity-15" role="button" data-bs-toggle="modal" data-bs-target="#modalDompetInfo" style="cursor: pointer;" title="Ketuk untuk isi saldo / info kuota">
                     <div class="text-white-50" style="font-size: 0.68rem;">Saldo Kuota</div>
                     <div class="fw-bold text-white small d-flex align-items-center gap-1 justify-content-center">
                         <span>Rp <?= number_format($provider['wallet_balance'] ?? 0, 0, ',', '.') ?></span>
-                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="badge bg-warning text-dark text-decoration-none rounded-pill" style="font-size: 0.6rem;">+Topup</a>
+                        <span class="badge bg-warning text-dark rounded-pill fw-bold" style="font-size: 0.6rem;">+Topup</span>
                     </div>
                 </div>
                 <div class="col-4 border-end border-white border-opacity-15">
@@ -430,17 +430,17 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Section 2: Keuangan & Pesanan -->
     <div class="shopee-settings-section-title px-2">Keuangan & Bursa Pekerjaan</div>
     <div class="shopee-list-group">
-        <!-- Menu 5: Dompet Saldo (Pop-up Modal) -->
-        <a href="javascript:void(0)" class="shopee-list-item" data-bs-toggle="modal" data-bs-target="#modalDompetInfo">
+        <!-- Menu 5: Riwayat Mutasi Saldo & Pembukuan -->
+        <a href="<?= BASE_URL ?>/provider/wallet.php" class="shopee-list-item">
             <div class="shopee-list-item-left">
-                <i class="fa-solid fa-wallet shopee-list-icon text-warning"></i>
+                <i class="fa-solid fa-clock-rotate-left shopee-list-icon text-warning"></i>
                 <div>
-                    <span class="d-block fw-bold text-dark">Dompet & Saldo Deposit</span>
-                    <span class="text-muted small" style="font-size: 0.72rem;">Isi kuota saldo dan pantau riwayat biaya kontak pesanan</span>
+                    <span class="d-block fw-bold text-dark">Riwayat Mutasi Saldo & Pembukuan</span>
+                    <span class="text-muted small" style="font-size: 0.72rem;">Catatan keluar-masuk kuota pesanan & pengajuan saldo</span>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-1.5">
-                <strong class="text-teal font-monospace" style="font-size: 0.8rem;">Rp <?= number_format($provider['wallet_balance'], 0, ',', '.') ?></strong>
+                <span class="badge bg-light text-secondary border py-0.5 px-2 rounded-pill small" style="font-size: 0.68rem;">Lihat Mutasi</span>
                 <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
             </div>
         </a>
