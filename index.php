@@ -742,61 +742,6 @@ require_once __DIR__ . '/includes/header.php';
 </section>
 <?php endif; ?>
 
-<!-- FITUR BESAR 5: 3 PILAR KEPERCAYAAN & STANDAR LAYANAN PROFESIONAL -->
-<section class="py-4 py-md-5 bg-white border-top mb-4">
-    <div class="container">
-        <div class="text-center mx-auto mb-4 mb-md-5" style="max-width: 680px;">
-            <span class="badge bg-teal-subtle text-teal fw-bold px-3 py-1.5 rounded-pill mb-2 small border border-teal-subtle">
-                <i class="fa-solid fa-shield-halved me-1"></i> STANDAR LAYANAN PROFESIONAL
-            </span>
-            <h3 class="fw-bold text-dark mb-2 fs-5 fs-md-3">Kenyamanan & Keamanan Transaksi Prioritas Kami</h3>
-            <p class="text-muted small mb-0" style="line-height: 1.6;">
-                JASA INHU menghadirkan platform digital terpercaya untuk memudahkan Anda menemukan teknisi, montir, dan pekerja profesional lokal di Kabupaten Indragiri Hulu tanpa rasa cemas.
-            </p>
-        </div>
-
-        <div class="row g-3 g-md-4">
-            <!-- Pilar 1 -->
-            <div class="col-md-4">
-                <div class="card h-100 border rounded-4 p-4 bg-white shadow-sm text-center text-md-start">
-                    <div class="rounded-3 bg-teal bg-opacity-10 text-teal d-inline-flex align-items-center justify-content-center mb-3" style="width: 52px; height: 52px;">
-                        <i class="fa-solid fa-id-card-clip fs-4"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark mb-2 fs-6">Mitra Terverifikasi KTP & STR</h5>
-                    <p class="text-muted small mb-0" style="font-size: 0.82rem; line-height: 1.55;">
-                        Seluruh mitra teknisi dan tenaga ahli memiliki identitas KTP dan domisili jelas di 14 kecamatan Inhu, bebas dari profil fiktif.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Pilar 2 -->
-            <div class="col-md-4">
-                <div class="card h-100 border rounded-4 p-4 bg-white shadow-sm text-center text-md-start">
-                    <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 52px; height: 52px;">
-                        <i class="fa-solid fa-hand-holding-dollar fs-4"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark mb-2 fs-6">Bayar Usai Pekerjaan Selesai</h5>
-                    <p class="text-muted small mb-0" style="font-size: 0.82rem; line-height: 1.55;">
-                        Tanpa biaya tersembunyi atau transfer di muka. Anda memeriksa langsung hasil kerja di lokasi sebelum melakukan pelunasan.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Pilar 3 -->
-            <div class="col-md-4">
-                <div class="card h-100 border rounded-4 p-4 bg-white shadow-sm text-center text-md-start">
-                    <div class="rounded-3 bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 52px; height: 52px;">
-                        <i class="fa-solid fa-file-invoice fs-4"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark mb-2 fs-6">Kwitansi Sah & Bantuan CS</h5>
-                    <p class="text-muted small mb-0" style="font-size: 0.82rem; line-height: 1.55;">
-                        Setiap pesanan tuntas dilengkapi bukti kwitansi elektronik resmi, serta didukung layanan mediasi tim CS Admin via WhatsApp.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- 5. MODAL POP-UP SELURUH KATEGORI JASA (SHOPEE STYLE DRAWER/MODAL) -->
 <div class="modal fade" id="allCategoriesModal" tabindex="-1" aria-labelledby="allCategoriesModalLabel" aria-hidden="true">
