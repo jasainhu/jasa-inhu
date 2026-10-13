@@ -98,6 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Global Modern Pop-up & Confirmation System (SweetAlert2)
     // Convert native confirm() and custom data-confirm forms to modern animated modals
     initModernPopups();
+
+    // 6. Mobile Smart Back Navigation & Double-Tap Back to Exit
+    initMobileAppBackNavigation();
 });
 
 /**
@@ -239,6 +242,125 @@ function initModernPopups() {
             }
         });
     }, true);
+}
+
+/**
+ * 6. Native App-like Navigation & Double-Tap Back to Exit
+ * Solusi untuk komplain pelanggan: "banyak back-back" & "keluar aplikasi tanpa harus logout"
+ */
+function initMobileAppBackNavigation() {
+    let lastBackPressTime = 0;
+    let isHandlingPop = false;
+
+    // Normalisasi pathname
+    const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+    const isHome = currentPath === '' || currentPath === '/' || currentPath.endsWith('/index.php') || currentPath.endsWith('/jasa-inhu') || currentPath.endsWith('/jasa-inhu/index.php');
+
+    // Buat elemen Toast Android "Tekan sekali lagi untuk keluar aplikasi"
+    let toast = document.getElementById('appBackExitToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'appBackExitToast';
+        toast.className = 'app-back-exit-toast';
+        toast.innerHTML = '<i class="fa-solid fa-arrow-right-from-bracket text-warning"></i><span>Tekan sekali lagi untuk keluar aplikasi</span>';
+        document.body.appendChild(toast);
+    }
+
+    function showExitToast() {
+        toast.classList.add('show');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    // A. Intersep pembukaan Modal & Offcanvas agar tombol BACK HP otomatis menutupnya
+    document.addEventListener('shown.bs.modal', function(e) {
+        window.history.pushState({ modalOpen: true, modalId: e.target.id }, '');
+    });
+
+    document.addEventListener('shown.bs.offcanvas', function(e) {
+        window.history.pushState({ offcanvasOpen: true, offcanvasId: e.target.id }, '');
+    });
+
+    // B. Jika pengguna berada di Beranda, siapkan state pengunci tombol Back
+    if (isHome) {
+        window.history.pushState({ isHomeRoot: true }, '');
+    }
+
+    // C. Listener utama tombol Back fisik / gesture smartphone
+    window.addEventListener('popstate', function(e) {
+        if (isHandlingPop) return;
+
+        // 1. Jika ada Modal Bootstrap yang sedang terbuka -> Tutup modal saja
+        const activeModal = document.querySelector('.modal.show');
+        if (activeModal) {
+            isHandlingPop = true;
+            try {
+                const modalInstance = bootstrap.Modal.getInstance(activeModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                } else {
+                    const closeBtn = activeModal.querySelector('[data-bs-dismiss="modal"]');
+                    if (closeBtn) closeBtn.click();
+                }
+            } catch (err) {
+                console.warn('Error hiding modal on back:', err);
+            }
+            setTimeout(() => { isHandlingPop = false; }, 100);
+            return;
+        }
+
+        // 2. Jika ada Menu Offcanvas yang sedang terbuka -> Tutup offcanvas saja
+        const activeOffcanvas = document.querySelector('.offcanvas.show');
+        if (activeOffcanvas) {
+            isHandlingPop = true;
+            try {
+                const ocInstance = bootstrap.Offcanvas.getInstance(activeOffcanvas);
+                if (ocInstance) {
+                    ocInstance.hide();
+                } else {
+                    const closeBtn = activeOffcanvas.querySelector('[data-bs-dismiss="offcanvas"]');
+                    if (closeBtn) closeBtn.click();
+                }
+            } catch (err) {
+                console.warn('Error hiding offcanvas on back:', err);
+            }
+            setTimeout(() => { isHandlingPop = false; }, 100);
+            return;
+        }
+
+        // 3. Jika ada SweetAlert Popup terbuka -> Tutup SweetAlert saja
+        if (typeof Swal !== 'undefined' && Swal.isVisible()) {
+            isHandlingPop = true;
+            Swal.close();
+            setTimeout(() => { isHandlingPop = false; }, 100);
+            return;
+        }
+
+        // 4. Jika sedang berada di Halaman Beranda
+        if (isHome) {
+            const now = Date.now();
+            if (now - lastBackPressTime < 2000) {
+                // Tekan Back 2x cepat: Izinkan keluar dari aplikasi
+                toast.classList.remove('show');
+                
+                // Jika mode PWA Standalone terpasang di layar utama HP
+                if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                    window.close();
+                } else {
+                    // Di browser HP biasa: Langsung tutup tab / keluar riwayat
+                    window.history.back();
+                }
+            } else {
+                // Tekan Back pertama kali: Munculkan pesan Android
+                lastBackPressTime = now;
+                showExitToast();
+                // Kunci kembali state agar tombol back berikutnya tertangkap lagi
+                window.history.pushState({ isHomeRoot: true }, '');
+            }
+        }
+    });
 }
 
 // Register PWA Service Worker for Mobile Installability

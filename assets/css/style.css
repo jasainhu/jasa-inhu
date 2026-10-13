@@ -3807,3 +3807,38 @@ div.swal2-popup {
     }
 }
 
+/* ==============================================================
+   TOAST ANDROID NATIVE: TEKAN SEKALI LAGI UNTUK KELUAR
+   ============================================================== */
+.app-back-exit-toast {
+    position: fixed;
+    bottom: 84px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    background: rgba(15, 23, 42, 0.94);
+    color: #ffffff;
+    padding: 10px 22px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    z-index: 999999;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    white-space: nowrap;
+    max-width: 90vw;
+}
+
+.app-back-exit-toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+

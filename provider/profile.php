@@ -646,11 +646,21 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                     <div>
                         <div class="fw-bold small text-dark mb-0">Beralih ke Profil Pengguna Biasa</div>
-                        <div class="text-muted" style="font-size: 0.7rem;">Gunakan akun Anda untuk memesan jasa warga lain di Inhu</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">Gunakan akun Anda untuk memesan jasa lain di Inhu</div>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
             </a>
+
+            <!-- Tips Tutup Aplikasi -->
+            <div class="p-2.5 px-3 bg-light text-center border-bottom">
+                <div class="small fw-bold text-dark mb-0.5" style="font-size: 0.76rem;">
+                    <i class="fa-solid fa-mobile-screen-button text-teal me-1"></i> Ingin Menutup Aplikasi?
+                </div>
+                <p class="text-muted mb-0" style="font-size: 0.71rem; line-height: 1.4;">
+                    Cukup tekan tombol <strong>Home / Back 2x</strong> di HP. Akun toko Anda tetap aktif dan notifikasi pesanan tetap bisa berdering.
+                </p>
+            </div>
 
             <a href="<?= BASE_URL ?>/logout.php" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2.5 px-3 text-danger">
                 <div class="d-flex align-items-center gap-2.5">

@@ -1326,9 +1326,19 @@ require_once __DIR__ . '/../includes/header.php';
             </a>
         </div>
 
+        <!-- Tips Menutup Aplikasi Tanpa Logout -->
+        <div class="p-2.5 px-3 bg-light rounded-3 border text-center mb-2.5">
+            <div class="small fw-bold text-dark mb-0.5" style="font-size: 0.78rem;">
+                <i class="fa-solid fa-mobile-screen-button text-teal me-1"></i> Ingin Menutup Aplikasi?
+            </div>
+            <p class="text-muted mb-0" style="font-size: 0.72rem; line-height: 1.4;">
+                Cukup tekan tombol <strong>Home</strong> atau tekan <strong>Back 2x</strong> di HP. Akun Anda otomatis tetap tersimpan tanpa perlu login ulang.
+            </p>
+        </div>
+
         <!-- Tombol Keluar dari Akun (Logout) Khusus Mobile (Foto 2) -->
         <a href="<?= BASE_URL ?>/logout.php" class="shopee-btn-logout-mobile">
-            <i class="fa-solid fa-arrow-right-from-bracket me-1.5"></i> Ganti Akun / Keluar
+            <i class="fa-solid fa-arrow-right-from-bracket me-1.5"></i> Ganti Akun / Logout
         </a>
     </div>
 </div>
