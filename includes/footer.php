@@ -191,5 +191,16 @@
 <script src="<?= asset_url('js/image-compressor.js') ?>"></script>
 <!-- Custom App JS -->
 <script src="<?= asset_url('js/app.js') ?>"></script>
+<!-- Universal Real-time Sound & Push Notification Engine -->
+<script src="<?= asset_url('js/provider_sound.js') ?>"></script>
+<?php if (function_exists('is_logged_in') && is_logged_in() && function_exists('has_role') && has_role('penyedia')): ?>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.ProviderNotification && typeof window.ProviderNotification.startOrderPolling === 'function') {
+        window.ProviderNotification.startOrderPolling();
+    }
+});
+</script>
+<?php endif; ?>
 </body>
 </html>
