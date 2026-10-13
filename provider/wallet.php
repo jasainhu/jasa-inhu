@@ -275,6 +275,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <th>Nominal</th>
                             <th>Metode</th>
                             <th>Status</th>
+                            <th>Bukti Struk</th>
                             <th>Keterangan</th>
                         </tr>
                     </thead>
@@ -294,6 +295,15 @@ require_once __DIR__ . '/../includes/header.php';
                                         <span class="badge text-bg-danger">Ditolak</span>
                                     <?php endif; ?>
                                 </td>
+                                <td>
+                                    <?php if (has_media($tr['proof_image'] ?? '')): ?>
+                                        <button type="button" class="btn btn-xs btn-outline-teal py-0.5 px-2 rounded-2" data-bs-toggle="modal" data-bs-target="#modalStrukProv<?= $tr['id'] ?>">
+                                            <i class="fa-solid fa-receipt me-1"></i> Struk
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="text-muted small">-</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-muted"><?= e($tr['admin_notes'] ?: '-') ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -301,6 +311,38 @@ require_once __DIR__ . '/../includes/header.php';
                 </table>
             </div>
         </div>
+
+        <!-- Modal Pratinjau Struk untuk Mitra -->
+        <?php foreach ($topup_requests as $tr): ?>
+            <?php if (has_media($tr['proof_image'] ?? '')): ?>
+                <div class="modal fade" id="modalStrukProv<?= $tr['id'] ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                            <div class="modal-header bg-teal text-white py-2.5 px-3">
+                                <h6 class="modal-title fw-bold mb-0 text-white fs-6">
+                                    <i class="fa-solid fa-receipt me-1.5"></i> Bukti Transfer Top-Up #<?= $tr['id'] ?>
+                                </h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-3 text-center bg-light">
+                                <div class="bg-white p-2 rounded-3 border mb-2">
+                                    <img src="<?= e(get_media_url($tr['proof_image'])) ?>" 
+                                         alt="Bukti Transfer Top-Up #<?= $tr['id'] ?>" 
+                                         class="img-fluid rounded" 
+                                         style="max-height: 400px; width: auto; object-fit: contain;">
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="fw-bold text-teal">Rp <?= number_format((float)$tr['amount'], 0, ',', '.') ?> (<?= e($tr['payment_method']) ?>)</span>
+                                    <a href="<?= BASE_URL ?>/view_doc.php?topup_id=<?= $tr['id'] ?>&type=topup" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Buka Penuh
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php endforeach; ?>
     <?php endif; ?>
 
     <!-- Riwayat Mutasi Dompet (Log Transaksi) -->

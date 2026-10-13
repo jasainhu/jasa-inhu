@@ -17,40 +17,75 @@ if (!$current_user) {
 }
 
 $user_id = (int)($_GET['user_id'] ?? 0);
+$topup_id = (int)($_GET['topup_id'] ?? 0);
 $type = strtolower(trim($_GET['type'] ?? 'ktp'));
 $download = isset($_GET['download']) && $_GET['download'] === '1';
 
-// Jika user_id tidak disertakan, default ke ID pengguna yang sedang login
-if ($user_id <= 0) {
-    $user_id = (int)$current_user['id'];
-}
-
-// Cek hak akses: hanya administrator atau pengguna pemilik yang boleh melihat
-if ($current_user['role_name'] !== 'admin' && (int)$current_user['id'] !== $user_id) {
-    http_response_code(403);
-    die('Akses ditolak: Anda tidak memiliki izin untuk melihat dokumen ini.');
-}
-
 $db = get_db();
-$stmt = $db->prepare("
-    SELECT sp.id_card_image, sp.id_card_number, sp.certificate_url, sp.credential_title, u.name, sp.business_name
-    FROM service_providers sp
-    JOIN users u ON sp.user_id = u.id
-    WHERE sp.user_id = ?
-");
-$stmt->execute([$user_id]);
-$doc = $stmt->fetch();
 
-if (!$doc) {
-    http_response_code(404);
-    die('Data dokumen penyedia jasa tidak ditemukan.');
-}
+// 1. Jika melihat Bukti Struk Top-Up Dompet
+if ($topup_id > 0 || $type === 'topup' || $type === 'struk') {
+    $stmtTopup = $db->prepare("
+        SELECT wtr.id, wtr.proof_image, wtr.amount, wtr.payment_method, sp.user_id, u.name, sp.business_name
+        FROM wallet_topup_requests wtr
+        JOIN service_providers sp ON wtr.provider_id = sp.id
+        JOIN users u ON sp.user_id = u.id
+        WHERE wtr.id = ?
+    ");
+    $stmtTopup->execute([$topup_id]);
+    $topup = $stmtTopup->fetch();
 
-$rawMedia = ($type === 'str' || $type === 'certificate') ? ($doc['certificate_url'] ?? '') : ($doc['id_card_image'] ?? '');
+    if (!$topup) {
+        http_response_code(404);
+        die('Data pengajuan isi saldo tidak ditemukan.');
+    }
 
-if (empty($rawMedia)) {
-    http_response_code(404);
-    die('Dokumen ' . strtoupper($type) . ' belum diunggah.');
+    if ($current_user['role_name'] !== 'admin' && (int)$current_user['id'] !== (int)$topup['user_id']) {
+        http_response_code(403);
+        die('Akses ditolak: Anda tidak memiliki izin untuk melihat bukti transfer ini.');
+    }
+
+    $rawMedia = $topup['proof_image'] ?? '';
+    if (empty($rawMedia)) {
+        http_response_code(404);
+        die('Bukti transfer belum diunggah untuk pengajuan ini.');
+    }
+
+    $doc = [
+        'name' => 'struk_topup_' . $topup['id'] . '_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $topup['business_name'])
+    ];
+} else {
+    // 2. Berkas KTP atau Sertifikat / STR
+    if ($user_id <= 0) {
+        $user_id = (int)$current_user['id'];
+    }
+
+    // Cek hak akses: hanya administrator atau pengguna pemilik yang boleh melihat
+    if ($current_user['role_name'] !== 'admin' && (int)$current_user['id'] !== $user_id) {
+        http_response_code(403);
+        die('Akses ditolak: Anda tidak memiliki izin untuk melihat dokumen ini.');
+    }
+
+    $stmt = $db->prepare("
+        SELECT sp.id_card_image, sp.id_card_number, sp.certificate_url, sp.credential_title, u.name, sp.business_name
+        FROM service_providers sp
+        JOIN users u ON sp.user_id = u.id
+        WHERE sp.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    $doc = $stmt->fetch();
+
+    if (!$doc) {
+        http_response_code(404);
+        die('Data dokumen penyedia jasa tidak ditemukan.');
+    }
+
+    $rawMedia = ($type === 'str' || $type === 'certificate') ? ($doc['certificate_url'] ?? '') : ($doc['id_card_image'] ?? '');
+
+    if (empty($rawMedia)) {
+        http_response_code(404);
+        die('Dokumen ' . strtoupper($type) . ' belum diunggah.');
+    }
 }
 
 // 1. Jika Base64 Data URI

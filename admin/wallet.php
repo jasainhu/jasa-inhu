@@ -284,9 +284,9 @@ $recent_transactions = $stmtRecentTx->fetchAll();
                             <td><?= e($pt['payment_method']) ?></td>
                             <td>
                                 <?php if (has_media($pt['proof_image'] ?? '')): ?>
-                                    <a href="<?= e(get_media_url($pt['proof_image'])) ?>" target="_blank" class="btn btn-sm btn-outline-teal py-0.5 px-2">
-                                        <i class="fa-solid fa-image me-1"></i> Lihat Struk
-                                    </a>
+                                    <button type="button" class="btn btn-sm btn-teal text-white py-1 px-2.5 fw-semibold shadow-xs" data-bs-toggle="modal" data-bs-target="#modalStrukAdmin<?= $pt['id'] ?>">
+                                        <i class="fa-solid fa-receipt me-1"></i> Periksa Struk
+                                    </button>
                                 <?php else: ?>
                                     <span class="badge text-bg-light border text-muted">Konfirmasi via WA</span>
                                 <?php endif; ?>
@@ -325,6 +325,101 @@ $recent_transactions = $stmtRecentTx->fetchAll();
             </table>
         </div>
     </div>
+
+    <!-- Modal Pratinjau Struk Bukti Transfer Top-Up -->
+    <?php foreach ($pending_topups as $pt): ?>
+        <?php if (has_media($pt['proof_image'] ?? '')): ?>
+            <div class="modal fade" id="modalStrukAdmin<?= $pt['id'] ?>" tabindex="-1" aria-labelledby="modalStrukAdminLabel<?= $pt['id'] ?>" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                        <div class="modal-header bg-dark text-white py-3 px-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="modal-title fw-bold mb-0 text-white" id="modalStrukAdminLabel<?= $pt['id'] ?>">
+                                        Bukti Transfer Top-Up #<?= $pt['id'] ?>
+                                    </h6>
+                                    <span class="text-white-50 small" style="font-size: 0.72rem;"><?= e($pt['business_name']) ?> &bull; <?= e($pt['payment_method']) ?></span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-3 p-md-4 bg-light">
+                            <!-- Ringkasan Info Top-Up -->
+                            <div class="card border-0 shadow-xs rounded-3 p-3 mb-3 bg-white">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-sm-6">
+                                        <div class="text-muted small" style="font-size: 0.72rem;">Mitra Penyedia Jasa:</div>
+                                        <div class="fw-bold text-dark fs-6"><?= e($pt['business_name']) ?></div>
+                                        <div class="small text-muted">Kec. <?= e($pt['district_name']) ?> &bull; <?= e($pt['owner_name']) ?> (<?= e($pt['owner_phone']) ?>)</div>
+                                    </div>
+                                    <div class="col-sm-6 text-sm-end">
+                                        <div class="text-muted small" style="font-size: 0.72rem;">Nominal Isi Saldo:</div>
+                                        <div class="fs-4 fw-bold text-teal">Rp <?= number_format((float)$pt['amount'], 0, ',', '.') ?></div>
+                                        <div class="small text-muted">Diajukan: <?= format_date($pt['created_at'], true) ?></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gambar Struk Bukti Transfer -->
+                            <div class="text-center p-3 bg-white rounded-3 border shadow-xs mb-3">
+                                <img src="<?= e(get_media_url($pt['proof_image'])) ?>" 
+                                     alt="Bukti Transfer Top-Up #<?= $pt['id'] ?>" 
+                                     class="img-fluid rounded-3 shadow-xs" 
+                                     style="max-height: 480px; width: auto; object-fit: contain;">
+                            </div>
+
+                            <!-- Akses Alternatif (Unduh / Layar Penuh via view_doc.php) -->
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                                <div class="small text-muted">
+                                    <i class="fa-solid fa-circle-info text-teal me-1"></i> Bukti struk tersimpan aman dalam sistem.
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="<?= BASE_URL ?>/view_doc.php?topup_id=<?= $pt['id'] ?>&type=topup" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Buka Tab Baru
+                                    </a>
+                                    <a href="<?= BASE_URL ?>/view_doc.php?topup_id=<?= $pt['id'] ?>&type=topup&download=1" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fa-solid fa-download me-1"></i> Unduh File
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-white border-top py-2.5 px-4 d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Tutup</button>
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="<?= BASE_URL ?>/admin/wallet.php" class="d-inline"
+                                      data-confirm="Apakah Anda yakin ingin MENOLAK permintaan top-up saldo Rp <?= number_format($pt['amount'], 0, ',', '.') ?> dari <?= e($pt['business_name']) ?>?"
+                                      data-confirm-title="Tolak Permintaan Top-Up?"
+                                      data-confirm-btn="Ya, Tolak Permintaan"
+                                      data-confirm-type="danger">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="reject_topup">
+                                    <input type="hidden" name="topup_id" value="<?= $pt['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-xmark me-1"></i> Tolak
+                                    </button>
+                                </form>
+                                <form method="POST" action="<?= BASE_URL ?>/admin/wallet.php" class="d-inline"
+                                      data-confirm="Apakah Anda sudah memeriksa bukti transfer dan yakin ingin MENYETUJUI penambahan saldo Rp <?= number_format($pt['amount'], 0, ',', '.') ?> untuk <?= e($pt['business_name']) ?>?"
+                                      data-confirm-title="Setujui Top-Up Saldo?"
+                                      data-confirm-btn="Ya, Setujui Top-Up"
+                                      data-confirm-type="success">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="approve_topup">
+                                    <input type="hidden" name="topup_id" value="<?= $pt['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold px-3">
+                                        <i class="fa-solid fa-check me-1"></i> Setujui & Tambah Saldo
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endforeach; ?>
 <?php endif; ?>
 
 <!-- Tabel Daftar Saldo Seluruh Mitra di Inhu -->
