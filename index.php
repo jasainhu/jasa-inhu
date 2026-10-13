@@ -129,24 +129,6 @@ try {
         $showcase_portfolios = [];
     }
 
-    // 7. Testimoni Nyata & Rating Bintang Warga Inhu
-    $showcase_reviews = [];
-    try {
-        $stmtRevShow = $db->query("
-            SELECT r.*, u.name as customer_name, sp.id as provider_id, sp.business_name, sc.name as category_name, d.name as district_name
-            FROM reviews r
-            JOIN users u ON r.user_id = u.id
-            JOIN service_providers sp ON r.provider_id = sp.id
-            JOIN service_categories sc ON sp.primary_category_id = sc.id
-            LEFT JOIN districts d ON sp.district_id = d.id
-            WHERE r.rating >= 4
-            ORDER BY r.created_at DESC
-            LIMIT 6
-        ");
-        $showcase_reviews = $stmtRevShow->fetchAll();
-    } catch (Exception $e) {
-        $showcase_reviews = [];
-    }
 
 } catch (Exception $e) {
     error_log("Homepage query error: " . $e->getMessage());
@@ -689,58 +671,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<?php if (!empty($showcase_reviews)): ?>
-<!-- FITUR BESAR 4: TESTIMONI & ULASAN ASLI WARGA INHU (Social Proof) -->
-<section class="py-4 bg-light border-top border-bottom mb-4">
-    <div class="container">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-                <span class="badge bg-warning-subtle text-warning-emphasis fw-bold px-2.5 py-1 rounded-pill small mb-1 border border-warning-subtle">
-                    <i class="fa-solid fa-star me-1 text-warning"></i> ULASAN & KEPUASAN PELANGGAN
-                </span>
-                <h4 class="fw-bold text-dark mb-0 fs-5">Pengalaman Nyata Pelanggan Jasa Inhu</h4>
-                <p class="text-muted small mb-0">Ulasan kepuasan jujur dari masyarakat di berbagai kecamatan se-Indragiri Hulu</p>
-            </div>
-        </div>
-
-        <div class="row g-3">
-            <?php foreach ($showcase_reviews as $sRev): ?>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card border-0 shadow-sm rounded-4 p-3.5 h-100 bg-white d-flex flex-column">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center fw-bold small" style="width: 36px; height: 36px;">
-                                    <?= strtoupper(substr($sRev['customer_name'], 0, 1)) ?>
-                                </div>
-                                <div>
-                                    <div class="fw-bold text-dark small"><?= e($sRev['customer_name']) ?></div>
-                                    <div class="text-muted" style="font-size: 0.7rem;"><i class="fa-solid fa-location-dot text-danger me-1"></i> Kec. <?= e($sRev['district_name'] ?: 'Inhu') ?></div>
-                                </div>
-                            </div>
-                            <div class="text-warning small">
-                                <?php for ($i = 0; $i < (int)$sRev['rating']; $i++): ?>
-                                    <i class="fa-solid fa-star"></i>
-                                <?php endfor; ?>
-                            </div>
-                        </div>
-
-                        <p class="small text-secondary mb-3 flex-grow-1 fst-italic" style="line-height: 1.5; font-size: 0.82rem;">
-                            "<?= e($sRev['comment']) ?>"
-                        </p>
-
-                        <div class="p-2 rounded-3 bg-light border-top d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
-                            <span class="text-muted">Untuk Mitra:</span>
-                            <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $sRev['provider_id'] ?>" class="fw-bold text-teal text-decoration-none">
-                                <?= e($sRev['business_name']) ?> &rarr;
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</section>
-<?php endif; ?>
 
 
 <!-- 5. MODAL POP-UP SELURUH KATEGORI JASA (SHOPEE STYLE DRAWER/MODAL) -->
