@@ -740,10 +740,35 @@ require_once __DIR__ . '/../includes/header.php';
                                                 </div>
                                             </div>
                                             <div class="text-end">
-                                                <div class="fw-bold fs-5 text-teal"><?= format_rupiah($off['offer_price']) ?></div>
-                                                <span class="badge <?= $off['status'] === 'accepted' ? 'text-bg-success' : 'text-bg-light border text-muted' ?>" style="font-size: 0.72rem;">
-                                                    <?= strtoupper(e($off['status'])) ?>
-                                                </span>
+                                                <?php
+                                                    $effective_price = 0;
+                                                    $is_final = false;
+                                                    if ($current_req['status'] === 'completed' && !empty($current_req['final_price']) && (float)$current_req['final_price'] > 0) {
+                                                        $effective_price = (float)$current_req['final_price'];
+                                                        $is_final = true;
+                                                    } elseif (!empty($off['offer_price']) && (float)$off['offer_price'] > 0) {
+                                                        $effective_price = (float)$off['offer_price'];
+                                                    } elseif (!empty($current_req['budget']) && (float)$current_req['budget'] > 0) {
+                                                        $effective_price = (float)$current_req['budget'];
+                                                    }
+                                                ?>
+                                                <?php if ($effective_price > 0): ?>
+                                                    <div class="fw-bold fs-5 <?= $is_final ? 'text-success' : 'text-teal' ?>"><?= format_rupiah($effective_price) ?></div>
+                                                    <?php if ($is_final): ?>
+                                                        <span class="badge bg-success text-white" style="font-size: 0.72rem;">
+                                                            <i class="fa-solid fa-circle-check me-1"></i> SELESAI / LUNAS
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge <?= $off['status'] === 'accepted' ? 'text-bg-success' : 'text-bg-light border text-muted' ?>" style="font-size: 0.72rem;">
+                                                            <?= $off['status'] === 'accepted' ? 'DISETUJUI' : strtoupper(e($off['status'])) ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <div class="fw-semibold text-teal" style="font-size: 0.85rem;">Sesuai Kesepakatan</div>
+                                                    <span class="badge <?= $off['status'] === 'accepted' ? 'text-bg-success' : 'text-bg-light border text-muted' ?>" style="font-size: 0.72rem;">
+                                                        <?= $off['status'] === 'accepted' ? 'DISETUJUI MITRA' : 'MENUNGGU KESEPAKATAN' ?>
+                                                    </span>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
 

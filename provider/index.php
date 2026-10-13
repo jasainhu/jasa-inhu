@@ -310,6 +310,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     if ($final_price !== null) {
                         $stmtUpd = $db->prepare("UPDATE service_requests SET status = 'completed', progress_step = 'completed', final_price = ?, cost_breakdown = ? WHERE id = ?");
                         $stmtUpd->execute([$final_price, $cost_breakdown, $request_id]);
+
+                        // Sinkronkan juga offer_price di respon mitra agar konsisten di semua tampilan
+                        $stmtUpdResp = $db->prepare("UPDATE service_request_responses SET offer_price = ? WHERE request_id = ? AND status = 'accepted'");
+                        $stmtUpdResp->execute([$final_price, $request_id]);
                     } else {
                         $stmtUpd = $db->prepare("UPDATE service_requests SET status = 'completed', progress_step = 'completed' WHERE id = ?");
                         $stmtUpd->execute([$request_id]);
