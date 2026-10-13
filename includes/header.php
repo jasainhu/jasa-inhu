@@ -878,7 +878,11 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
         </div>
     </div>
 
-    <!-- Baris 2: Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab -->
+    <!-- Baris 2: Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab (Khusus Pengguna, Sembunyikan di Panel Mitra) -->
+    <?php 
+    $is_provider_panel = str_contains($_SERVER['REQUEST_URI'] ?? '', '/provider/') || str_contains($_SERVER['REQUEST_URI'] ?? '', '/admin/');
+    if (empty($hide_mobile_search) && !$is_provider_panel): 
+    ?>
     <div class="gojek-header-search-row">
         <form action="<?= BASE_URL ?>/search.php" method="GET" class="gojek-search-capsule">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
@@ -891,6 +895,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
             </button>
         </form>
     </div>
+    <?php endif; ?>
 </header>
 
 <!-- Modal Pilih Kecamatan (Shopee / Gojek Style Location Picker) -->
