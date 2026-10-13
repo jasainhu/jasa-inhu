@@ -3842,3 +3842,40 @@ div.swal2-popup {
     transform: translate(-50%, 0);
 }
 
+/* ==============================================================
+   FIX BOOTSTRAP MODAL FORM SCROLLABLE PADA SMARTPHONE & DESKTOP
+   ============================================================== */
+.modal-dialog-scrollable {
+    max-height: calc(100dvh - 1.5rem) !important;
+}
+
+.modal-dialog-scrollable form.modal-content,
+.modal-dialog-scrollable .modal-content {
+    max-height: calc(100dvh - 2rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Dukungan jika form dibungkus di dalam .modal-content */
+.modal-dialog-scrollable .modal-content > form {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.modal-dialog-scrollable .modal-body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+}
+
+.modal-dialog-scrollable .modal-header,
+.modal-dialog-scrollable .modal-footer {
+    flex-shrink: 0 !important;
+}
+

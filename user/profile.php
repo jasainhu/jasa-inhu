@@ -991,92 +991,91 @@ require_once __DIR__ . '/../includes/header.php';
      MODAL EDIT PROFIL CEPAT (UNTUK MOBILE SAAT KLIK UBAH PROFIL)
      ============================================================== -->
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content rounded-4 border-0 shadow" method="POST" action="<?= BASE_URL ?>/user/profile.php" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="update_profile">
+
             <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0">Ubah Profil & Alamat</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="<?= BASE_URL ?>/user/profile.php" enctype="multipart/form-data">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="update_profile">
 
-                <div class="modal-body p-4">
-                    <!-- Preview Foto Avatar -->
-                    <div class="text-center mb-3">
-                        <div class="d-inline-block position-relative">
-                            <?php if (!empty($user['avatar'])): ?>
-                                <img id="mobileAvatarPreview" src="<?= BASE_URL ?>/uploads/avatars/<?= e($user['avatar']) ?>" alt="Avatar" class="rounded-circle border shadow-xs" style="width: 80px; height: 80px; object-fit: cover;">
-                            <?php else: ?>
-                                <div id="mobileAvatarPlaceholder" class="rounded-circle bg-teal text-white fw-bold d-flex align-items-center justify-content-center shadow-xs mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
-                                    <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
-                                </div>
-                                <img id="mobileAvatarPreview" src="" alt="Avatar" class="rounded-circle border shadow-xs d-none" style="width: 80px; height: 80px; object-fit: cover;">
-                            <?php endif; ?>
+            <div class="modal-body p-4">
+                <!-- Preview Foto Avatar -->
+                <div class="text-center mb-3">
+                    <div class="d-inline-block position-relative">
+                        <?php if (!empty($user['avatar'])): ?>
+                            <img id="mobileAvatarPreview" src="<?= BASE_URL ?>/uploads/avatars/<?= e($user['avatar']) ?>" alt="Avatar" class="rounded-circle border shadow-xs" style="width: 80px; height: 80px; object-fit: cover;">
+                        <?php else: ?>
+                            <div id="mobileAvatarPlaceholder" class="rounded-circle bg-teal text-white fw-bold d-flex align-items-center justify-content-center shadow-xs mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                                <?= strtoupper(substr($user['name'] ?: 'U', 0, 1)) ?>
+                            </div>
+                            <img id="mobileAvatarPreview" src="" alt="Avatar" class="rounded-circle border shadow-xs d-none" style="width: 80px; height: 80px; object-fit: cover;">
+                        <?php endif; ?>
 
-                            <label for="inputMobileAvatar" class="btn btn-sm btn-dark position-absolute bottom-0 end-0 rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; cursor: pointer;">
-                                <i class="fa-solid fa-camera" style="font-size: 0.75rem;"></i>
+                        <label for="inputMobileAvatar" class="btn btn-sm btn-dark position-absolute bottom-0 end-0 rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; cursor: pointer;">
+                            <i class="fa-solid fa-camera" style="font-size: 0.75rem;"></i>
+                        </label>
+                        <input type="file" id="inputMobileAvatar" name="avatar" class="d-none" accept="image/*" onchange="previewAvatar(this, 'mobileAvatarPreview', 'mobileAvatarPlaceholder')">
+                    </div>
+                    <div class="text-muted small mt-1" style="font-size: 0.72rem;">Sentuh ikon kamera untuk ganti foto</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Nama Lengkap</label>
+                    <input type="text" name="name" class="form-control" value="<?= e($user['name']) ?>" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Nomor WhatsApp</label>
+                    <input type="text" name="phone" class="form-control" value="<?= e($user['phone']) ?>" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Jenis Kelamin</label>
+                    <div class="d-flex align-items-center gap-3 pt-1 flex-wrap">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="gender" id="mGenderMale" value="male" <?= ($user['gender'] ?? '') === 'male' ? 'checked' : '' ?>>
+                            <label class="form-check-label small text-nowrap" for="mGenderMale" style="cursor: pointer;">
+                                Laki-laki
                             </label>
-                            <input type="file" id="inputMobileAvatar" name="avatar" class="d-none" accept="image/*" onchange="previewAvatar(this, 'mobileAvatarPreview', 'mobileAvatarPlaceholder')">
                         </div>
-                        <div class="text-muted small mt-1" style="font-size: 0.72rem;">Sentuh ikon kamera untuk ganti foto</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Nama Lengkap</label>
-                        <input type="text" name="name" class="form-control" value="<?= e($user['name']) ?>" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Nomor WhatsApp</label>
-                        <input type="text" name="phone" class="form-control" value="<?= e($user['phone']) ?>" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Jenis Kelamin</label>
-                        <div class="d-flex align-items-center gap-3 pt-1 flex-wrap">
-                            <div class="form-check mb-0">
-                                <input class="form-check-input" type="radio" name="gender" id="mGenderMale" value="male" <?= ($user['gender'] ?? '') === 'male' ? 'checked' : '' ?>>
-                                <label class="form-check-label small text-nowrap" for="mGenderMale" style="cursor: pointer;">
-                                    Laki-laki
-                                </label>
-                            </div>
-                            <div class="form-check mb-0">
-                                <input class="form-check-input" type="radio" name="gender" id="mGenderFemale" value="female" <?= ($user['gender'] ?? '') === 'female' ? 'checked' : '' ?>>
-                                <label class="form-check-label small text-nowrap" for="mGenderFemale" style="cursor: pointer;">
-                                    Perempuan
-                                </label>
-                            </div>
-                            <div class="form-check mb-0">
-                                <input class="form-check-input" type="radio" name="gender" id="mGenderOther" value="other" <?= ($user['gender'] ?? '') === 'other' ? 'checked' : '' ?>>
-                                <label class="form-check-label small text-muted text-nowrap" for="mGenderOther" style="cursor: pointer;">
-                                    Lainnya
-                                </label>
-                            </div>
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="gender" id="mGenderFemale" value="female" <?= ($user['gender'] ?? '') === 'female' ? 'checked' : '' ?>>
+                            <label class="form-check-label small text-nowrap" for="mGenderFemale" style="cursor: pointer;">
+                                Perempuan
+                            </label>
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Tanggal Lahir</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-secondary"><i class="fa-regular fa-calendar"></i></span>
-                            <input type="date" name="birth_date" class="form-control" value="<?= e($user['birth_date'] ?? '') ?>" max="<?= date('Y-m-d') ?>">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="gender" id="mGenderOther" value="other" <?= ($user['gender'] ?? '') === 'other' ? 'checked' : '' ?>>
+                            <label class="form-check-label small text-muted text-nowrap" for="mGenderOther" style="cursor: pointer;">
+                                Lainnya
+                            </label>
                         </div>
-                        <div class="form-text text-muted" style="font-size: 0.72rem;">Opsional. Digunakan untuk verifikasi usia.</div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold">Bio / Catatan</label>
-                        <textarea name="bio" rows="2" class="form-control" placeholder="Deskripsi singkat profil Anda..."><?= e($user['bio'] ?? '') ?></textarea>
                     </div>
                 </div>
 
-                <div class="modal-footer border-top py-2.5 px-4 bg-light">
-                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Simpan Profil</button>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Tanggal Lahir</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary"><i class="fa-regular fa-calendar"></i></span>
+                        <input type="date" name="birth_date" class="form-control" value="<?= e($user['birth_date'] ?? '') ?>" max="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="form-text text-muted" style="font-size: 0.72rem;">Opsional. Digunakan untuk verifikasi usia.</div>
                 </div>
-            </form>
-        </div>
+
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Bio / Catatan</label>
+                    <textarea name="bio" rows="2" class="form-control" placeholder="Deskripsi singkat profil Anda..."><?= e($user['bio'] ?? '') ?></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer border-top py-2.5 px-4 bg-light">
+                <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Simpan Profil</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1084,43 +1083,42 @@ require_once __DIR__ . '/../includes/header.php';
      MODAL EDIT ALAMAT DOMISILI (UNTUK MOBILE)
      ============================================================== -->
 <div class="modal fade" id="editAddressModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content rounded-4 border-0 shadow" method="POST" action="<?= BASE_URL ?>/user/profile.php?tab=address">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="update_address">
+
             <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0">Alamat Domisili Saya</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="<?= BASE_URL ?>/user/profile.php?tab=address">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="update_address">
 
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Kecamatan di Inhu <span class="text-danger">*</span></label>
-                        <select name="district_id" class="form-select" required>
-                            <option value="">-- Pilih Kecamatan di Inhu --</option>
-                            <?php foreach ($districts as $d): ?>
-                                <option value="<?= $d['id'] ?>" <?= ($user['district_id'] == $d['id']) ? 'selected' : '' ?>>
-                                    Kecamatan <?= e($d['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="form-text text-muted" style="font-size: 0.72rem;">Wajib dipilih agar sistem mencocokkan tukang terdekat di wilayah Anda.</div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold">Alamat / Patokan</label>
-                        <textarea name="address" rows="3" class="form-control" placeholder="Jl. Lintas Timur, Gang Kenanga, Patokan dekat..."><?= e($user['address'] ?? '') ?></textarea>
-                        <div class="form-text text-muted" style="font-size: 0.72rem;">Sertakan nomor rumah, nama gang, atau patokan terdekat.</div>
-                    </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Kecamatan di Inhu <span class="text-danger">*</span></label>
+                    <select name="district_id" class="form-select" required>
+                        <option value="">-- Pilih Kecamatan di Inhu --</option>
+                        <?php foreach ($districts as $d): ?>
+                            <option value="<?= $d['id'] ?>" <?= ($user['district_id'] == $d['id']) ? 'selected' : '' ?>>
+                                Kecamatan <?= e($d['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="form-text text-muted" style="font-size: 0.72rem;">Wajib dipilih agar sistem mencocokkan tukang terdekat di wilayah Anda.</div>
                 </div>
 
-                <div class="modal-footer border-top py-2.5 px-4 bg-light">
-                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Simpan Alamat</button>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Alamat / Patokan</label>
+                    <textarea name="address" rows="3" class="form-control" placeholder="Jl. Lintas Timur, Gang Kenanga, Patokan dekat..."><?= e($user['address'] ?? '') ?></textarea>
+                    <div class="form-text text-muted" style="font-size: 0.72rem;">Sertakan nomor rumah, nama gang, atau patokan terdekat.</div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="modal-footer border-top py-2.5 px-4 bg-light">
+                <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Simpan Alamat</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1345,38 +1343,37 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Modal Ubah Kata Sandi Mobile -->
 <div class="modal fade" id="changePassModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content rounded-4 border-0 shadow" method="POST" action="<?= BASE_URL ?>/user/profile.php">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="change_password">
+
             <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0">Ubah Kata Sandi Akun</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="<?= BASE_URL ?>/user/profile.php">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="change_password">
 
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Kata Sandi Saat Ini</label>
-                        <input type="password" name="old_password" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Kata Sandi Baru</label>
-                        <input type="password" name="new_password" class="form-control" minlength="6" required>
-                        <div class="form-text" style="font-size: 0.72rem;">Minimal 6 karakter.</div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold">Ulangi Kata Sandi Baru</label>
-                        <input type="password" name="confirm_password" class="form-control" minlength="6" required>
-                    </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Kata Sandi Saat Ini</label>
+                    <input type="password" name="old_password" class="form-control" required>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Kata Sandi Baru</label>
+                    <input type="password" name="new_password" class="form-control" minlength="6" required>
+                    <div class="form-text" style="font-size: 0.72rem;">Minimal 6 karakter.</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Ulangi Kata Sandi Baru</label>
+                    <input type="password" name="confirm_password" class="form-control" minlength="6" required>
+                </div>
+            </div>
 
-                <div class="modal-footer border-top py-2.5 px-4 bg-light">
-                    <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Perbarui Kata Sandi</button>
-                </div>
-            </form>
-        </div>
+            <div class="modal-footer border-top py-2.5 px-4 bg-light">
+                <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-teal btn-sm fw-bold px-3">Perbarui Kata Sandi</button>
+            </div>
+        </form>
     </div>
 </div>
 

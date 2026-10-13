@@ -519,7 +519,10 @@ require_once __DIR__ . '/../includes/header.php';
      ====================================================================== -->
 <div class="modal fade" id="modalEditJasa" tabindex="-1" aria-labelledby="modalEditJasaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content rounded-4 border-0 shadow">
+        <form class="modal-content rounded-4 border-0 shadow" method="POST" action="<?= BASE_URL ?>/provider/profile.php" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="form_section" value="services">
+
             <div class="modal-header border-bottom py-3 px-4 bg-white">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
@@ -533,107 +536,102 @@ require_once __DIR__ . '/../includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
 
-            <form method="POST" action="<?= BASE_URL ?>/provider/profile.php" enctype="multipart/form-data">
-                <?= csrf_field() ?>
-                <input type="hidden" name="form_section" value="services">
-
-                <div class="modal-body p-3 p-md-4">
-                    <!-- Upload Foto Usaha / Profil -->
-                    <div class="p-3 mb-3 rounded-3 border bg-light">
-                        <label class="form-label fw-bold text-dark mb-1 small d-flex align-items-center justify-content-between flex-wrap gap-1">
-                            <span><i class="fa-solid fa-camera text-teal me-1"></i> Foto Profil / Hasil Kerja / Tempat Usaha</span>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-normal" style="font-size: 0.68rem;">
-                                <i class="fa-solid fa-check me-0.5"></i> Bebas / Tanpa Toko Fisik
-                            </span>
-                        </label>
-                        <div class="text-muted small mb-2" style="font-size: 0.72rem;">
-                            Boleh foto diri Anda yang rapi, hasil kerja, atau tempat kerja Anda.
-                        </div>
-
-                        <div class="d-flex align-items-center gap-3">
-                            <div id="imagePreviewContainer" class="position-relative rounded-3 overflow-hidden border shadow-xs flex-shrink-0" style="width: 80px; height: 64px; background: #e2e8f0;">
-                                <?php if (has_media($provider['image_url'] ?? '')): ?>
-                                    <img id="imagePreview" src="<?= e(get_media_url($provider['image_url'])) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
-                                <?php else: ?>
-                                    <div id="imagePlaceholder" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted">
-                                        <i class="fa-solid fa-image fs-5 mb-0.5 opacity-50"></i>
-                                    </div>
-                                    <img id="imagePreview" src="" alt="Preview" class="w-100 h-100 object-fit-cover d-none">
-                                <?php endif; ?>
-                            </div>
-                            <div class="flex-grow-1">
-                                <input type="file" name="image" id="providerImageInput" class="form-control form-control-sm mb-1" accept="image/jpeg,image/png,image/webp,image/*" onchange="previewProviderPhoto(this)">
-                                <div id="imageCompressStatus"></div>
-                                <div class="text-muted" style="font-size: 0.68rem;">Format: JPG, PNG, WebP (Otomatis dikompresi).</div>
-                            </div>
-                        </div>
+            <div class="modal-body p-3 p-md-4">
+                <!-- Upload Foto Usaha / Profil -->
+                <div class="p-3 mb-3 rounded-3 border bg-light">
+                    <label class="form-label fw-bold text-dark mb-1 small d-flex align-items-center justify-content-between flex-wrap gap-1">
+                        <span><i class="fa-solid fa-camera text-teal me-1"></i> Foto Profil / Hasil Kerja / Tempat Usaha</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-normal" style="font-size: 0.68rem;">
+                            <i class="fa-solid fa-check me-0.5"></i> Bebas / Tanpa Toko Fisik
+                        </span>
+                    </label>
+                    <div class="text-muted small mb-2" style="font-size: 0.72rem;">
+                        Boleh foto diri Anda yang rapi, hasil kerja, atau tempat kerja Anda.
                     </div>
 
-                    <!-- Input Nama & Kontak -->
-                    <div class="mb-3">
-                        <label class="form-label mb-1 small fw-bold text-dark">Nama Usaha / Merek Layanan Jasa <span class="text-danger">*</span></label>
-                        <input type="text" name="business_name" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= e($provider['business_name'] ?? '') ?>" placeholder="Contoh: Bengkel AC Berkah / Servis <?= e($user['name']) ?>" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label mb-1 small fw-bold text-dark">Nomor WhatsApp Usaha <span class="text-danger">*</span></label>
-                        <input type="text" name="phone" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= e($user['phone'] ?? '') ?>" placeholder="08xxxxxxxxxx" required>
-                        <div class="text-muted" style="font-size: 0.68rem; margin-top: 2px;">Untuk menerima chat dan pesanan langsung dari pelanggan.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label mb-1 small fw-bold text-dark">Slogan / Headline Promosi Singkat</label>
-                        <input type="text" name="headline" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= e($provider['headline'] ?? '') ?>" placeholder="Contoh: Ahli Servis AC & Kelistrikan Bergaransi di Rengat">
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-8">
-                            <label class="form-label mb-1 small fw-bold text-dark">Kategori Utama Keahlian <span class="text-danger">*</span></label>
-                            <select name="category_id" class="form-select form-select-sm rounded-3 py-2 px-2.5" required>
-                                <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= $cat['id'] ?>" <?= (($provider['primary_category_id'] ?? 0) == $cat['id']) ? 'selected' : '' ?>>
-                                        <?= e($cat['name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="imagePreviewContainer" class="position-relative rounded-3 overflow-hidden border shadow-xs flex-shrink-0" style="width: 80px; height: 64px; background: #e2e8f0;">
+                            <?php if (has_media($provider['image_url'] ?? '')): ?>
+                                <img id="imagePreview" src="<?= e(get_media_url($provider['image_url'])) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
+                            <?php else: ?>
+                                <div id="imagePlaceholder" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                                    <i class="fa-solid fa-image fs-5 mb-0.5 opacity-50"></i>
+                                </div>
+                                <img id="imagePreview" src="" alt="Preview" class="w-100 h-100 object-fit-cover d-none">
+                            <?php endif; ?>
                         </div>
-                        <div class="col-4">
-                            <label class="form-label mb-1 small fw-bold text-dark">Pengalaman</label>
-                            <div class="input-group input-group-sm">
-                                <input type="number" name="experience_years" class="form-control rounded-3 py-2 px-2" value="<?= (int)($provider['experience_years'] ?? 1) ?>" min="0">
-                                <span class="input-group-text small" style="font-size: 0.72rem;">Thn</span>
-                            </div>
+                        <div class="flex-grow-1">
+                            <input type="file" name="image" id="providerImageInput" class="form-control form-control-sm mb-1" accept="image/jpeg,image/png,image/webp,image/*" onchange="previewProviderPhoto(this)">
+                            <div id="imageCompressStatus"></div>
+                            <div class="text-muted" style="font-size: 0.68rem;">Format: JPG, PNG, WebP (Otomatis dikompresi).</div>
                         </div>
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label mb-1 small fw-bold text-dark">Biaya Mulai Dari (Rp)</label>
-                            <input type="number" name="hourly_rate_min" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($provider['hourly_rate_min'] ?? 0) ?>" placeholder="Contoh: 35000">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label mb-1 small fw-bold text-dark">Hingga Sekitar (Rp)</label>
-                            <input type="number" name="hourly_rate_max" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($provider['hourly_rate_max'] ?? 0) ?>" placeholder="Contoh: 150000">
-                        </div>
-                        <div class="col-12">
-                            <span class="text-muted" style="font-size: 0.68rem;">Boleh diisi 0 jika biaya disepakati setelah cek lokasi pengerjaan.</span>
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1 small fw-bold text-dark">Deskripsi Layanan & Garansi</label>
-                        <textarea name="description" rows="3" class="form-control form-control-sm rounded-3 py-2 px-2.5" placeholder="Jelaskan jenis pekerjaan yang bisa Anda tangani, kelebihan layanan, garansi hasil kerja, dll..."><?= e($provider['description'] ?? '') ?></textarea>
                     </div>
                 </div>
 
-                <div class="modal-footer border-top p-3 bg-white">
-                    <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
-                        <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Informasi Jasa
-                    </button>
+                <!-- Input Nama & Kontak -->
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark">Nama Usaha / Merek Layanan Jasa <span class="text-danger">*</span></label>
+                    <input type="text" name="business_name" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= e($provider['business_name'] ?? '') ?>" placeholder="Contoh: Bengkel AC Berkah / Servis <?= e($user['name']) ?>" required>
                 </div>
-            </form>
-        </div>
+
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark">Nomor WhatsApp Usaha <span class="text-danger">*</span></label>
+                    <input type="text" name="phone" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= e($user['phone'] ?? '') ?>" placeholder="08xxxxxxxxxx" required>
+                    <div class="text-muted" style="font-size: 0.68rem; margin-top: 2px;">Untuk menerima chat dan pesanan langsung dari pelanggan.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark">Slogan / Headline Promosi Singkat</label>
+                    <input type="text" name="headline" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= e($provider['headline'] ?? '') ?>" placeholder="Contoh: Ahli Servis AC & Kelistrikan Bergaransi di Rengat">
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-8">
+                        <label class="form-label mb-1 small fw-bold text-dark">Kategori Utama Keahlian <span class="text-danger">*</span></label>
+                        <select name="category_id" class="form-select form-select-sm rounded-3 py-2 px-2.5" required>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>" <?= (($provider['primary_category_id'] ?? 0) == $cat['id']) ? 'selected' : '' ?>>
+                                    <?= e($cat['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label mb-1 small fw-bold text-dark">Pengalaman</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="experience_years" class="form-control rounded-3 py-2 px-2" value="<?= (int)($provider['experience_years'] ?? 1) ?>" min="0">
+                            <span class="input-group-text small" style="font-size: 0.72rem;">Thn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label mb-1 small fw-bold text-dark">Biaya Mulai Dari (Rp)</label>
+                        <input type="number" name="hourly_rate_min" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($provider['hourly_rate_min'] ?? 0) ?>" placeholder="Contoh: 35000">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label mb-1 small fw-bold text-dark">Hingga Sekitar (Rp)</label>
+                        <input type="number" name="hourly_rate_max" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($provider['hourly_rate_max'] ?? 0) ?>" placeholder="Contoh: 150000">
+                    </div>
+                    <div class="col-12">
+                        <span class="text-muted" style="font-size: 0.68rem;">Boleh diisi 0 jika biaya disepakati setelah cek lokasi pengerjaan.</span>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label mb-1 small fw-bold text-dark">Deskripsi Layanan & Garansi</label>
+                    <textarea name="description" rows="3" class="form-control form-control-sm rounded-3 py-2 px-2.5" placeholder="Jelaskan jenis pekerjaan yang bisa Anda tangani, kelebihan layanan, garansi hasil kerja, dll..."><?= e($provider['description'] ?? '') ?></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer border-top p-3 bg-white">
+                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Informasi Jasa
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -641,8 +639,11 @@ require_once __DIR__ . '/../includes/header.php';
      MODAL 2: EDIT WILAYAH LAYANAN DOMISILI
      ====================================================================== -->
 <div class="modal fade" id="modalEditLokasi" tabindex="-1" aria-labelledby="modalEditLokasiLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content rounded-4 border-0 shadow" method="POST" action="<?= BASE_URL ?>/provider/profile.php">
+            <?= csrf_field() ?>
+            <input type="hidden" name="form_section" value="location">
+
             <div class="modal-header border-bottom py-3 px-4 bg-white">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
@@ -656,56 +657,51 @@ require_once __DIR__ . '/../includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
 
-            <form method="POST" action="<?= BASE_URL ?>/provider/profile.php">
-                <?= csrf_field() ?>
-                <input type="hidden" name="form_section" value="location">
+            <div class="modal-body p-3 p-md-4">
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark">Kecamatan Domisili / Layanan (Inhu)</label>
+                    <select name="district_id" id="district_select" class="form-select form-select-sm rounded-3 py-2 px-2.5">
+                        <option value="">-- Pilih Kecamatan --</option>
+                        <?php foreach ($districts as $dist): ?>
+                            <option value="<?= $dist['id'] ?>" <?= (($provider['district_id'] ?? 0) == $dist['id']) ? 'selected' : '' ?>>
+                                Kec. <?= e($dist['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-                <div class="modal-body p-3 p-md-4">
-                    <div class="mb-3">
-                        <label class="form-label mb-1 small fw-bold text-dark">Kecamatan Domisili / Layanan (Inhu)</label>
-                        <select name="district_id" id="district_select" class="form-select form-select-sm rounded-3 py-2 px-2.5">
-                            <option value="">-- Pilih Kecamatan --</option>
-                            <?php foreach ($districts as $dist): ?>
-                                <option value="<?= $dist['id'] ?>" <?= (($provider['district_id'] ?? 0) == $dist['id']) ? 'selected' : '' ?>>
-                                    Kec. <?= e($dist['name']) ?>
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark">Desa / Kelurahan</label>
+                    <select name="village_id" id="village_select" class="form-select form-select-sm rounded-3 py-2 px-2.5" <?= empty($current_villages) ? 'disabled' : '' ?>>
+                        <?php if (empty($current_villages)): ?>
+                            <option value="">-- Pilih Kecamatan Terlebih Dahulu --</option>
+                        <?php else: ?>
+                            <option value="">-- Pilih Desa / Kelurahan --</option>
+                            <?php foreach ($current_villages as $vil): ?>
+                                <option value="<?= $vil['id'] ?>" <?= (($provider['village_id'] ?? 0) == $vil['id']) ? 'selected' : '' ?>>
+                                    <?= e($vil['name']) ?> <?= !empty($vil['postal_code']) ? '(' . e($vil['postal_code']) . ')' : '' ?>
                                 </option>
                             <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label mb-1 small fw-bold text-dark">Desa / Kelurahan</label>
-                        <select name="village_id" id="village_select" class="form-select form-select-sm rounded-3 py-2 px-2.5" <?= empty($current_villages) ? 'disabled' : '' ?>>
-                            <?php if (empty($current_villages)): ?>
-                                <option value="">-- Pilih Kecamatan Terlebih Dahulu --</option>
-                            <?php else: ?>
-                                <option value="">-- Pilih Desa / Kelurahan --</option>
-                                <?php foreach ($current_villages as $vil): ?>
-                                    <option value="<?= $vil['id'] ?>" <?= (($provider['village_id'] ?? 0) == $vil['id']) ? 'selected' : '' ?>>
-                                        <?= e($vil['name']) ?> <?= !empty($vil['postal_code']) ? '(' . e($vil['postal_code']) . ')' : '' ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1 small fw-bold text-dark">Alamat Lengkap / Patokan Domisili</label>
-                        <textarea name="address" rows="2" class="form-control form-control-sm rounded-3 py-2 px-2.5" placeholder="Contoh: Jl. Narasinga, Rengat (Dekat Pasar / Simpang Lima)"><?= e($provider['address'] ?? '') ?></textarea>
-                        <div class="text-muted" style="font-size: 0.68rem; margin-top: 2px;">
-                            Bagi pekerja mandiri tanpa toko fisik, cukup tuliskan patokan domisili tempat tinggal Anda.
-                        </div>
-                    </div>
+                        <?php endif; ?>
+                    </select>
                 </div>
 
-                <div class="modal-footer border-top p-3 bg-white">
-                    <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
-                        <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Lokasi
-                    </button>
+                <div class="mb-2">
+                    <label class="form-label mb-1 small fw-bold text-dark">Alamat Lengkap / Patokan Domisili</label>
+                    <textarea name="address" rows="2" class="form-control form-control-sm rounded-3 py-2 px-2.5" placeholder="Contoh: Jl. Narasinga, Rengat (Dekat Pasar / Simpang Lima)"><?= e($provider['address'] ?? '') ?></textarea>
+                    <div class="text-muted" style="font-size: 0.68rem; margin-top: 2px;">
+                        Bagi pekerja mandiri tanpa toko fisik, cukup tuliskan patokan domisili tempat tinggal Anda.
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="modal-footer border-top p-3 bg-white">
+                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Lokasi
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -714,7 +710,10 @@ require_once __DIR__ . '/../includes/header.php';
      ====================================================================== -->
 <div class="modal fade" id="modalEditKtp" tabindex="-1" aria-labelledby="modalEditKtpLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content rounded-4 border-0 shadow">
+        <form class="modal-content rounded-4 border-0 shadow" method="POST" action="<?= BASE_URL ?>/provider/profile.php" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="form_section" value="ktp">
+
             <div class="modal-header border-bottom py-3 px-4 bg-white">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
@@ -728,94 +727,89 @@ require_once __DIR__ . '/../includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
 
-            <form method="POST" action="<?= BASE_URL ?>/provider/profile.php" enctype="multipart/form-data">
-                <?= csrf_field() ?>
-                <input type="hidden" name="form_section" value="ktp">
-
-                <div class="modal-body p-3 p-md-4">
-                    <!-- Status Badge -->
-                    <div class="p-3 rounded-3 mb-3 border <?php if (!empty($provider['is_verified'])): ?>bg-success bg-opacity-10 border-success<?php elseif (!empty($provider['id_card_image'])): ?>bg-warning bg-opacity-10 border-warning<?php else: ?>bg-light border-secondary-subtle<?php endif; ?>">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
-                            <span class="small fw-bold text-dark">Status Verifikasi Akun:</span>
-                            <?php if (!empty($provider['is_verified'])): ?>
-                                <span class="badge bg-success text-white px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                    <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP Resmi
-                                </span>
-                            <?php elseif (!empty($provider['id_card_image'])): ?>
-                                <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                    <i class="fa-solid fa-clock me-1"></i> Berkas KTP Sedang Divalidasi
-                                </span>
-                            <?php else: ?>
-                                <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                    <i class="fa-solid fa-circle-exclamation me-1"></i> Belum Mengunggah KTP
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="text-muted small" style="font-size: 0.72rem; line-height: 1.4;">
-                            Toko yang terverifikasi KTP diprioritaskan di hasil pencarian dan lebih dipercaya pelanggan se-Kabupaten Indragiri Hulu.
-                        </div>
+            <div class="modal-body p-3 p-md-4">
+                <!-- Status Badge -->
+                <div class="p-3 rounded-3 mb-3 border <?php if (!empty($provider['is_verified'])): ?>bg-success bg-opacity-10 border-success<?php elseif (!empty($provider['id_card_image'])): ?>bg-warning bg-opacity-10 border-warning<?php else: ?>bg-light border-secondary-subtle<?php endif; ?>">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                        <span class="small fw-bold text-dark">Status Verifikasi Akun:</span>
+                        <?php if (!empty($provider['is_verified'])): ?>
+                            <span class="badge bg-success text-white px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP Resmi
+                            </span>
+                        <?php elseif (!empty($provider['id_card_image'])): ?>
+                            <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-clock me-1"></i> Berkas KTP Sedang Divalidasi
+                            </span>
+                        <?php else: ?>
+                            <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i> Belum Mengunggah KTP
+                            </span>
+                        <?php endif; ?>
                     </div>
-
-                    <!-- Input NIK -->
-                    <div class="mb-3">
-                        <label class="form-label mb-1 small fw-bold text-dark">Nomor Induk Kependudukan (NIK KTP)</label>
-                        <input type="text" name="id_card_number" class="form-control form-control-sm rounded-3 py-2 px-2.5" maxlength="20" placeholder="16 digit NIK KTP Anda" value="<?= e($provider['id_card_number'] ?? '') ?>">
+                    <div class="text-muted small" style="font-size: 0.72rem; line-height: 1.4;">
+                        Toko yang terverifikasi KTP diprioritaskan di hasil pencarian dan lebih dipercaya pelanggan se-Kabupaten Indragiri Hulu.
                     </div>
+                </div>
 
-                    <!-- Upload KTP -->
-                    <div class="mb-3">
-                        <label class="form-label mb-1 small fw-bold text-dark">Unggah Foto KTP Asli</label>
-                        <input type="file" name="id_card_image" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,image/*">
-                        <?php if (has_media($provider['id_card_image'] ?? '')): ?>
-                            <div class="mt-2 d-flex align-items-center justify-content-between p-2 rounded-2 bg-light border" style="font-size: 0.72rem;">
-                                <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan aman</span>
-                                <a href="<?= BASE_URL ?>/view_doc.php?user_id=<?= $user['id'] ?>&type=ktp" target="_blank" class="fw-semibold text-teal text-decoration-none">
-                                    <i class="fa-solid fa-eye me-0.5"></i> Lihat Foto ↗
+                <!-- Input NIK -->
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark">Nomor Induk Kependudukan (NIK KTP)</label>
+                    <input type="text" name="id_card_number" class="form-control form-control-sm rounded-3 py-2 px-2.5" maxlength="20" placeholder="16 digit NIK KTP Anda" value="<?= e($provider['id_card_number'] ?? '') ?>">
+                </div>
+
+                <!-- Upload KTP -->
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark">Unggah Foto KTP Asli</label>
+                    <input type="file" name="id_card_image" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,image/*">
+                    <?php if (has_media($provider['id_card_image'] ?? '')): ?>
+                        <div class="mt-2 d-flex align-items-center justify-content-between p-2 rounded-2 bg-light border" style="font-size: 0.72rem;">
+                            <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan aman</span>
+                            <a href="<?= BASE_URL ?>/view_doc.php?user_id=<?= $user['id'] ?>&type=ktp" target="_blank" class="fw-semibold text-teal text-decoration-none">
+                                <i class="fa-solid fa-eye me-0.5"></i> Lihat Foto ↗
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="p-2.5 rounded-3 border bg-light small text-muted d-flex align-items-start gap-2 mb-3" style="font-size: 0.72rem;">
+                    <i class="fa-solid fa-lock text-success mt-0.5 fs-6 flex-shrink-0"></i>
+                    <div>
+                        <strong>Privasi Terjamin:</strong> Foto KTP hanya digunakan untuk validasi internal pengelola <?= APP_NAME ?> dan <strong>tidak akan pernah ditampilkan ke publik</strong>.
+                    </div>
+                </div>
+
+                <!-- Khusus Tenaga Medis (STR) -->
+                <div class="border rounded-3 p-2.5 bg-light">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <span class="fw-bold text-dark small" style="font-size: 0.76rem;">
+                            <i class="fa-solid fa-user-doctor text-teal me-1"></i> Khusus Tenaga Medis / STR (Opsional)
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label mb-1 small fw-bold">Gelar / Kualifikasi</label>
+                        <input type="text" name="credential_title" class="form-control form-control-sm rounded-3 py-1.5 px-2" placeholder="Contoh: STR Perawat Aktif / Bidan" value="<?= e($provider['credential_title'] ?? '') ?>">
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label mb-1 small fw-bold">Berkas Scan Dokumen STR (JPG, PNG, PDF)</label>
+                        <input type="file" name="certificate" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,application/pdf">
+                        <?php if (has_media($provider['certificate_url'] ?? '')): ?>
+                            <div class="mt-1 small">
+                                <a href="<?= BASE_URL ?>/view_doc.php?user_id=<?= $user['id'] ?>&type=str" target="_blank" class="fw-semibold text-teal text-decoration-none" style="font-size: 0.72rem;">
+                                    <i class="fa-solid fa-file-shield me-1"></i> Lihat Berkas STR Tersimpan ↗
                                 </a>
                             </div>
                         <?php endif; ?>
                     </div>
-
-                    <div class="p-2.5 rounded-3 border bg-light small text-muted d-flex align-items-start gap-2 mb-3" style="font-size: 0.72rem;">
-                        <i class="fa-solid fa-lock text-success mt-0.5 fs-6 flex-shrink-0"></i>
-                        <div>
-                            <strong>Privasi Terjamin:</strong> Foto KTP hanya digunakan untuk validasi internal pengelola <?= APP_NAME ?> dan <strong>tidak akan pernah ditampilkan ke publik</strong>.
-                        </div>
-                    </div>
-
-                    <!-- Khusus Tenaga Medis (STR) -->
-                    <div class="border rounded-3 p-2.5 bg-light">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                            <span class="fw-bold text-dark small" style="font-size: 0.76rem;">
-                                <i class="fa-solid fa-user-doctor text-teal me-1"></i> Khusus Tenaga Medis / STR (Opsional)
-                            </span>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label mb-1 small fw-bold">Gelar / Kualifikasi</label>
-                            <input type="text" name="credential_title" class="form-control form-control-sm rounded-3 py-1.5 px-2" placeholder="Contoh: STR Perawat Aktif / Bidan" value="<?= e($provider['credential_title'] ?? '') ?>">
-                        </div>
-                        <div class="mb-1">
-                            <label class="form-label mb-1 small fw-bold">Berkas Scan Dokumen STR (JPG, PNG, PDF)</label>
-                            <input type="file" name="certificate" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,application/pdf">
-                            <?php if (has_media($provider['certificate_url'] ?? '')): ?>
-                                <div class="mt-1 small">
-                                    <a href="<?= BASE_URL ?>/view_doc.php?user_id=<?= $user['id'] ?>&type=str" target="_blank" class="fw-semibold text-teal text-decoration-none" style="font-size: 0.72rem;">
-                                        <i class="fa-solid fa-file-shield me-1"></i> Lihat Berkas STR Tersimpan ↗
-                                    </a>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
                 </div>
+            </div>
 
-                <div class="modal-footer border-top p-3 bg-white">
-                    <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
-                        <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Dokumen
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div class="modal-footer border-top p-3 bg-white">
+                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Dokumen
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -823,7 +817,7 @@ require_once __DIR__ . '/../includes/header.php';
      MODAL 4: PENGATURAN SUARA DERING & NOTIFIKASI
      ====================================================================== -->
 <div class="modal fade" id="modalSoundSettings" tabindex="-1" aria-labelledby="modalSoundSettingsLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-bottom py-3 px-4 bg-white">
                 <div class="d-flex align-items-center gap-2">
@@ -871,8 +865,11 @@ require_once __DIR__ . '/../includes/header.php';
      MODAL 5: UBAH KATA SANDI AKUN
      ====================================================================== -->
 <div class="modal fade" id="changePassModal" tabindex="-1" aria-labelledby="changePassModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content rounded-4 border-0 shadow" method="POST" action="<?= BASE_URL ?>/provider/profile.php">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="change_password">
+
             <div class="modal-header border-bottom py-3 px-4 bg-white">
                 <div class="d-flex align-items-center gap-2">
                     <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
@@ -886,30 +883,25 @@ require_once __DIR__ . '/../includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
 
-            <form method="POST" action="<?= BASE_URL ?>/provider/profile.php">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="change_password">
-
-                <div class="modal-body p-3 p-md-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Kata Sandi Saat Ini <span class="text-danger">*</span></label>
-                        <input type="password" name="old_password" class="form-control form-control-sm rounded-3 py-2 px-2.5" required placeholder="Masukkan kata sandi lama Anda">
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold text-dark">Kata Sandi Baru <span class="text-danger">*</span></label>
-                        <input type="password" name="new_password" class="form-control form-control-sm rounded-3 py-2 px-2.5" minlength="6" required placeholder="Minimal 6 karakter">
-                    </div>
+            <div class="modal-body p-3 p-md-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Kata Sandi Saat Ini <span class="text-danger">*</span></label>
+                    <input type="password" name="old_password" class="form-control form-control-sm rounded-3 py-2 px-2.5" required placeholder="Masukkan kata sandi lama Anda">
                 </div>
 
-                <div class="modal-footer border-top p-3 bg-white">
-                    <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
-                        <i class="fa-solid fa-check me-1"></i> Simpan Sandi Baru
-                    </button>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold text-dark">Kata Sandi Baru <span class="text-danger">*</span></label>
+                    <input type="password" name="new_password" class="form-control form-control-sm rounded-3 py-2 px-2.5" minlength="6" required placeholder="Minimal 6 karakter">
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="modal-footer border-top p-3 bg-white">
+                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-sm btn-teal fw-bold px-4">
+                    <i class="fa-solid fa-check me-1"></i> Simpan Sandi Baru
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
