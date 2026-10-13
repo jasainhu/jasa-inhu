@@ -69,7 +69,7 @@ function get_db(bool $select_db = true): PDO {
         return $pdo;
     }
 
-    $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";charset=utf8";
+    $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";charset=utf8mb4";
     if ($select_db) {
         $dsn .= ";dbname=" . DB_NAME;
     }
@@ -78,6 +78,7 @@ function get_db(bool $select_db = true): PDO {
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
     ];
 
     // Dukungan otomatis SSL untuk database cloud (TiDB Cloud, Aiven, Railway, dll)

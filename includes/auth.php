@@ -420,7 +420,11 @@ function register_user(array $data): array {
         }
 
         // 4. Notifikasi selamat datang (otomatis disesuaikan untuk Mitra vs Pengguna)
-        send_welcome_notification($user_id);
+        try {
+            send_welcome_notification($user_id);
+        } catch (Throwable $notifErr) {
+            error_log("Failed to insert welcome notification: " . $notifErr->getMessage());
+        }
 
         $db->commit();
 
@@ -666,41 +670,45 @@ function verify_user_token(string $token): array {
  * Kirimkan notifikasi ucapan selamat datang yang ramah, hangat, dan interaktif
  */
 function send_welcome_notification(int $user_id): void {
-    $db = get_db();
+    try {
+        $db = get_db();
 
-    // Cek apakah sudah pernah menerima notifikasi selamat datang
-    $stmtCheck = $db->prepare("SELECT id FROM notifications WHERE user_id = ? AND title LIKE '%Selamat Datang%' LIMIT 1");
-    $stmtCheck->execute([$user_id]);
-    if ($stmtCheck->fetch()) {
-        return;
+        // Cek apakah sudah pernah menerima notifikasi selamat datang
+        $stmtCheck = $db->prepare("SELECT id FROM notifications WHERE user_id = ? AND title LIKE '%Selamat Datang%' LIMIT 1");
+        $stmtCheck->execute([$user_id]);
+        if ($stmtCheck->fetch()) {
+            return;
+        }
+
+        $stmtU = $db->prepare("
+            SELECT u.id, u.name, r.name as role_name 
+            FROM users u 
+            JOIN roles r ON u.role_id = r.id 
+            WHERE u.id = ? 
+            LIMIT 1
+        ");
+        $stmtU->execute([$user_id]);
+        $u = $stmtU->fetch();
+        if (!$u) return;
+
+        $isProvider = ($u['role_name'] === 'penyedia');
+
+        if ($isProvider) {
+            $title = "Selamat Datang di Jasa Inhu, Mitra " . $u['name'] . "!";
+            $message = "Terima kasih telah bergabung sebagai Mitra Resmi! Layanan Anda kini siap menjangkau ribuan warga di Kab. Indragiri Hulu. Segera lengkapi portofolio hasil kerja dan verifikasi KTP Anda agar toko semakin dipercaya calon pelanggan.";
+            $link = "/provider/profile.php";
+        } else {
+            $title = "Selamat Datang di JASA INHU, " . $u['name'] . "!";
+            $message = "Senang Anda bergabung! Mencari tukang servis, teknisi, montir, dan pekerja lokal terpercaya di kecamatan Anda kini jauh lebih mudah dan cepat. Coba cari jasa atau konsultasikan kebutuhan Anda sekarang.";
+            $link = "/#kategori";
+        }
+
+        $stmtIns = $db->prepare("
+            INSERT INTO notifications (user_id, title, message, link, is_read, created_at)
+            VALUES (?, ?, ?, ?, 0, NOW())
+        ");
+        $stmtIns->execute([$user_id, $title, $message, $link]);
+    } catch (Throwable $e) {
+        error_log("send_welcome_notification error: " . $e->getMessage());
     }
-
-    $stmtU = $db->prepare("
-        SELECT u.id, u.name, r.name as role_name 
-        FROM users u 
-        JOIN roles r ON u.role_id = r.id 
-        WHERE u.id = ? 
-        LIMIT 1
-    ");
-    $stmtU->execute([$user_id]);
-    $u = $stmtU->fetch();
-    if (!$u) return;
-
-    $isProvider = ($u['role_name'] === 'penyedia');
-
-    if ($isProvider) {
-        $title = "🎉 Selamat Datang di Jasa Inhu, Mitra " . $u['name'] . "!";
-        $message = "Terima kasih telah bergabung sebagai Mitra Resmi! Layanan Anda kini siap menjangkau ribuan warga di Kab. Indragiri Hulu. Segera lengkapi portofolio hasil kerja dan verifikasi KTP Anda agar toko semakin dipercaya calon pelanggan.";
-        $link = "/provider/profile.php";
-    } else {
-        $title = "🎉 Selamat Datang di JASA INHU, " . $u['name'] . "!";
-        $message = "Senang Anda bergabung! Mencari tukang servis, teknisi, montir, dan pekerja lokal terpercaya di kecamatan Anda kini jauh lebih mudah dan cepat. Coba cari jasa atau konsultasikan kebutuhan Anda sekarang.";
-        $link = "/#kategori";
-    }
-
-    $stmtIns = $db->prepare("
-        INSERT INTO notifications (user_id, title, message, link, is_read, created_at)
-        VALUES (?, ?, ?, ?, 0, NOW())
-    ");
-    $stmtIns->execute([$user_id, $title, $message, $link]);
 }
