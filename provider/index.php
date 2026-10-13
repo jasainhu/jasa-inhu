@@ -1267,10 +1267,21 @@ require_once __DIR__ . '/../includes/header.php';
                                         Pelanggan: <strong><?= e($comp['customer_name']) ?></strong> &bull; <?= e($comp['district_name'] ?: 'Inhu') ?>
                                     </div>
 
-                                    <div class="bg-light p-2.5 rounded-3 mb-3 d-flex justify-content-between align-items-center small">
+                                    <?php 
+                                        $display_paid = (!empty($comp['final_price']) && (float)$comp['final_price'] > 0) 
+                                            ? (float)$comp['final_price'] 
+                                            : ($comp['agreed_price'] ?: ($comp['budget'] ?: 0));
+                                    ?>
+                                    <div class="bg-light p-2.5 rounded-3 mb-2 d-flex justify-content-between align-items-center small">
                                         <span class="text-muted">Total Pembayaran:</span>
-                                        <span class="fw-bold text-success fs-6"><?= format_rupiah($comp['agreed_price'] ?: $comp['budget']) ?></span>
+                                        <span class="fw-bold text-success fs-6"><?= format_rupiah($display_paid) ?></span>
                                     </div>
+
+                                    <?php if (!empty($comp['cost_breakdown'])): ?>
+                                        <div class="p-2 bg-light rounded-2 border text-muted small mb-3" style="font-size: 0.73rem;">
+                                            <i class="fa-solid fa-circle-info text-teal me-1"></i> <?= e($comp['cost_breakdown']) ?>
+                                        </div>
+                                    <?php endif; ?>
 
                                     <!-- Customer Review & Rating if available -->
                                     <?php if (!empty($comp['customer_rating'])): ?>
@@ -1289,8 +1300,9 @@ require_once __DIR__ . '/../includes/header.php';
                                 </div>
 
                                 <div class="pt-2 border-top">
-                                    <a href="<?= BASE_URL ?>/receipt.php?request_id=<?= $comp['id'] ?>" target="_blank" class="btn btn-outline-teal btn-sm w-100 rounded-3">
-                                        <i class="fa-solid fa-receipt me-1"></i> Lihat Kwitansi Resmi ↗
+                                    <a href="<?= BASE_URL ?>/invoice.php?id=<?= $comp['id'] ?>" target="_blank" class="btn btn-teal text-white btn-sm w-100 fw-bold rounded-3 shadow-xs d-flex align-items-center justify-content-center gap-2 py-2">
+                                        <i class="fa-solid fa-file-invoice"></i>
+                                        <span>Buka Kwitansi & Invoice Resmi ↗</span>
                                     </a>
                                 </div>
                             </div>

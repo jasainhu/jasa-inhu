@@ -30,19 +30,30 @@ $stmt = $db->prepare("
            sc.name as category_name, sc.icon as category_icon,
            d.name as customer_district, v.name as customer_village,
            cust.name as customer_name, cust.phone as customer_phone, cust.email as customer_email,
-           sp.id as resolved_provider_id, sp.user_id as provider_user_id, sp.business_name, sp.is_verified as provider_verified,
-           sp.address as provider_address, prov_d.name as provider_district,
-           prov_u.name as provider_owner_name, prov_u.phone as provider_phone,
-           (SELECT offer_price FROM service_request_responses srr WHERE srr.request_id = sr.id AND (srr.status = 'accepted' OR srr.provider_id = sp.id) LIMIT 1) as response_price,
+           COALESCE(sp_direct.id, sp_bid.id) as resolved_provider_id,
+           COALESCE(sp_direct.user_id, sp_bid.user_id) as provider_user_id,
+           COALESCE(sp_direct.business_name, sp_bid.business_name) as business_name,
+           COALESCE(sp_direct.is_verified, sp_bid.is_verified) as provider_verified,
+           COALESCE(sp_direct.address, sp_bid.address) as provider_address,
+           COALESCE(prov_d_direct.name, prov_d_bid.name) as provider_district,
+           COALESCE(prov_u_direct.name, prov_u_bid.name) as provider_owner_name,
+           COALESCE(prov_u_direct.phone, prov_u_bid.phone) as provider_phone,
+           srr_accepted.offer_price as response_price,
            r.rating as review_rating, r.comment as review_comment, r.created_at as review_date
     FROM service_requests sr
     JOIN users cust ON sr.user_id = cust.id
     JOIN service_categories sc ON sr.category_id = sc.id
     LEFT JOIN districts d ON sr.district_id = d.id
     LEFT JOIN villages v ON sr.village_id = v.id
-    LEFT JOIN service_providers sp ON (sr.provider_id = sp.id OR sp.id = (SELECT srr2.provider_id FROM service_request_responses srr2 WHERE srr2.request_id = sr.id AND srr2.status = 'accepted' LIMIT 1))
-    LEFT JOIN users prov_u ON sp.user_id = prov_u.id
-    LEFT JOIN districts prov_d ON sp.district_id = prov_d.id
+    -- 1. Direct provider
+    LEFT JOIN service_providers sp_direct ON sr.provider_id = sp_direct.id
+    LEFT JOIN users prov_u_direct ON sp_direct.user_id = prov_u_direct.id
+    LEFT JOIN districts prov_d_direct ON sp_direct.district_id = prov_d_direct.id
+    -- 2. Bidding accepted provider
+    LEFT JOIN service_request_responses srr_accepted ON (srr_accepted.request_id = sr.id AND srr_accepted.status = 'accepted')
+    LEFT JOIN service_providers sp_bid ON srr_accepted.provider_id = sp_bid.id
+    LEFT JOIN users prov_u_bid ON sp_bid.user_id = prov_u_bid.id
+    LEFT JOIN districts prov_d_bid ON sp_bid.district_id = prov_d_bid.id
     LEFT JOIN reviews r ON r.request_id = sr.id
     WHERE sr.id = ?
     LIMIT 1
