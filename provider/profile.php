@@ -248,6 +248,11 @@ $stmtPort = $db->prepare("SELECT COUNT(*) FROM provider_portfolios WHERE provide
 $stmtPort->execute([$provider['id']]);
 $portfolio_count = (int)$stmtPort->fetchColumn();
 
+// Data kuota & saldo dompet deposit
+$lead_fee_amount = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
+$current_balance = (float)($provider['wallet_balance'] ?? 0.00);
+$est_orders = $lead_fee_amount > 0 ? floor($current_balance / $lead_fee_amount) : 'Tak Terbatas';
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -425,12 +430,12 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Section 2: Keuangan & Pesanan -->
     <div class="shopee-settings-section-title px-2">Keuangan & Bursa Pekerjaan</div>
     <div class="shopee-list-group">
-        <!-- Menu 5: Dompet Saldo -->
-        <a href="<?= BASE_URL ?>/provider/wallet.php" class="shopee-list-item">
+        <!-- Menu 5: Dompet Saldo (Pop-up Modal) -->
+        <a href="javascript:void(0)" class="shopee-list-item" data-bs-toggle="modal" data-bs-target="#modalDompetInfo">
             <div class="shopee-list-item-left">
                 <i class="fa-solid fa-wallet shopee-list-icon text-warning"></i>
                 <div>
-                    <span class="d-block fw-bold text-dark">Dompet & Riwayat Saldo Deposit</span>
+                    <span class="d-block fw-bold text-dark">Dompet & Saldo Deposit</span>
                     <span class="text-muted small" style="font-size: 0.72rem;">Isi kuota saldo dan pantau riwayat biaya kontak pesanan</span>
                 </div>
             </div>
@@ -902,6 +907,84 @@ require_once __DIR__ . '/../includes/header.php';
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- ======================================================================
+     MODAL 6: POP-UP INFO & STATUS DOMPET DEPOSIT MITRA
+     ====================================================================== -->
+<div class="modal fade" id="modalDompetInfo" tabindex="-1" aria-labelledby="modalDompetInfoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 460px;">
+        <div class="modal-content rounded-4 border-0 shadow overflow-hidden">
+            <div class="modal-header border-bottom py-3 px-4 bg-white">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="fa-solid fa-wallet fs-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold text-dark mb-0" id="modalDompetInfoLabel">Dompet & Saldo Deposit</h6>
+                        <div class="text-muted" style="font-size: 0.72rem;">Status kuota pesanan masuk & biaya kontak</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+
+            <div class="modal-body p-3 p-md-4">
+                <!-- Mini Hero Card Saldo Ramping -->
+                <div class="card border-0 rounded-4 overflow-hidden text-white p-3 mb-3 shadow-xs" style="background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
+                    <!-- Badge Promo dengan Kontras Jelas -->
+                    <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-0.5 rounded-pill mb-2 fw-semibold shadow-xs" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(253, 224, 71, 0.4); font-size: 0.68rem; color: #fde047;">
+                        <i class="fa-solid fa-gift text-warning"></i>
+                        <span>PROMO: 15 PESANAN PERTAMA GRATIS</span>
+                    </div>
+
+                    <div class="text-white-50 text-uppercase fw-semibold" style="font-size: 0.68rem; letter-spacing: 0.3px;">Saldo Kuota Deposit:</div>
+                    <div class="fs-3 fw-bold text-white my-0.5">
+                        Rp <?= number_format($current_balance, 0, ',', '.') ?>
+                    </div>
+                    <div class="d-inline-flex align-items-center gap-1 px-2 py-0.5 rounded-pill mb-2" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); font-size: 0.65rem; color: rgba(255,255,255,0.85);">
+                        <i class="fa-solid fa-lock text-warning"></i>
+                        <span>Kredit Kuota Aplikasi &bull; Non-Tunai</span>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-1.5 pt-2 border-top border-white border-opacity-15" style="font-size: 0.70rem;">
+                        <span class="badge bg-black bg-opacity-25 text-white fw-normal px-2 py-0.5 rounded-pill">
+                            <i class="fa-solid fa-bolt text-warning me-0.5"></i> Kapasitas: <strong>~<?= $est_orders ?> Pesanan</strong>
+                        </span>
+                        <span class="badge bg-black bg-opacity-25 text-white fw-normal px-2 py-0.5 rounded-pill">
+                            <i class="fa-solid fa-tag text-info me-0.5"></i> Biaya Kontak: <strong><?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS' ?></strong>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Keunggulan Sistem Deposit Singkat -->
+                <div class="p-2.5 bg-light rounded-3 border mb-3 small" style="font-size: 0.73rem; line-height: 1.45;">
+                    <div class="fw-bold text-dark mb-1 d-flex align-items-center gap-1">
+                        <i class="fa-solid fa-shield-halved text-teal"></i> Keuntungan Sistem Kuota Mitra:
+                    </div>
+                    <ul class="mb-0 ps-3 text-muted">
+                        <li><strong>Biaya flat ringan:</strong> <?= $lead_fee_amount > 0 ? 'Hanya Rp ' . number_format($lead_fee_amount, 0, ',', '.') . ' per kontak order.' : 'Gratis Rp 0 selama masa promo!' ?></li>
+                        <li><strong>Hasil kerja 100% hak Anda:</strong> Tanpa potongan komisi ataupun persenan omzet.</li>
+                        <li><strong>Prioritas order:</strong> Saldo aktif diprioritaskan tampil teratas di Inhu.</li>
+                    </ul>
+                </div>
+
+                <!-- Tombol Aksi Cepat -->
+                <div class="d-grid gap-2">
+                    <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-warning fw-bold py-2 rounded-3 shadow-xs d-flex align-items-center justify-content-center gap-1.5" style="font-size: 0.84rem;">
+                        <i class="fa-solid fa-circle-plus fs-6"></i> Isi Saldo (Top-Up) Sekarang
+                    </a>
+                    <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-outline-teal fw-semibold py-2 rounded-3 small d-flex align-items-center justify-content-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Buka Halaman Riwayat Mutasi Lengkap &rsaquo;
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer border-top p-2.5 px-3 bg-light justify-content-between">
+                <span class="text-muted small" style="font-size: 0.70rem;">Saldo aktif: Rp <?= number_format($current_balance, 0, ',', '.') ?></span>
+                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
     </div>
 </div>
 

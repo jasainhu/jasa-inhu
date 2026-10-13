@@ -128,32 +128,36 @@ $total_earned_by_provider = (float)($stmtRevTotal->fetchColumn() ?: 0.00);
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container py-4">
-    <!-- Breadcrumb & Navigasi -->
+<div class="container py-3 py-md-4" style="max-width: 920px;">
+    <!-- Header Ramping & Bersih -->
     <div class="d-flex align-items-center justify-content-between mb-3">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/provider/index.php" class="text-teal text-decoration-none">Dashboard Mitra</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Dompet & Saldo Deposit</li>
-            </ol>
-        </nav>
-        <a href="<?= BASE_URL ?>/provider/index.php" class="btn btn-sm btn-outline-secondary">
-            <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Dashboard
-        </a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="<?= BASE_URL ?>/provider/index.php" class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 36px; height: 36px;" title="Kembali ke Dashboard">
+                <i class="fa-solid fa-arrow-left text-dark"></i>
+            </a>
+            <div>
+                <h5 class="fw-bold text-dark mb-0 fs-6">Dompet & Saldo Deposit</h5>
+                <span class="text-muted small" style="font-size: 0.72rem;">Kuota kontak pesanan mitra Kab. Indragiri Hulu</span>
+            </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-warning fw-bold px-3 py-1.5 rounded-pill shadow-xs d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#topupModal">
+            <i class="fa-solid fa-circle-plus"></i>
+            <span>Isi Saldo</span>
+        </button>
     </div>
 
     <?php if (!empty($error)): ?>
-        <div class="alert alert-danger mb-4"><?= e($error) ?></div>
+        <div class="alert alert-danger mb-3 p-2.5 small rounded-3"><?= e($error) ?></div>
     <?php endif; ?>
 
     <?php if (isset($_GET['wa_redirect'])): ?>
-        <div class="alert alert-success alert-dismissible fade show p-3 mb-4 rounded-3 shadow-sm border-0 bg-success bg-opacity-10" role="alert">
-            <div class="d-flex align-items-center gap-3">
-                <i class="fa-brands fa-whatsapp text-success fs-1"></i>
+        <div class="alert alert-success alert-dismissible fade show p-3 mb-3 rounded-3 shadow-xs border-0 bg-success bg-opacity-10" role="alert">
+            <div class="d-flex align-items-center gap-2.5">
+                <i class="fa-brands fa-whatsapp text-success fs-3 flex-shrink-0"></i>
                 <div class="flex-grow-1">
-                    <h6 class="fw-bold text-dark mb-1">Kirim Bukti Pembayaran ke WhatsApp Admin</h6>
-                    <p class="text-muted small mb-2">Klik tombol di bawah ini untuk membuka WhatsApp Admin JASA INHU dan verifikasi saldo Anda segera diaktifkan.</p>
-                    <a href="<?= e($_GET['wa_redirect']) ?>" target="_blank" class="btn btn-success btn-sm fw-bold px-3 py-1.5 shadow-xs">
+                    <h6 class="fw-bold text-dark mb-0.5" style="font-size: 0.85rem;">Kirim Bukti Pembayaran ke WhatsApp Admin</h6>
+                    <p class="text-muted small mb-2" style="font-size: 0.75rem;">Konfirmasi bukti transfer agar saldo deposit segera aktif.</p>
+                    <a href="<?= e($_GET['wa_redirect']) ?>" target="_blank" class="btn btn-success btn-sm fw-bold px-3 py-1 shadow-xs" style="font-size: 0.78rem;">
                         <i class="fa-brands fa-whatsapp me-1"></i> Buka WhatsApp Admin Sekarang
                     </a>
                 </div>
@@ -162,114 +166,116 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- Kartu Saldo Utama (Hero Card) -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden text-white" style="background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
-        <div class="card-body p-4 p-md-5">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-7">
-                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-15 mb-3 small fw-semibold">
-                        <i class="fa-solid fa-gift text-warning"></i>
-                        <span>PROMO PELUNCURAN INHU: 15 PESANAN PERTAMA GRATIS</span>
-                    </div>
-                    <div class="text-white-50 small text-uppercase fw-semibold mb-1">Saldo Kuota Deposit Pesanan:</div>
-                    <div class="display-4 fw-bold text-white mb-1">
+    <!-- Kartu Saldo Utama (Ramping & Modern ala E-Wallet) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden text-white" style="background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
+        <div class="card-body p-3 p-md-4">
+            <!-- Badge Promo Peluncuran dengan Kontras Jelas -->
+            <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill mb-2.5 fw-semibold shadow-xs" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(253, 224, 71, 0.4); font-size: 0.72rem; color: #fde047;">
+                <i class="fa-solid fa-gift text-warning"></i>
+                <span>PROMO PELUNCURAN INHU: 15 PESANAN PERTAMA GRATIS</span>
+            </div>
+
+            <div class="row align-items-center g-3">
+                <div class="col-sm-7">
+                    <div class="text-white-50 text-uppercase fw-semibold" style="font-size: 0.70rem; letter-spacing: 0.5px;">Saldo Kuota Deposit Pesanan:</div>
+                    <div class="fs-2 fw-bold text-white my-1" style="letter-spacing: -0.5px;">
                         Rp <?= number_format($current_balance, 0, ',', '.') ?>
                     </div>
-                    <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill bg-black bg-opacity-30 border border-white border-opacity-20 text-white-50 small mb-3" style="font-size: 0.72rem;">
+                    <div class="d-inline-flex align-items-center gap-1 px-2 py-0.5 rounded-pill mb-2" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); font-size: 0.68rem; color: rgba(255,255,255,0.85);">
                         <i class="fa-solid fa-lock text-warning"></i>
-                        <span>Kredit Kuota Aplikasi &bull; Non-Tunai / Tidak Dapat Ditarik ke Rekening</span>
-                    </div>
-                    <div class="d-flex flex-wrap align-items-center gap-3 text-white-50 small">
-                        <span>
-                            <i class="fa-solid fa-bolt text-warning me-1"></i>
-                            Kapasitas: <strong class="text-white">~<?= $est_orders ?> Pesanan Tersedia</strong>
-                        </span>
-                        <span>&bull;</span>
-                        <span>
-                            <i class="fa-solid fa-coins text-warning me-1"></i>
-                            Total Omzet Didapat: <strong class="text-white">Rp <?= number_format($total_earned_by_provider, 0, ',', '.') ?></strong>
-                        </span>
-                        <span>&bull;</span>
-                        <span>
-                            <i class="fa-solid fa-tag text-info me-1"></i>
-                            Biaya Flat: <strong class="text-white"><?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS (Rp 0)' ?> / Pesanan</strong>
-                        </span>
+                        <span>Kredit Kuota Aplikasi &bull; Non-Tunai</span>
                     </div>
                 </div>
-                <div class="col-lg-5 text-lg-end">
-                    <button type="button" class="btn btn-warning fw-bold px-4 py-3 shadow rounded-3 fs-6 d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#topupModal">
-                        <i class="fa-solid fa-circle-plus fs-5"></i>
-                        <span>Isi Saldo (Top-Up) Sekarang</span>
+                <div class="col-sm-5 text-sm-end">
+                    <button type="button" class="btn btn-warning fw-bold px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-1.5 w-100 w-sm-auto justify-content-center" data-bs-toggle="modal" data-bs-target="#topupModal">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span>Isi Saldo (Top-Up)</span>
                     </button>
-                    <div class="text-white-50 small mt-2">
-                        <i class="fa-solid fa-clock-rotate-left me-1"></i> Proses verifikasi cepat via WhatsApp Admin
+                    <div class="text-white-50 small mt-1.5" style="font-size: 0.70rem;">
+                        <i class="fa-solid fa-bolt me-1 text-warning"></i> Verifikasi cepat via WA
                     </div>
                 </div>
+            </div>
+
+            <!-- Rincian Kapasitas Kuota -->
+            <div class="d-flex flex-wrap align-items-center gap-2 pt-2.5 mt-2.5 border-top border-white border-opacity-15" style="font-size: 0.72rem;">
+                <span class="badge bg-black bg-opacity-25 text-white fw-normal px-2.5 py-1 rounded-pill">
+                    <i class="fa-solid fa-bolt text-warning me-1"></i>
+                    Kapasitas: <strong class="text-white">~<?= $est_orders ?> Pesanan Tersedia</strong>
+                </span>
+                <span class="badge bg-black bg-opacity-25 text-white fw-normal px-2.5 py-1 rounded-pill">
+                    <i class="fa-solid fa-coins text-warning me-1"></i>
+                    Total Omzet: <strong class="text-white">Rp <?= number_format($total_earned_by_provider, 0, ',', '.') ?></strong>
+                </span>
+                <span class="badge bg-black bg-opacity-25 text-white fw-normal px-2.5 py-1 rounded-pill">
+                    <i class="fa-solid fa-tag text-info me-1"></i>
+                    Biaya Kontak: <strong class="text-white"><?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS (Rp 0)' ?></strong> / Pesanan
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- Edukasi Manfaat Sistem Biaya Kontak Flat -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100 p-3 bg-white border-start border-4 border-success">
-                <div class="d-flex align-items-center gap-2.5 mb-2">
-                    <div class="rounded-circle bg-success bg-opacity-10 text-success p-2">
-                        <i class="fa-solid fa-coins fs-5"></i>
+    <!-- Edukasi Manfaat Sistem Deposit (Ramping ala Accordion/Tip) -->
+    <div class="accordion mb-3" id="accordionInfoDeposit">
+        <div class="accordion-item border-0 shadow-xs rounded-3 overflow-hidden bg-white">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed py-2 px-3 bg-light text-dark fw-bold small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDepositInfo" aria-expanded="false" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-circle-info text-teal me-2"></i>
+                    <span>Bagaimana Sistem Kuota & Biaya Kontak Bekerja?</span>
+                    <span class="badge bg-teal-subtle text-teal ms-auto me-2" style="font-size: 0.65rem;">Info Mitra</span>
+                </button>
+            </h2>
+            <div id="collapseDepositInfo" class="accordion-collapse collapse" data-bs-parent="#accordionInfoDeposit">
+                <div class="accordion-body p-3 pt-2">
+                    <div class="row g-2 small">
+                        <div class="col-md-4">
+                            <div class="p-2.5 rounded-3 bg-light border-start border-3 border-success h-100">
+                                <div class="fw-bold text-dark mb-1" style="font-size: 0.78rem;"><i class="fa-solid fa-coins text-success me-1"></i> Biaya Flat & Ringan</div>
+                                <div class="text-muted" style="font-size: 0.72rem; line-height: 1.4;">
+                                    <?= $lead_fee_amount > 0 ? 'Hanya dipotong <strong>Rp ' . number_format($lead_fee_amount, 0, ',', '.') . '</strong> per order kontak. Tanpa potongan persenan hasil kerja.' : 'Saat ini berlaku <strong>Promo Bebas Biaya Kontak (GRATIS Rp 0)</strong>! Ambil pesanan tanpa memotong saldo deposit Anda.' ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-2.5 rounded-3 bg-light border-start border-3 border-primary h-100">
+                                <div class="fw-bold text-dark mb-1" style="font-size: 0.78rem;"><i class="fa-solid fa-wrench text-primary me-1"></i> Sparepart 100% Hak Anda</div>
+                                <div class="text-muted" style="font-size: 0.72rem; line-height: 1.4;">
+                                    Seluruh ongkos kerja dan pergantian onderdil dari pelanggan sepenuhnya milik Anda 100% tanpa potongan aplikasi.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-2.5 rounded-3 bg-light border-start border-3 border-warning h-100">
+                                <div class="fw-bold text-dark mb-1" style="font-size: 0.78rem;"><i class="fa-solid fa-award text-warning me-1"></i> Prioritas Order Nomor 1</div>
+                                <div class="text-muted" style="font-size: 0.72rem; line-height: 1.4;">
+                                    Toko mitra dengan saldo aktif selalu diprioritaskan tampil di urutan atas pencarian warga se-Kabupaten Inhu.
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <h6 class="fw-bold text-dark mb-0">Biaya Murah & Flat</h6>
                 </div>
-                <p class="text-muted small mb-0" style="line-height: 1.45;">
-                    <?= $lead_fee_amount > 0 ? 'Hanya dipotong <strong>Rp ' . number_format($lead_fee_amount, 0, ',', '.') . '</strong> saat Anda mengambil order. Tidak ada potongan persentase persenan yang memberatkan.' : 'Saat ini berlaku <strong>Promo Bebas Biaya Kontak (GRATIS Rp 0)</strong>! Seluruh pesanan dapat diambil tanpa memotong saldo deposit Anda.' ?>
-                </p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100 p-3 bg-white border-start border-4 border-primary">
-                <div class="d-flex align-items-center gap-2.5 mb-2">
-                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2">
-                        <i class="fa-solid fa-wrench fs-5"></i>
-                    </div>
-                    <h6 class="fw-bold text-dark mb-0">Sparepart 100% Milik Anda</h6>
-                </div>
-                <p class="text-muted small mb-0" style="line-height: 1.45;">
-                    Jika ada pergantian onderdil motor/AC senilai Rp 200.000 atau lebih, seluruh pembayaran pelanggan 100% jadi hak Anda tanpa potongan aplikasi.
-                </p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100 p-3 bg-white border-start border-4 border-warning">
-                <div class="d-flex align-items-center gap-2.5 mb-2">
-                    <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-2">
-                        <i class="fa-solid fa-award fs-5"></i>
-                    </div>
-                    <h6 class="fw-bold text-dark mb-0">Prioritas Order Nomor 1</h6>
-                </div>
-                <p class="text-muted small mb-0" style="line-height: 1.45;">
-                    Mitra dengan saldo aktif selalu diprioritaskan tampil di urutan atas pencarian warga Kab. Indragiri Hulu dan langsung menerima pesanan kilat.
-                </p>
             </div>
         </div>
     </div>
 
     <!-- Riwayat Permintaan Top-up Pending (Jika Ada) -->
     <?php if (!empty($topup_requests)): ?>
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-header bg-white py-3 border-bottom">
-                <h6 class="fw-bold mb-0 text-dark">
+        <div class="card border-0 shadow-xs rounded-4 mb-3">
+            <div class="card-header bg-white py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
+                <h6 class="fw-bold mb-0 text-dark small">
                     <i class="fa-solid fa-receipt text-teal me-1"></i> Pengajuan Isi Saldo Terakhir
                 </h6>
             </div>
             <div class="table-responsive">
-                <table class="table align-middle mb-0 small">
+                <table class="table align-middle mb-0 small" style="font-size: 0.75rem;">
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
                             <th>Tanggal</th>
                             <th>Nominal</th>
-                            <th>Metode Pembayaran</th>
+                            <th>Metode</th>
                             <th>Status</th>
-                            <th>Keterangan Admin</th>
+                            <th>Keterangan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -281,9 +287,9 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td><?= e($tr['payment_method']) ?></td>
                                 <td>
                                     <?php if ($tr['status'] === 'pending'): ?>
-                                        <span class="badge text-bg-warning">Menunggu Konfirmasi Admin</span>
+                                        <span class="badge text-bg-warning">Menunggu Validasi</span>
                                     <?php elseif ($tr['status'] === 'approved'): ?>
-                                        <span class="badge text-bg-success">Berhasil Masuk Saldo</span>
+                                        <span class="badge text-bg-success">Berhasil Masuk</span>
                                     <?php else: ?>
                                         <span class="badge text-bg-danger">Ditolak</span>
                                     <?php endif; ?>
@@ -298,27 +304,62 @@ require_once __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 
     <!-- Riwayat Mutasi Dompet (Log Transaksi) -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold mb-0 text-dark">
+    <div class="card border-0 shadow-xs rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-2.5 px-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark small">
                 <i class="fa-solid fa-clock-rotate-left text-teal me-1"></i> Riwayat Mutasi Saldo Dompet
             </h6>
-            <span class="small text-muted">Menampilkan 30 riwayat terakhir</span>
+            <span class="text-muted" style="font-size: 0.70rem;">30 riwayat terakhir</span>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 small">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 20%;">Waktu</th>
-                        <th style="width: 15%;">Tipe Mutasi</th>
-                        <th style="width: 40%;">Rincian & Keterangan</th>
-                        <th style="width: 10%;" class="text-end">Nominal</th>
-                        <th style="width: 10%;" class="text-end">Sisa Saldo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($transactions)): ?>
+
+        <?php if (!empty($transactions)): ?>
+            <!-- Tampilan List Mobile (Sleek App View) -->
+            <div class="d-md-none divide-y">
+                <?php foreach ($transactions as $idx => $tx): ?>
+                    <?php $isCredit = ((float)$tx['amount'] > 0); ?>
+                    <div class="p-3 border-bottom d-flex align-items-center justify-content-between gap-2.5">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 <?= $isCredit ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?>" style="width: 36px; height: 36px;">
+                                <i class="fa-solid <?= $isCredit ? 'fa-arrow-down-left' : 'fa-arrow-up-right' ?>" style="font-size: 0.85rem;"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark small" style="font-size: 0.78rem; line-height: 1.3;">
+                                    <?= e($tx['description']) ?>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.68rem;">
+                                    <?= format_date($tx['created_at'], true) ?>
+                                    <?php if (!empty($tx['reference_id'])): ?>
+                                        &bull; Order #<?= $tx['reference_id'] ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            <div class="fw-bold font-monospace <?= $isCredit ? 'text-success' : 'text-danger' ?>" style="font-size: 0.82rem;">
+                                <?= $isCredit ? '+' : '' ?>Rp <?= number_format((float)$tx['amount'], 0, ',', '.') ?>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.66rem;">
+                                Sisa: Rp <?= number_format((float)$tx['balance_after'], 0, ',', '.') ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Tampilan Tabel Desktop -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-hover align-middle mb-0 small" style="font-size: 0.78rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%;">No</th>
+                            <th style="width: 20%;">Waktu</th>
+                            <th style="width: 15%;">Tipe</th>
+                            <th style="width: 40%;">Rincian & Keterangan</th>
+                            <th style="width: 10%;" class="text-end">Nominal</th>
+                            <th style="width: 10%;" class="text-end">Sisa Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <?php foreach ($transactions as $idx => $tx): ?>
                             <?php $isCredit = ((float)$tx['amount'] > 0); ?>
                             <tr>
@@ -326,17 +367,11 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td><?= format_date($tx['created_at'], true) ?></td>
                                 <td>
                                     <?php if ($tx['type'] === 'lead_fee'): ?>
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                                            <i class="fa-solid fa-minus me-0.5"></i> Biaya Kontak
-                                        </span>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Biaya Kontak</span>
                                     <?php elseif ($tx['type'] === 'topup'): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                            <i class="fa-solid fa-plus me-0.5"></i> Top-Up Saldo
-                                        </span>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Top-Up Saldo</span>
                                     <?php elseif ($tx['type'] === 'bonus'): ?>
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
-                                            <i class="fa-solid fa-gift me-0.5"></i> Bonus Saldo
-                                        </span>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Bonus Saldo</span>
                                     <?php else: ?>
                                         <span class="badge bg-secondary-subtle text-secondary">Penyesuaian</span>
                                     <?php endif; ?>
@@ -344,7 +379,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td>
                                     <div class="fw-semibold text-dark"><?= e($tx['description']) ?></div>
                                     <?php if (!empty($tx['reference_id'])): ?>
-                                        <div class="text-muted" style="font-size: 0.72rem;">ID Pesanan: #<?= $tx['reference_id'] ?></div>
+                                        <div class="text-muted" style="font-size: 0.70rem;">ID Pesanan: #<?= $tx['reference_id'] ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end fw-bold font-monospace <?= $isCredit ? 'text-success' : 'text-danger' ?>">
@@ -355,23 +390,26 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                Belum ada riwayat transaksi mutasi saldo.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="text-center py-4 text-muted small">
+                <i class="fa-solid fa-receipt text-secondary opacity-50 fs-3 mb-2 d-block"></i>
+                Belum ada riwayat transaksi mutasi saldo.
+            </div>
+        <?php endif; ?>
     </div>
+</div>
 </div>
 
 <!-- Modal Isi Saldo (Top-Up) -->
 <div class="modal fade" id="topupModal" tabindex="-1" aria-labelledby="topupModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 520px;">
+        <form class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" method="POST" action="<?= BASE_URL ?>/provider/wallet.php" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="request_topup">
+
             <div class="modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
                 <div class="d-flex align-items-center gap-2">
                     <i class="fa-solid fa-wallet fs-4 text-warning"></i>
@@ -383,11 +421,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form method="POST" action="<?= BASE_URL ?>/provider/wallet.php" enctype="multipart/form-data">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="request_topup">
-
-                <div class="modal-body p-4">
+            <div class="modal-body p-4">
                     <!-- Pilihan Paket Cepat -->
                     <label class="form-label fw-bold text-dark small mb-2">1. Pilih Nominal Top-Up:</label>
                     <div class="row g-2 mb-3">
@@ -519,7 +553,6 @@ require_once __DIR__ . '/../includes/header.php';
                     </button>
                 </div>
             </form>
-        </div>
     </div>
 </div>
 
