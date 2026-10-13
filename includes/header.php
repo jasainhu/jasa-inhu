@@ -27,12 +27,29 @@ $page_title = $page_title ?? 'Marketplace Jasa Lokal Kabupaten Indragiri Hulu';
     <link rel="apple-touch-icon" sizes="180x180" href="<?= asset_url('images/apple-touch-icon.png') ?>?v=2">
     <link rel="manifest" href="<?= BASE_URL ?>/manifest.json?v=2">
 
-    <!-- OpenGraph Meta Tags (WhatsApp, Facebook, Twitter Preview) -->
+    <!-- OpenGraph Meta Tags (WhatsApp, Facebook, Telegram Preview) -->
+<?php
+$meta_og_title = $og_title ?? ($page_title . ' | ' . APP_NAME);
+$meta_og_desc = $og_description ?? 'Pusat layanan jasa & tukang terpercaya se-Kabupaten Indragiri Hulu, Riau. Temukan bengkel, tukang bangunan, servis AC, montir, tenaga medis, dan lainnya di 14 kecamatan.';
+$meta_og_img = !empty($og_image) ? (str_starts_with($og_image, 'http') ? $og_image : (BASE_URL . '/' . ltrim($og_image, '/'))) : (BASE_URL . '/assets/images/og-banner.jpg');
+$meta_og_url = BASE_URL . ($_SERVER['REQUEST_URI'] ?? '/');
+?>
     <meta property="og:site_name" content="<?= APP_NAME ?>">
-    <meta property="og:title" content="<?= e($page_title) ?> | <?= APP_NAME ?>">
-    <meta property="og:description" content="Temukan dan pesan jasa servis motor, AC, tukang bangunan, las, dan kebutuhan harian terpercaya di Kabupaten Indragiri Hulu.">
-    <meta property="og:image" content="<?= asset_url('images/logo.png') ?>">
+    <meta property="og:title" content="<?= e($meta_og_title) ?>">
+    <meta property="og:description" content="<?= e($meta_og_desc) ?>">
+    <meta property="og:image" content="<?= e($meta_og_img) ?>">
+    <meta property="og:image:secure_url" content="<?= e($meta_og_img) ?>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:url" content="<?= e($meta_og_url) ?>">
     <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= e($meta_og_title) ?>">
+    <meta name="twitter:description" content="<?= e($meta_og_desc) ?>">
+    <meta name="twitter:image" content="<?= e($meta_og_img) ?>">
 
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">

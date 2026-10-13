@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /includes/
+Disallow: /database/
+Disallow: /config/
+Disallow: /scratch/
+
+Sitemap: https://jasainhu.gafahrandi.my.id/sitemap.xml

@@ -40,6 +40,11 @@ if (!$provider) {
 }
 
 $page_title = e($provider['business_name']) . ' - Profil & Testimoni Mitra JASA INHU';
+$og_title = e($provider['business_name']) . ' (' . e($provider['category_name']) . ') - JASA INHU';
+$og_description = 'Layanan ' . e($provider['category_name']) . ' terpercaya di Kec. ' . e($provider['district_name'] ?: 'Kab. Indragiri Hulu') . '. Hubungi langsung via WhatsApp atau pesan instan di platform JASA INHU.';
+if (has_media($provider['image_url'] ?? '') && !str_starts_with($provider['image_url'], 'data:')) {
+    $og_image = get_media_url($provider['image_url']);
+}
 
 // 2. Ambil Wilayah Layanan yang Dicakup di Kab. Inhu
 $stmtAreas = $db->prepare("
