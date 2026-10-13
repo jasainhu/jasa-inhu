@@ -110,7 +110,7 @@ require_once __DIR__ . '/includes/header.php';
         <!-- Role Pill Selector -->
         <div class="role-pill-selector">
             <button type="button" class="role-pill-btn <?= $prefill_role === 'pengguna' ? 'active' : '' ?>" data-role="pengguna">
-                <i class="fa-solid fa-user me-1"></i> Saya Butuh Jasa (Masyarakat)
+                <i class="fa-solid fa-user me-1"></i> Saya Butuh Jasa (Pelanggan)
             </button>
             <button type="button" class="role-pill-btn <?= $prefill_role === 'penyedia' ? 'active' : '' ?>" data-role="penyedia">
                 <i class="fa-solid fa-briefcase me-1"></i> Saya Buka Jasa (Penyedia)

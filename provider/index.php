@@ -802,12 +802,12 @@ require_once __DIR__ . '/../includes/header.php';
                     <i class="fa-solid fa-bullhorn fs-5"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold mb-0 text-dark">Ada <?= count($open_leads) ?> Lowongan Jasa Terbuka dari Warga!</h6>
+                    <h6 class="fw-bold mb-0 text-dark">Ada <?= count($open_leads) ?> Permintaan Jasa Terbuka!</h6>
                     <span class="text-muted small">Pelanggan di Kab. Inhu sedang mencari jasa kategori Anda. Kirim penawaran sekarang untuk dapat orderan!</span>
                 </div>
             </div>
             <a href="#pills-leads" onclick="document.getElementById('pills-leads-tab').click();" class="btn btn-dark btn-sm fw-bold px-3 py-2 rounded-pill shadow-xs text-nowrap">
-                Lihat Lowongan Warga <i class="fa-solid fa-arrow-right ms-1"></i>
+                Lihat Permintaan Jasa <i class="fa-solid fa-arrow-right ms-1"></i>
             </a>
         </div>
     <?php endif; ?>
@@ -841,11 +841,11 @@ require_once __DIR__ . '/../includes/header.php';
                 </button>
             </li>
 
-            <!-- Tab 3: Bursa Lowongan Warga -->
+            <!-- Tab 3: Bursa Permintaan Jasa -->
             <li class="nav-item flex-fill" role="presentation">
                 <button class="nav-link w-100" id="pills-leads-tab" data-bs-toggle="pill" data-bs-target="#pills-leads" type="button" role="tab" aria-controls="pills-leads" aria-selected="false">
                     <i class="fa-solid fa-briefcase text-warning"></i>
-                    <span>Bursa Lowongan Warga</span>
+                    <span>Bursa Permintaan Jasa</span>
                     <?php if (count($open_leads) > 0): ?>
                         <span class="badge bg-warning text-dark rounded-pill px-2 py-1"><?= count($open_leads) ?></span>
                     <?php endif; ?>
@@ -878,11 +878,11 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                     <h5 class="fw-bold text-dark mb-1">Belum Ada Pesanan Baru Masuk</h5>
                     <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
-                        Pesanan langsung dari warga yang memilih profil toko Anda akan masuk di sini. Anda juga bisa mencari pekerjaan aktif di tab <strong>Bursa Lowongan Warga</strong>.
+                        Pesanan langsung dari pelanggan yang memilih profil toko Anda akan masuk di sini. Anda juga bisa mencari pekerjaan aktif di tab <strong>Bursa Permintaan Jasa</strong>.
                     </p>
                     <div>
                         <button type="button" onclick="document.getElementById('pills-leads-tab').click();" class="btn btn-outline-teal fw-bold px-4 py-2 rounded-pill shadow-xs">
-                            <i class="fa-solid fa-magnifying-glass me-1"></i> Cek Lowongan Terbuka Warga
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Cek Permintaan Jasa Terbuka
                         </button>
                     </div>
                 </div>
@@ -1145,11 +1145,11 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 3: BURSA LOWONGAN WARGA (OPEN LEADS)  -->
+        <!-- TAB 3: BURSA PERMINTAAN JASA (OPEN LEADS)  -->
         <!-- ========================================== -->
         <div class="tab-pane fade" id="pills-leads" role="tabpanel" aria-labelledby="pills-leads-tab">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-dark mb-0">Permintaan Jasa Terbuka Warga Inhu</h5>
+                <h5 class="fw-bold text-dark mb-0">Permintaan Jasa Terbuka Pelanggan Inhu</h5>
                 <span class="badge bg-teal-subtle text-teal px-3 py-2 rounded-pill small">Sistem Penawaran Harga</span>
             </div>
 
@@ -1158,9 +1158,9 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="mx-auto mb-3 bg-light rounded-circle d-flex align-items-center justify-content-center text-muted" style="width: 80px; height: 80px;">
                         <i class="fa-solid fa-bullhorn fs-1 text-warning opacity-50"></i>
                     </div>
-                    <h5 class="fw-bold text-dark mb-1">Belum Ada Lowongan Jasa Terbuka Saat Ini</h5>
+                    <h5 class="fw-bold text-dark mb-1">Belum Ada Permintaan Jasa Terbuka Saat Ini</h5>
                     <p class="text-muted small mx-auto mb-0" style="max-width: 450px;">
-                        Saat ada warga Indragiri Hulu yang membuat permintaan jasa lelang untuk umum, daftarnya akan segera ditampilkan di sini.
+                        Saat ada pelanggan di Indragiri Hulu yang membuat permintaan jasa lelang untuk umum, daftarnya akan segera ditampilkan di sini.
                     </p>
                 </div>
             <?php else: ?>

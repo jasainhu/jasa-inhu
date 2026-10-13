@@ -313,7 +313,7 @@ if (is_logged_in() && !empty($current_user)) {
                                         <?php if ($current_user['role_name'] === 'pengguna'): ?>
                                             <?php if (!empty($current_user['email_verified_at'])): ?>
                                                 <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-2" style="font-size: 0.65rem;">
-                                                    <i class="fa-solid fa-user-check me-1"></i> Warga Terverifikasi
+                                                    <i class="fa-solid fa-user-check me-1"></i> Pelanggan Terverifikasi
                                                 </span>
                                             <?php else: ?>
                                                 <a href="<?= BASE_URL ?>/verify.php" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-decoration-none py-0.5 px-2" style="font-size: 0.65rem;" title="Klik untuk verifikasi via WhatsApp atau Gmail">
@@ -444,7 +444,7 @@ if (is_logged_in() && !empty($current_user)) {
                                 <li>
                                     <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between text-primary fw-semibold" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
                                         <span class="d-flex align-items-center"><i class="fa-solid fa-repeat me-2 text-primary" style="width: 16px;"></i> Beralih ke Akun Pengguna</span>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.62rem;">Mode Warga</span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.62rem;">Mode Pelanggan</span>
                                     </a>
                                 </li>
 
@@ -699,7 +699,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                         <?php if ($current_user['role_name'] === 'pengguna'): ?>
                                             <?php if (!empty($current_user['email_verified_at'])): ?>
                                                 <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-2" style="font-size: 0.62rem;">
-                                                    <i class="fa-solid fa-user-check me-1"></i> Warga Terverifikasi
+                                                    <i class="fa-solid fa-user-check me-1"></i> Pelanggan Terverifikasi
                                                 </span>
                                             <?php else: ?>
                                                 <a href="<?= BASE_URL ?>/verify.php" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-decoration-none py-0.5 px-2" style="font-size: 0.62rem;" title="Klik untuk verifikasi via WhatsApp atau Gmail">
@@ -822,7 +822,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                                 <li>
                                     <a class="dropdown-item py-1.5 px-3 d-flex align-items-center justify-content-between text-primary fw-semibold" href="<?= BASE_URL ?>/switch_mode.php?to=pengguna">
                                         <span class="d-flex align-items-center"><i class="fa-solid fa-repeat me-2 text-primary" style="width: 16px;"></i> Beralih ke Akun Pengguna</span>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.62rem;">Mode Warga</span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.62rem;">Mode Pelanggan</span>
                                     </a>
                                 </li>
                             <?php endif; ?>

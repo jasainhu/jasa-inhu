@@ -157,7 +157,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <div class="position-relative" style="z-index: 2; max-width: 760px;">
                 <span class="badge fw-bold px-3 py-1.5 rounded-pill mb-2 shadow-xs" style="background-color: <?= e($tender_banner['badge_color'] ?: '#f59e0b') ?>; color: #0f172a;">
-                    <i class="fa-solid fa-bolt me-1"></i> <?= e($tender_banner['badge_text'] ?: 'Tender Kilat & Siaran Warga Inhu') ?>
+                    <i class="fa-solid fa-bolt me-1"></i> <?= e($tender_banner['badge_text'] ?: 'Bursa Permintaan Jasa Terbuka') ?>
                 </span>
                 <h1 class="fw-bold mb-2 display-6"><?= e($tender_banner['title'] ?: 'Pasang Kebutuhan Jasa Terbuka') ?></h1>
                 <p class="text-white-50 fs-6 mb-3">
@@ -177,7 +177,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <div class="position-relative" style="z-index: 2; max-width: 760px;">
                 <span class="badge fw-bold px-3 py-1.5 rounded-pill mb-2 shadow-xs" style="background-color: <?= e($tender_banner['badge_color'] ?? '#f59e0b') ?>; color: #0f172a;">
-                    <i class="fa-solid fa-bolt me-1"></i> <?= e($tender_banner['badge_text'] ?? 'Tender Kilat & Siaran Warga Inhu') ?>
+                    <i class="fa-solid fa-bolt me-1"></i> <?= e($tender_banner['badge_text'] ?? 'Bursa Permintaan Jasa Terbuka') ?>
                 </span>
                 <h1 class="fw-bold mb-2 display-6"><?= e($tender_banner['title'] ?? 'Pasang Kebutuhan Jasa Terbuka') ?></h1>
                 <p class="text-white-50 fs-6 mb-3">
@@ -363,7 +363,7 @@ require_once __DIR__ . '/includes/header.php';
                             <i class="fa-solid fa-bullhorn"></i>
                         </div>
                         <div>
-                            <h5 class="fw-bold mb-0 text-dark">Formulir Tender Kilat Warga</h5>
+                            <h5 class="fw-bold mb-0 text-dark">Formulir Permintaan Jasa Terbuka</h5>
                             <span class="text-muted small">Disiarkan gratis ke puluhan teknisi & mitra terverifikasi se-Inhu</span>
                         </div>
                     </div>

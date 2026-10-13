@@ -389,7 +389,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php if (!empty($user['email_verified_at'])): ?>
                         <span class="shopee-badge-pill" style="background: rgba(16, 185, 129, 0.15); color: #047857; border-color: rgba(16, 185, 129, 0.3);">
                             <i class="fa-solid fa-shield-check text-success"></i>
-                            <span>Warga Terverifikasi Inhu</span>
+                            <span>Pelanggan Terverifikasi</span>
                         </span>
                     <?php else: ?>
                         <a href="<?= BASE_URL ?>/verify.php" class="shopee-badge-pill text-decoration-none" style="background: rgba(245, 158, 11, 0.15); color: #b45309; border-color: rgba(245, 158, 11, 0.35);" title="Klik untuk verifikasi via WhatsApp / Gmail">
@@ -410,7 +410,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="d-flex align-items-center gap-2">
             <i class="fa-solid fa-crown text-warning fs-5"></i>
             <div>
-                <div class="fw-bold small mb-0" style="font-size: 0.78rem;">Program Warga Aktif Inhu</div>
+                <div class="fw-bold small mb-0" style="font-size: 0.78rem;">Program Pelanggan Setia Inhu</div>
                 <div class="small opacity-80" style="font-size: 0.7rem;">Cari tukang terdekat & konsultasi langsung via WA</div>
             </div>
         </div>
@@ -505,7 +505,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.85rem;">Buka Jasa Mandiri</h6>
                                 <span class="badge rounded-pill bg-warning text-dark px-1.5 py-0.5 fw-bold" style="font-size: 0.62rem;">GRATIS</span>
                             </div>
-                            <div class="text-secondary" style="font-size: 0.72rem; line-height: 1.35;">Mulai terima order pekerjaan dari warga Inhu & dapatkan saldo awal gratis!</div>
+                            <div class="text-secondary" style="font-size: 0.72rem; line-height: 1.35;">Mulai terima order pekerjaan dari pelanggan di Inhu & dapatkan saldo awal gratis!</div>
                         </div>
                     </div>
                     <button type="button" class="btn btn-teal btn-sm fw-bold px-3 py-2 rounded-3 text-nowrap shadow-xs" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#upgradeProviderModal">
@@ -1147,7 +1147,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="p-3 bg-white rounded-3 border shadow-xs mb-3 position-relative overflow-hidden" style="border-left: 5px solid #0d9488 !important;">
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                         <div>
-                            <span class="badge bg-teal-subtle text-teal fw-bold px-2 py-0.5 mb-1" style="font-size: 0.65rem;">DISKON KHUSUS WARGA</span>
+                            <span class="badge bg-teal-subtle text-teal fw-bold px-2 py-0.5 mb-1" style="font-size: 0.65rem;">DISKON KHUSUS PELANGGAN</span>
                             <h6 class="fw-bold mb-0 text-dark">Potongan Rp 15.000</h6>
                             <p class="text-muted mb-0" style="font-size: 0.75rem;">Semua Jasa Servis & Tukang di Kabupaten Inhu</p>
                         </div>
@@ -1201,7 +1201,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <i class="fa-solid fa-coins fs-6"></i>
                     </div>
                     <div>
-                        <h6 class="modal-title fw-bold text-dark mb-0">Poin Loyalitas Warga</h6>
+                        <h6 class="modal-title fw-bold text-dark mb-0">Poin Loyalitas Pelanggan</h6>
                         <div class="text-muted" style="font-size: 0.72rem;">Reward setiap Anda memesan jasa di JASA INHU</div>
                     </div>
                 </div>
@@ -1219,7 +1219,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <ul class="list-unstyled mb-0 small text-muted" style="font-size: 0.78rem; line-height: 1.6;">
                         <li><i class="fa-solid fa-check text-success me-1.5"></i> Dapatkan <strong>+10 Poin</strong> otomatis setiap 1 pesanan selesai.</li>
                         <li><i class="fa-solid fa-check text-success me-1.5"></i> Kumpulkan <strong>50 Poin</strong>: Potongan Biaya Pesanan Rp 25.000.</li>
-                        <li><i class="fa-solid fa-check text-success me-1.5"></i> Kumpulkan <strong>100 Poin</strong>: Kaos Eksklusif Warga Inhu.</li>
+                        <li><i class="fa-solid fa-check text-success me-1.5"></i> Kumpulkan <strong>100 Poin</strong>: Merchandise Eksklusif JASA INHU.</li>
                     </ul>
                 </div>
             </div>
@@ -1259,7 +1259,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <i class="fa-solid fa-store text-teal"></i>
                         <div>
                             <span class="small fw-bold d-block text-dark">Buka Jasa Mandiri (Jadi Mitra)</span>
-                            <span class="text-muted" style="font-size: 0.7rem;">Mulai cari rezeki & terima orderan dari warga Inhu</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">Mulai cari rezeki & terima orderan dari pelanggan Inhu</span>
                         </div>
                     </div>
                     <span class="badge rounded-pill bg-warning text-dark px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">GRATIS</span>
