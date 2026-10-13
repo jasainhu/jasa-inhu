@@ -2,7 +2,9 @@
 /**
  * Smart Mobile App Banner & Install Modal (Tokopedia / Shopee Style)
  */
+$is_provider_or_admin = str_contains($_SERVER['REQUEST_URI'] ?? '', '/provider/') || str_contains($_SERVER['REQUEST_URI'] ?? '', '/admin/');
 ?>
+<?php if (!$is_provider_or_admin): ?>
 <!-- 1. Floating Smart App Banner di Layar HP (Tampil di atas Mobile Bottom Nav) -->
 <div id="smartAppBanner" class="smart-app-banner d-lg-none shadow-lg">
     <div class="d-flex align-items-center justify-content-between gap-2 p-2 px-3">
@@ -26,6 +28,7 @@
         </button>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- 2. Pop-up Modal Instalasi Aplikasi (Modern App Store Style) -->
 <div class="modal fade" id="installAppModal" tabindex="-1" aria-labelledby="installAppModalLabel" aria-hidden="true">

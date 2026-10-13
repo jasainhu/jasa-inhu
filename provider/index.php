@@ -592,14 +592,15 @@ require_once __DIR__ . '/../includes/header.php';
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 .order-card {
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.85);
     border-radius: 16px;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     background: #fff;
+    scroll-margin-top: 85px;
 }
 .order-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
     border-color: #cbd5e1;
 }
 .order-card.priority-active {
@@ -625,7 +626,7 @@ require_once __DIR__ . '/../includes/header.php';
     display: flex;
     justify-content: space-between;
     position: relative;
-    margin: 15px 0 20px;
+    margin: 12px 0 18px;
 }
 .stepper-progress::before {
     content: '';
@@ -667,21 +668,28 @@ require_once __DIR__ . '/../includes/header.php';
     background: #f59e0b;
     border-color: #f59e0b;
     color: #fff;
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25);
+    animation: stepper-pulse 2s infinite ease-in-out;
+}
+@keyframes stepper-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25); }
+    50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1); }
 }
 .stepper-label {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: #64748b;
     display: block;
+    line-height: 1.25;
 }
 .stepper-step.completed .stepper-label,
 .stepper-step.active .stepper-label {
     color: #0f172a;
+    font-weight: 700;
 }
 .avatar-circle {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1014,97 +1022,122 @@ require_once __DIR__ . '/../includes/header.php';
                         $finalEstimate = (int)($job['agreed_price'] ?: $job['budget'] ?: 0);
                     ?>
                         <div class="col-12">
-                            <div class="order-card priority-active shadow-sm p-4">
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 pb-3 border-bottom mb-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar-circle bg-primary-subtle text-primary">
+                            <?php
+                            // Logika status stepper yang presisi
+                            $s2_done = in_array($step, ['working', 'completed']);
+                            $s2_active = ($step === 'on_the_way');
+
+                            $s3_done = ($step === 'completed');
+                            $s3_active = ($step === 'working');
+
+                            $s4_done = ($step === 'completed');
+                            ?>
+                            <div class="order-card priority-active shadow-sm p-3 p-md-4">
+                                <!-- Header Kartu: Info Pelanggan & Biaya Kesepakatan -->
+                                <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 pb-2.5 border-bottom mb-2.5">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="avatar-circle bg-teal-subtle text-teal fw-bold flex-shrink-0" style="border-radius: 12px;">
                                             <?= strtoupper(substr($job['customer_name'] ?? 'P', 0, 1)) ?>
                                         </div>
                                         <div>
-                                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                <h5 class="fw-bold text-dark mb-0"><?= e($job['customer_name']) ?></h5>
+                                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                <h5 class="fw-bold text-dark mb-0 fs-6"><?= e($job['customer_name']) ?></h5>
                                                 <?php if ($step === 'accepted'): ?>
-                                                    <span class="badge bg-primary text-white rounded-pill small">Pesanan Diterima - Siap Berangkat</span>
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.70rem;">
+                                                        <i class="fa-solid fa-check-circle me-1"></i> Siap Berangkat
+                                                    </span>
                                                 <?php elseif ($step === 'on_the_way'): ?>
-                                                    <span class="badge bg-info text-white rounded-pill small">🛵 Mitra Sedang Menuju Lokasi (OTW)</span>
+                                                    <span class="badge bg-info-subtle text-info-emphasis border border-info border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.70rem;">
+                                                        🛵 Mitra Sedang Menuju Lokasi (OTW)
+                                                    </span>
                                                 <?php elseif ($step === 'working'): ?>
-                                                    <span class="badge bg-warning text-dark rounded-pill small">🔧 Sedang Melakukan Pengerjaan</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.70rem;">
+                                                        🔧 Sedang Melakukan Pengerjaan
+                                                    </span>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="text-muted small mt-1">
-                                                <i class="fa-solid fa-location-dot text-danger me-1"></i> <?= e($job['district_name'] ?: 'Kab. Inhu') ?> &bull; 
-                                                <i class="fa-solid fa-clock me-1 ms-1"></i> Mulai: <?= format_date($job['created_at']) ?>
+                                            <div class="text-muted small mt-0.5" style="font-size: 0.72rem;">
+                                                <i class="fa-solid fa-location-dot text-danger me-1"></i> <?= e($job['district_name'] ?: 'Kab. Inhu') ?>
+                                                <span class="mx-1">&bull;</span>
+                                                <i class="fa-regular fa-calendar me-1"></i> Mulai: <?= format_date($job['created_at']) ?>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="text-md-end">
-                                        <div class="text-muted small">Biaya Kesepakatan:</div>
-                                        <div class="fs-5 fw-bold text-teal">
+
+                                    <!-- Biaya Kesepakatan Kompak & Rapi -->
+                                    <div class="text-end bg-light px-2.5 py-1.5 rounded-3 border">
+                                        <div class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.3px;">Biaya Kesepakatan</div>
+                                        <div class="fw-bold text-teal" style="font-size: 0.90rem;">
                                             <?= $finalEstimate > 0 ? format_rupiah($finalEstimate) : 'Sesuai Tagihan Akhir' ?>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Interactive Modern Stepper -->
+                                <!-- Interactive Modern Stepper (Logika Akurat) -->
                                 <div class="stepper-progress">
                                     <!-- Step 1: Diterima -->
                                     <div class="stepper-step completed">
                                         <div class="stepper-dot"><i class="fa-solid fa-check"></i></div>
                                         <span class="stepper-label">1. Diterima</span>
                                     </div>
-                                    <!-- Step 2: OTW -->
-                                    <div class="stepper-step <?= in_array($step, ['on_the_way', 'working', 'completed']) ? 'completed' : ($step === 'accepted' ? 'active' : '') ?>">
+                                    <!-- Step 2: Menuju Lokasi (OTW) -->
+                                    <div class="stepper-step <?= $s2_done ? 'completed' : ($s2_active ? 'active' : '') ?>">
                                         <div class="stepper-dot">
-                                            <?= in_array($step, ['on_the_way', 'working', 'completed']) ? '<i class="fa-solid fa-check"></i>' : '2' ?>
+                                            <?= $s2_done ? '<i class="fa-solid fa-check"></i>' : '2' ?>
                                         </div>
                                         <span class="stepper-label">2. Menuju Lokasi</span>
                                     </div>
-                                    <!-- Step 3: Bekerja -->
-                                    <div class="stepper-step <?= in_array($step, ['working', 'completed']) ? 'completed' : ($step === 'on_the_way' ? 'active' : '') ?>">
+                                    <!-- Step 3: Pengerjaan -->
+                                    <div class="stepper-step <?= $s3_done ? 'completed' : ($s3_active ? 'active' : '') ?>">
                                         <div class="stepper-dot">
-                                            <?= in_array($step, ['working', 'completed']) ? '<i class="fa-solid fa-check"></i>' : '3' ?>
+                                            <?= $s3_done ? '<i class="fa-solid fa-check"></i>' : '3' ?>
                                         </div>
                                         <span class="stepper-label">3. Pengerjaan</span>
                                     </div>
                                     <!-- Step 4: Selesai -->
-                                    <div class="stepper-step <?= ($step === 'working') ? 'active' : '' ?>">
-                                        <div class="stepper-dot">4</div>
+                                    <div class="stepper-step <?= $s4_done ? 'completed' : '' ?>">
+                                        <div class="stepper-dot">
+                                            <?= $s4_done ? '<i class="fa-solid fa-check"></i>' : '4' ?>
+                                        </div>
                                         <span class="stepper-label">4. Selesai & Kwitansi</span>
                                     </div>
                                 </div>
 
-                                <!-- Job Detail Description -->
-                                <div class="mb-3">
-                                    <h6 class="fw-bold text-dark mb-1">
-                                        <i class="fa-solid <?= e($job['category_icon'] ?? 'fa-wrench') ?> text-teal me-1"></i>
-                                        <?= e($job['title']) ?>
-                                    </h6>
-                                    <p class="text-secondary small mb-2 bg-light p-3 rounded-3 border">
-                                        <?= nl2br(e($job['description'])) ?>
-                                    </p>
+                                <!-- Rincian Deskripsi Pekerjaan / Keluhan -->
+                                <div class="p-2.5 p-md-3 bg-light rounded-3 border mb-3">
+                                    <div class="d-flex align-items-center gap-1.5 fw-bold text-dark mb-1" style="font-size: 0.85rem;">
+                                        <i class="fa-solid <?= e($job['category_icon'] ?? 'fa-wrench') ?> text-teal"></i>
+                                        <span><?= e($job['title']) ?></span>
+                                    </div>
+                                    <div class="text-secondary small" style="font-size: 0.78rem; line-height: 1.45; white-space: pre-line;">
+                                        <?= e($job['description']) ?>
+                                    </div>
                                     <?php if (!empty($job['address'])): ?>
-                                        <div class="small text-muted mb-2">
-                                            <i class="fa-solid fa-map-pin text-danger me-1"></i> <strong>Alamat Lokasi:</strong> <?= e($job['address']) ?>
+                                        <div class="mt-2 pt-2 border-top small text-muted d-flex align-items-start gap-1.5" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-map-pin text-danger mt-0.5 flex-shrink-0"></i>
+                                            <div><strong>Alamat Lokasi:</strong> <?= e($job['address']) ?></div>
                                         </div>
                                     <?php endif; ?>
                                 </div>
 
-                                <!-- Action Buttons Stepper Bar -->
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pt-2">
+                                <!-- Tombol Aksi Cepat Mitra -->
+                                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-2 pt-1">
                                     <!-- Direct Chat Contacts -->
                                     <div class="d-flex gap-2">
                                         <?php if (!empty($custPhoneClean)): ?>
-                                            <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextActive ?>" target="_blank" class="btn btn-wa-call btn-sm px-3 py-2 rounded-3" title="Chat WhatsApp Pelanggan">
-                                                <i class="fa-brands fa-whatsapp fs-6 me-1"></i> Hubungi WA
+                                            <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextActive ?>" target="_blank" class="btn btn-wa-call btn-sm px-3 py-2 rounded-3 shadow-xs d-flex align-items-center justify-content-center gap-1.5 flex-fill flex-sm-grow-0" title="Chat WhatsApp Pelanggan">
+                                                <i class="fa-brands fa-whatsapp fs-6"></i>
+                                                <span>Hubungi WA</span>
                                             </a>
                                         <?php endif; ?>
-                                        <a href="<?= BASE_URL ?>/chat.php?user_id=<?= $job['user_id'] ?>" class="btn btn-outline-teal btn-sm px-3 py-2 rounded-3" title="Obrolan Pesan di Aplikasi">
-                                            <i class="fa-solid fa-comments me-1"></i> Chat Aplikasi
+                                        <a href="<?= BASE_URL ?>/chat.php?user_id=<?= $job['user_id'] ?>" class="btn btn-outline-teal btn-sm px-3 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1.5 flex-fill flex-sm-grow-0" title="Obrolan Pesan di Aplikasi">
+                                            <i class="fa-solid fa-comments"></i>
+                                            <span>Chat</span>
                                         </a>
                                     </div>
 
                                     <!-- Next Step Button Based on Step -->
-                                    <div class="d-flex flex-fill justify-content-md-end">
+                                    <div class="d-flex flex-fill justify-content-sm-end">
                                         <?php if ($step === 'accepted'): ?>
                                             <!-- Step 1 to Step 2: OTW -->
                                             <form method="POST" action="<?= BASE_URL ?>/provider/index.php" class="w-100" style="max-width: 320px;">
@@ -1112,8 +1145,9 @@ require_once __DIR__ . '/../includes/header.php';
                                                 <input type="hidden" name="action" value="update_order_step">
                                                 <input type="hidden" name="request_id" value="<?= $job['id'] ?>">
                                                 <input type="hidden" name="step" value="on_the_way">
-                                                <button type="submit" class="btn btn-primary fw-bold w-100 py-2.5 rounded-3 shadow-xs">
-                                                    <i class="fa-solid fa-motorcycle me-2"></i> Saya Menuju Lokasi (OTW)
+                                                <button type="submit" class="btn btn-primary fw-bold w-100 py-2 rounded-3 shadow-xs d-flex align-items-center justify-content-center gap-2">
+                                                    <i class="fa-solid fa-motorcycle"></i>
+                                                    <span>Saya Menuju Lokasi (OTW)</span>
                                                 </button>
                                             </form>
 
@@ -1124,15 +1158,17 @@ require_once __DIR__ . '/../includes/header.php';
                                                 <input type="hidden" name="action" value="update_order_step">
                                                 <input type="hidden" name="request_id" value="<?= $job['id'] ?>">
                                                 <input type="hidden" name="step" value="working">
-                                                <button type="submit" class="btn btn-warning text-dark fw-bold w-100 py-2.5 rounded-3 shadow-xs">
-                                                    <i class="fa-solid fa-wrench me-2"></i> Sudah Sampai & Mulai Kerja
+                                                <button type="submit" class="btn btn-warning text-dark fw-bold w-100 py-2 rounded-3 shadow-xs d-flex align-items-center justify-content-center gap-2">
+                                                    <i class="fa-solid fa-wrench"></i>
+                                                    <span>Sudah Sampai & Mulai Kerja</span>
                                                 </button>
                                             </form>
 
                                         <?php elseif ($step === 'working'): ?>
                                             <!-- Step 3 to Step 4: Complete Job Modal -->
-                                            <button type="button" onclick="openCompleteOrderModal(<?= $job['id'] ?>, '<?= addslashes(e($job['title'])) ?>', '<?= addslashes(e($job['customer_name'])) ?>', <?= $finalEstimate ?>)" class="btn btn-success fw-bold w-100 py-2.5 rounded-3 shadow-xs" style="max-width: 340px;">
-                                                <i class="fa-solid fa-circle-check me-2"></i> Selesai & Buat Tagihan Kwitansi
+                                            <button type="button" onclick="openCompleteOrderModal(<?= $job['id'] ?>, '<?= addslashes(e($job['title'])) ?>', '<?= addslashes(e($job['customer_name'])) ?>', <?= $finalEstimate ?>)" class="btn btn-success fw-bold w-100 py-2 rounded-3 shadow-xs d-flex align-items-center justify-content-center gap-2" style="max-width: 340px;">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                                <span>Selesai & Buat Tagihan Kwitansi</span>
                                             </button>
                                         <?php endif; ?>
                                     </div>
