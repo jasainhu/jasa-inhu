@@ -112,10 +112,10 @@ require_once __DIR__ . '/includes/header.php';
             </button>
         </form>
 
-        <!-- Lupa Kata Sandi (Centered Link gaya Facebook) -->
+        <!-- Lupa Kata Sandi (Hubungi Admin via WhatsApp) -->
         <div class="text-center my-3">
-            <a href="https://wa.me/6281234567890?text=Halo%20Admin%20JASA%20INHU,%20saya%20lupa%20kata%20sandi%20akun%20saya" target="_blank" class="small text-decoration-none text-dark fw-semibold" style="font-size: 0.88rem;">
-                Lupa kata sandi?
+            <a href="<?= format_wa_url(get_setting('admin_wa', ADMIN_PHONE_WA), 'Halo Admin JASA INHU, saya lupa kata sandi akun saya. Mohon bantuan reset kata sandi.') ?>" target="_blank" class="small text-decoration-none text-teal fw-semibold" style="font-size: 0.88rem;">
+                <i class="fa-solid fa-key me-1"></i> Lupa kata sandi? Hubungi Admin
             </a>
         </div>
 

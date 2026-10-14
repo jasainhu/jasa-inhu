@@ -67,6 +67,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             redirect('/admin/users.php');
         }
 
+        // 1.d. Reset Kata Sandi Akun oleh Admin
+        if ($action === 'reset_password') {
+            $user_id = (int)$_POST['user_id'];
+            $new_password = trim($_POST['new_password'] ?? '');
+
+            if (empty($new_password) || strlen($new_password) < 6) {
+                set_flash('danger', 'Kata sandi baru minimal 6 karakter.');
+            } else {
+                $hash = password_hash($new_password, PASSWORD_BCRYPT);
+                $stmt = $db->prepare("UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?");
+                $stmt->execute([$hash, $user_id]);
+
+                $stmtU = $db->prepare("SELECT name, phone FROM users WHERE id = ?");
+                $stmtU->execute([$user_id]);
+                $uData = $stmtU->fetch();
+                $uName = $uData['name'] ?? 'Pengguna';
+
+                set_flash('success', "Kata sandi akun '{$uName}' berhasil direset menjadi: <strong class='text-dark bg-warning px-1.5 py-0.5 rounded'>" . htmlspecialchars($new_password, ENT_QUOTES) . "</strong>. Anda dapat menginfokannya langsung ke pengguna via WhatsApp.");
+            }
+            redirect('/admin/users.php');
+        }
+
         // 2. Edit data akun pengguna (Nama, HP, Email, Wilayah, dll)
         if ($action === 'edit_user') {
             $user_id = (int)$_POST['user_id'];
@@ -97,6 +119,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         // Update tabel users
                         $stmtU = $db->prepare("UPDATE users SET name = ?, email = ?, phone = ?, is_active = ?, updated_at = NOW() WHERE id = ?");
                         $stmtU->execute([$name, $email, $phone, $is_active, $user_id]);
+
+                        // Jika ada input kata sandi baru di modal edit
+                        $new_pass = trim($_POST['new_password'] ?? '');
+                        if (!empty($new_pass)) {
+                            if (strlen($new_pass) < 6) {
+                                throw new Exception('Kata sandi baru minimal 6 karakter.');
+                            }
+                            $hash = password_hash($new_pass, PASSWORD_BCRYPT);
+                            $db->prepare("UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?")->execute([$hash, $user_id]);
+                        }
 
                         // Update tabel profiles
                         $stmtPCheck = $db->prepare("SELECT id FROM profiles WHERE user_id = ?");
@@ -556,6 +588,11 @@ require_once __DIR__ . '/includes/header.php';
                                     <i class="fa-solid fa-pen-to-square me-1"></i> Edit
                                 </button>
 
+                                <!-- Tombol Reset Password -->
+                                <button type="button" class="btn btn-outline-warning text-dark py-1 px-2" data-bs-toggle="modal" data-bs-target="#resetPassModal<?= $u['id'] ?>" style="font-size: 0.75rem;" title="Reset Kata Sandi Akun Pengguna">
+                                    <i class="fa-solid fa-key me-0.5 text-warning-emphasis"></i> Sandi
+                                </button>
+
                                 <?php if ($u['id'] !== (int)$_SESSION['user_id']): ?>
                                     <form method="POST" action="<?= BASE_URL ?>/admin/users.php" class="d-inline">
                                         <?= csrf_field() ?>
@@ -646,6 +683,19 @@ require_once __DIR__ . '/includes/header.php';
                                                     </div>
                                                 </div>
 
+                                                <div class="mb-3 p-2.5 bg-light rounded-3 border">
+                                                    <label class="form-label small fw-semibold text-dark mb-1">
+                                                        <i class="fa-solid fa-key text-warning me-1"></i> Ganti Kata Sandi (Opsional)
+                                                    </label>
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" name="new_password" id="editPassInput<?= $u['id'] ?>" class="form-control" placeholder="Kosongkan jika tidak ingin mengubah password" minlength="6">
+                                                        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('editPassInput<?= $u['id'] ?>').value='inhu' + Math.floor(1000 + Math.random() * 9000)" title="Buat password acak">
+                                                            <i class="fa-solid fa-dice me-1"></i> Acak
+                                                        </button>
+                                                    </div>
+                                                    <div class="form-text" style="font-size: 0.72rem;">Isi jika pengguna lupa password dan meminta bantuan admin (min. 6 karakter).</div>
+                                                </div>
+
                                                 <div class="mb-3">
                                                     <label class="form-label small fw-semibold">Status Akun</label>
                                                     <select name="is_active" class="form-select form-select-sm">
@@ -658,6 +708,53 @@ require_once __DIR__ . '/includes/header.php';
                                                 <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Batal</button>
                                                 <button type="submit" class="btn btn-sm btn-primary-custom">
                                                     <i class="fa-solid fa-save me-1"></i> Simpan Perubahan
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal Reset Password -->
+                            <div class="modal fade text-start" id="resetPassModal<?= $u['id'] ?>" tabindex="-1" aria-labelledby="resetPassModalLabel<?= $u['id'] ?>" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+                                    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                                        <div class="modal-header border-0 pb-0">
+                                            <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="resetPassModalLabel<?= $u['id'] ?>">
+                                                <i class="fa-solid fa-key text-warning"></i> Reset Kata Sandi
+                                            </h5>
+                                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                                        </div>
+                                        <form method="POST" action="<?= BASE_URL ?>/admin/users.php">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="action" value="reset_password">
+                                            <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+
+                                            <div class="modal-body py-3">
+                                                <p class="small text-muted mb-3">
+                                                    Atur kata sandi baru untuk akun <strong><?= e($u['name']) ?></strong> (<?= e($u['email']) ?>).
+                                                </p>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Kata Sandi Baru <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="text" name="new_password" id="inputResetPass<?= $u['id'] ?>" class="form-control" value="inhu<?= rand(1000, 9999) ?>" required minlength="6">
+                                                        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('inputResetPass<?= $u['id'] ?>').value='inhu' + Math.floor(1000 + Math.random() * 9000)" title="Buat password acak baru">
+                                                            <i class="fa-solid fa-dice me-1"></i> Acak
+                                                        </button>
+                                                    </div>
+                                                    <div class="form-text" style="font-size: 0.72rem;">Minimal 6 karakter. Langsung aktif seketika setelah disimpan.</div>
+                                                </div>
+
+                                                <div class="p-2.5 rounded-3 bg-light border small text-muted">
+                                                    <i class="fa-brands fa-whatsapp text-success me-1"></i>
+                                                    Setelah disimpan, Anda dapat langsung menginfokan kata sandi baru ini ke pengguna via WhatsApp: <strong><?= e($u['phone']) ?></strong>.
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0 pt-0">
+                                                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-sm btn-primary-custom fw-semibold px-3">
+                                                    <i class="fa-solid fa-check me-1"></i> Simpan Password Baru
                                                 </button>
                                             </div>
                                         </form>

@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (strlen($new_password) < 6) {
                 $error = 'Kata sandi baru minimal 6 karakter.';
             } else {
-                $stmtAuth = $db->prepare("SELECT password FROM users WHERE id = ?");
+                $stmtAuth = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
                 $stmtAuth->execute([$user['id']]);
                 $currHash = $stmtAuth->fetchColumn();
 
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'Kata sandi saat ini tidak sesuai.';
                 } else {
                     $newHash = password_hash($new_password, PASSWORD_BCRYPT);
-                    $stmtUpPass = $db->prepare("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?");
+                    $stmtUpPass = $db->prepare("UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?");
                     $stmtUpPass->execute([$newHash, $user['id']]);
 
                     set_flash('success', 'Kata sandi akun Anda berhasil diperbarui!');

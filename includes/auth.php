@@ -160,16 +160,33 @@ function login_user(string $login, string $password, ?string $redirect_target = 
 
     try {
         $db = get_db();
-        // Pencarian bisa via Email atau Nomor HP (khas penggunaan lokal)
+        $login_email = strtolower($login);
+        $clean_digits = preg_replace('/[^0-9]/', '', $login);
+        $search_values = [$login, $login_email];
+        if (!empty($clean_digits)) {
+            $search_values[] = $clean_digits;
+            if (str_starts_with($clean_digits, '62')) {
+                $search_values[] = '0' . substr($clean_digits, 2);
+            } elseif (str_starts_with($clean_digits, '0')) {
+                $search_values[] = '62' . substr($clean_digits, 1);
+            } elseif (str_starts_with($clean_digits, '8')) {
+                $search_values[] = '0' . $clean_digits;
+                $search_values[] = '62' . $clean_digits;
+            }
+        }
+        $search_values = array_values(array_unique(array_filter($search_values)));
+        $placeholders = implode(',', array_fill(0, count($search_values), '?'));
+
+        // Pencarian cerdas via Email (case-insensitive) atau Nomor HP (multi-format 08/62/strip)
         $stmt = $db->prepare("
             SELECT u.id, u.role_id, u.name, u.email, u.phone, u.password_hash, u.is_active, u.email_verified_at,
                    r.name as role_name
             FROM users u
             JOIN roles r ON u.role_id = r.id
-            WHERE u.email = ? OR u.phone = ?
+            WHERE LOWER(u.email) IN ($placeholders) OR u.phone IN ($placeholders)
             LIMIT 1
         ");
-        $stmt->execute([$login, $login]);
+        $stmt->execute(array_merge($search_values, $search_values));
         $user = $stmt->fetch();
 
         if (!$user) {
