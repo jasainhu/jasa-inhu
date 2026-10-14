@@ -563,33 +563,97 @@ function build_order_wa_template(string $event, array $data): string {
 /**
  * Catat dan kirim notifikasi WhatsApp otomatis ke whatsapp_logs
  */
+/**
+ * Mengirim pesan notifikasi WhatsApp resmi via Fonnte Gateway (Otomatis & Real-Time)
+ */
 function send_wa_notification(string $phone, string $message, string $event_type = 'general', ?int $request_id = null, ?string $recipient_name = null): array {
     $wa_url = format_wa_url($phone, $message);
     $status = 'simulated';
+    $response_payload = null;
+
+    // Bersihkan nomor telepon untuk target Fonnte (format: 628xxx)
+    $clean_phone = preg_replace('/[^0-9]/', '', $phone);
+    if (str_starts_with($clean_phone, '0')) {
+        $clean_phone = '62' . substr($clean_phone, 1);
+    } elseif (str_starts_with($clean_phone, '8')) {
+        $clean_phone = '62' . $clean_phone;
+    }
+
+    // Ambil Token Fonnte dari pengaturan / env
+    $fonnte_token = trim((string)(get_setting('fonnte_token') ?: (getenv('FONNTE_TOKEN') ?: '')));
+    $is_active = (get_setting('wa_gateway_status', 'active') === 'active');
+
+    if (!empty($fonnte_token) && $is_active && !empty($clean_phone)) {
+        try {
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 5,
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_POSTFIELDS => [
+                    'target' => $clean_phone,
+                    'message' => $message,
+                    'countryCode' => '62'
+                ],
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: ' . $fonnte_token
+                ],
+            ]);
+
+            $api_response = curl_exec($curl);
+            $curl_err = curl_error($curl);
+            curl_close($curl);
+
+            if ($api_response) {
+                $response_payload = $api_response;
+                $resData = json_decode($api_response, true);
+                if (!empty($resData['status']) && $resData['status'] === true) {
+                    $status = 'sent';
+                } else {
+                    $status = 'failed';
+                }
+            } else {
+                $response_payload = 'cURL Error: ' . $curl_err;
+                $status = 'failed';
+            }
+        } catch (Exception $ex) {
+            $response_payload = 'Exception: ' . $ex->getMessage();
+            $status = 'failed';
+        }
+    }
 
     try {
         $db = get_db();
         $stmt = $db->prepare("
             INSERT INTO whatsapp_logs 
-            (request_id, recipient_phone, recipient_name, event_type, message, status, direct_url, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            (request_id, recipient_phone, recipient_name, event_type, message, status, direct_url, response_payload, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         $stmt->execute([
-            $request_id, $phone, $recipient_name, $event_type, $message, $status, $wa_url
+            $request_id, $phone, $recipient_name, $event_type, $message, $status, $wa_url, $response_payload
         ]);
         $log_id = (int)$db->lastInsertId();
 
         return [
-            'success'    => true,
+            'success'    => ($status === 'sent'),
             'log_id'     => $log_id,
             'direct_url' => $wa_url,
-            'status'     => $status
+            'status'     => $status,
+            'response'   => $response_payload
         ];
     } catch (Exception $e) {
         return [
             'success'    => false,
             'message'    => $e->getMessage(),
-            'direct_url' => $wa_url
+            'direct_url' => $wa_url,
+            'status'     => $status
         ];
     }
 }

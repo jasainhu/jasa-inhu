@@ -77,6 +77,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 update_setting('lead_fee_amount', (string)$lead_fee_amount);
                 update_setting('welcome_bonus_amount', (string)$welcome_bonus_amount);
 
+                // Simpan WhatsApp Gateway Fonnte
+                $fonnte_token = trim($_POST['fonnte_token'] ?? '');
+                $wa_gateway_status = trim($_POST['wa_gateway_status'] ?? 'active');
+                if (!empty($fonnte_token)) {
+                    update_setting('fonnte_token', $fonnte_token);
+                }
+                update_setting('wa_gateway_status', $wa_gateway_status);
+
                 // Simpan SMTP & Webhook
                 update_setting('smtp_user', $smtp_user);
                 update_setting('smtp_pass', $smtp_pass);
@@ -86,7 +94,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 update_setting('smtp_secure', $smtp_secure);
                 update_setting('gmail_webhook_url', $gmail_webhook_url);
 
-                $success = 'Pengaturan sistem, rekening bank, e-wallet, dan konfigurasi email berhasil disimpan!';
+                $success = 'Pengaturan sistem, rekening bank, e-wallet, WhatsApp Gateway, dan email berhasil disimpan!';
+            }
+        } elseif ($action === 'test_whatsapp') {
+            $test_phone = trim($_POST['test_phone'] ?? '');
+            if (empty($test_phone)) {
+                $error = 'Masukkan nomor WhatsApp tujuan uji coba.';
+            } else {
+                $msg = "🔔 *UJI COBA NOTIFIKASI RESMI JASA INHU*\n\n" .
+                       "Halo Admin JASA INHU,\n" .
+                       "Sistem WhatsApp Gateway via Fonnte telah aktif & berfungsi secara otomatis.\n\n" .
+                       "Waktu Uji: " . date('d M Y H:i:s') . " WIB\n" .
+                       "Status: Siap kirim orderan dan konfirmasi saldo warga!";
+                $waRes = send_wa_notification($test_phone, $msg, 'test_gateway', null, 'Admin Uji Coba');
+                if (!empty($waRes['success']) && ($waRes['status'] ?? '') === 'sent') {
+                    $success = "Pesan WhatsApp uji coba BERHASIL dikirim otomatis ke nomor {$test_phone}! Silakan cek WhatsApp Anda.";
+                } elseif (($waRes['status'] ?? '') === 'simulated') {
+                    $error = "WhatsApp Gateway saat ini dalam mode simulasi / direct only.";
+                } else {
+                    $error = "Gagal mengirim pesan WhatsApp: " . ($waRes['message'] ?? ($waRes['response'] ?? 'Periksa token Fonnte atau koneksi nomor.'));
+                }
+            }
+
+            if (!empty($_POST['ajax']) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => !empty($success),
+                    'message' => $success ?: $error
+                ]);
+                exit;
             }
         } elseif ($action === 'test_email') {
             $test_to = trim($_POST['test_recipient'] ?? '');
@@ -139,6 +175,16 @@ $current_ewallet_owner = get_setting('ewallet_owner', 'Admin Jasa Inhu');
 $current_qris = get_setting('qris_info', 'Scan QRIS Langsung via WhatsApp Admin');
 $current_lead_fee = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
 $current_welcome_bonus = (float)get_setting('welcome_bonus_amount', WELCOME_BONUS_WALLET);
+
+// Pengaturan WhatsApp Gateway (Fonnte)
+$current_fonnte_token = get_setting('fonnte_token', getenv('FONNTE_TOKEN') ?: '');
+$current_wa_status = get_setting('wa_gateway_status', 'active');
+
+$recent_wa_logs = [];
+try {
+    $stmtW = $db->query("SELECT id, recipient_phone, recipient_name, event_type, status, created_at FROM whatsapp_logs ORDER BY id DESC LIMIT 5");
+    $recent_wa_logs = $stmtW->fetchAll();
+} catch (Exception $e) {}
 
 // Nilai SMTP
 $current_smtp_host = get_setting('smtp_host', 'smtp.gmail.com');
@@ -643,6 +689,164 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
+        <!-- 5. Integrasi WhatsApp Gateway Otomatis (Fonnte API) -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-3 bg-success-subtle text-success">
+                            <i class="fa-brands fa-whatsapp fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Integrasi WhatsApp Gateway Otomatis (Fonnte API)</h5>
+                            <small class="text-muted">Notifikasi pesanan berdering seketika ke nomor WhatsApp Mitra & Pelanggan tanpa tergantung browser</small>
+                        </div>
+                    </div>
+                    <div>
+                        <?php if (!empty($current_fonnte_token) && $current_wa_status === 'active'): ?>
+                            <span class="badge text-bg-success px-3 py-1.5 fw-semibold">
+                                <i class="fa-solid fa-circle-check me-1"></i> Gateway Fonnte Aktif & Terhubung
+                            </span>
+                        <?php elseif ($current_wa_status === 'direct_only'): ?>
+                            <span class="badge text-bg-secondary px-3 py-1.5 fw-semibold text-white">
+                                <i class="fa-solid fa-link me-1"></i> Mode Tautan Manual (wa.me)
+                            </span>
+                        <?php else: ?>
+                            <span class="badge text-bg-warning px-3 py-1.5 fw-semibold text-dark">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Mode Simulasi / Belum Aktif
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="alert alert-success-subtle border border-success-subtle rounded-3 p-3 mb-4 d-flex align-items-start gap-3">
+                        <i class="fa-solid fa-circle-check text-success fs-4 mt-1"></i>
+                        <div class="small">
+                            <strong>Solusi Notifikasi Real-Time:</strong> Dengan menghubungkan WhatsApp Gateway Fonnte, setiap ada warga Indragiri Hulu yang melakukan order jasa, sistem akan langsung mengirimkan pesan WhatsApp otomatis ke HP Mitra. HP mitra akan berdering/bergetar meskipun aplikasi ditutup atau layar HP terkunci!
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold text-dark">
+                                Fonnte API Token:
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-key text-success"></i></span>
+                                <input type="password" id="inputFonnteToken" name="fonnte_token" class="form-control font-monospace fw-bold" 
+                                       value="<?= e($current_fonnte_token) ?>" 
+                                       placeholder="Tempel token Fonnte Anda di sini">
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleFonnteToken()">
+                                    <i class="fa-regular fa-eye" id="eyeIconFonnte"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Token dapat diperoleh dari dashboard Fonnte (<code>md.fonnte.com</code>) menu <strong>Device</strong>.</small>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-dark">
+                                Mode Operasional Gateway:
+                            </label>
+                            <select name="wa_gateway_status" class="form-select fw-semibold">
+                                <option value="active" <?= $current_wa_status === 'active' ? 'selected' : '' ?>>
+                                    🟢 Aktif (Kirim Otomatis via Fonnte API)
+                                </option>
+                                <option value="direct_only" <?= $current_wa_status === 'direct_only' ? 'selected' : '' ?>>
+                                    🟡 Tautan Manual wa.me (Tanpa Saldo Kuota)
+                                </option>
+                                <option value="simulation" <?= $current_wa_status === 'simulation' ? 'selected' : '' ?>>
+                                    ⚪ Mode Simulasi Dev (Log Saja)
+                                </option>
+                            </select>
+                            <small class="text-muted">Pilih mode pengiriman notifikasi WhatsApp.</small>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Simpan Kartu WhatsApp -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-3 border-top gap-2 bg-light p-3 rounded-3">
+                        <span class="text-muted small">
+                            <i class="fa-solid fa-shield-halved text-success me-1"></i> Kredensial Fonnte tersimpan aman di database server & file <code>.env</code>.
+                        </span>
+                        <button type="submit" form="settingsForm" class="btn btn-teal btn-sm fw-bold px-3 py-2 shadow-xs">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Pengaturan WhatsApp
+                        </button>
+                    </div>
+
+                    <!-- Alat Uji Coba Kirim Pesan WhatsApp Langsung -->
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="fa-solid fa-paper-plane text-success me-1"></i> Uji Coba Pengiriman Pesan WhatsApp (Live Test)
+                        </h6>
+                        <p class="small text-muted mb-3">
+                            Kirim pesan uji coba ke nomor WhatsApp Anda untuk membuktikan notifikasi otomatis masuk dan berdering seketika.
+                        </p>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-7">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="fa-brands fa-whatsapp text-success"></i></span>
+                                    <input type="text" id="testWaTarget" class="form-control" 
+                                           placeholder="Nomor HP/WA (contoh: 085126241679)"
+                                           value="<?= e($current_wa ?: '085126241679') ?>">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <button type="button" id="btnTestWa" class="btn btn-outline-success btn-sm fw-bold w-100" onclick="submitTestWa()">
+                                    <i class="fa-solid fa-paper-plane me-1"></i> Kirim WhatsApp Uji Coba Sekarang
+                                </button>
+                            </div>
+                        </div>
+                        <div id="testWaAlert" class="mt-2.5"></div>
+                    </div>
+
+                    <!-- Tabel Riwayat Log WhatsApp Terakhir -->
+                    <?php if (!empty($recent_wa_logs)): ?>
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-dark mb-2">
+                                <i class="fa-solid fa-clock-rotate-left text-muted me-1"></i> 5 Pengiriman WhatsApp Terakhir (Audit Trail)
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered align-middle mb-0 small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Waktu</th>
+                                            <th>Penerima</th>
+                                            <th>Tipe Event</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($recent_wa_logs as $wl): ?>
+                                            <tr>
+                                                <td class="text-nowrap text-muted"><?= e(date('d/m/Y H:i', strtotime($wl['created_at']))) ?></td>
+                                                <td class="fw-semibold">
+                                                    <?= e($wl['recipient_phone']) ?>
+                                                    <?php if (!empty($wl['recipient_name'])): ?>
+                                                        <span class="text-muted small">(<?= e($wl['recipient_name']) ?>)</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><span class="badge bg-light text-dark border"><?= e($wl['event_type']) ?></span></td>
+                                                <td>
+                                                    <?php if ($wl['status'] === 'sent'): ?>
+                                                        <span class="badge text-bg-success">Terkirim</span>
+                                                    <?php elseif ($wl['status'] === 'simulated'): ?>
+                                                        <span class="badge text-bg-warning text-dark">Simulasi</span>
+                                                    <?php else: ?>
+                                                        <span class="badge text-bg-danger">Gagal</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                </div>
+            </div>
+        </div>
+
         <!-- 6. Pengaturan Dering & Notifikasi Operasional Admin -->
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4">
@@ -726,7 +930,81 @@ require_once __DIR__ . '/includes/header.php';
     <input type="hidden" id="hiddenTestRecipient" name="test_recipient" value="">
 </form>
 
+<!-- Form Tersembunyi untuk Uji Coba Kirim WhatsApp -->
+<form id="testWaForm" method="POST" action="<?= BASE_URL ?>/admin/settings.php" class="d-none">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="test_whatsapp">
+    <input type="hidden" id="hiddenTestPhone" name="test_phone" value="">
+</form>
+
 <script>
+function toggleFonnteToken() {
+    const input = document.getElementById('inputFonnteToken');
+    const icon = document.getElementById('eyeIconFonnte');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+    }
+}
+
+async function submitTestWa() {
+    const targetInput = document.getElementById('testWaTarget');
+    const btn = document.getElementById('btnTestWa');
+    const alertBox = document.getElementById('testWaAlert');
+    const form = document.getElementById('testWaForm');
+
+    if (!targetInput || !targetInput.value.trim()) {
+        if (alertBox) {
+            alertBox.innerHTML = '<div class="alert alert-warning py-2 px-3 small mb-0"><i class="fa-solid fa-triangle-exclamation me-1"></i> Silakan ketik nomor WhatsApp tujuan uji coba.</div>';
+        }
+        targetInput?.focus();
+        return;
+    }
+
+    const phone = targetInput.value.trim();
+    const originalBtnHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5" role="status"></span> Menghubungi Fonnte Gateway...';
+
+    if (alertBox) {
+        alertBox.innerHTML = '<div class="alert alert-info py-2.5 px-3 small mb-0 d-flex align-items-center gap-2"><div class="spinner-border spinner-border-sm text-info flex-shrink-0"></div><div>Sedang mengirim pesan WhatsApp otomatis ke <strong>' + phone + '</strong>... Mohon tunggu beberapa detik.</div></div>';
+    }
+
+    try {
+        const csrfToken = form.querySelector('input[name="csrf_token"]')?.value || '';
+        const formData = new FormData();
+        formData.append('action', 'test_whatsapp');
+        formData.append('test_phone', phone);
+        formData.append('csrf_token', csrfToken);
+        formData.append('ajax', '1');
+
+        const response = await fetch('<?= BASE_URL ?>/admin/settings.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alertBox.innerHTML = '<div class="alert alert-success py-2.5 px-3 small mb-0 d-flex align-items-start gap-2"><i class="fa-solid fa-circle-check fs-5 text-success mt-0.5"></i><div><strong>Pesan WhatsApp BERHASIL Terkirim!</strong><br>' + data.message + '</div></div>';
+        } else {
+            alertBox.innerHTML = '<div class="alert alert-danger py-2.5 px-3 small mb-0 d-flex align-items-start gap-2"><i class="fa-solid fa-circle-xmark fs-5 text-danger mt-0.5"></i><div><strong>Pengiriman Gagal:</strong><br>' + data.message + '</div></div>';
+        }
+    } catch (err) {
+        console.error(err);
+        alertBox.innerHTML = '<div class="alert alert-danger py-2.5 px-3 small mb-0"><i class="fa-solid fa-circle-xmark me-1"></i> Terjadi kesalahan jaringan saat mengirim pesan uji coba.</div>';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+    }
+}
+
 function toggleSmtpPass() {
     const input = document.getElementById('inputSmtpPass');
     const icon = document.getElementById('eyeIcon');
