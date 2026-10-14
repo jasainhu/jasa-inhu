@@ -43,8 +43,8 @@ try {
         }
     }
 
-    // 3. Query Filter Dinamis
-    $where = ["u.is_active = 1"];
+    // 3. Query Filter Dinamis (Hanya akun terverifikasi)
+    $where = ["u.is_active = 1", "u.email_verified_at IS NOT NULL"];
     $params = [];
 
     if ($q !== '') {

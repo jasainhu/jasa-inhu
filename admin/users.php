@@ -49,6 +49,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             redirect('/admin/users.php');
         }
 
+        // 1.c. Verifikasi Akun Manual oleh Admin (Bypass OTP)
+        if ($action === 'manual_verify_user') {
+            $user_id = (int)$_POST['user_id'];
+            $stmt = $db->prepare("UPDATE users SET email_verified_at = NOW(), is_active = 1, updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$user_id]);
+            $db->prepare("UPDATE user_verifications SET is_verified = 1 WHERE user_id = ?")->execute([$user_id]);
+            set_flash('success', 'Akun berhasil diverifikasi manual oleh admin.');
+            redirect('/admin/users.php');
+        }
+
         // 2. Edit data akun pengguna (Nama, HP, Email, Wilayah, dll)
         if ($action === 'edit_user') {
             $user_id = (int)$_POST['user_id'];
@@ -495,7 +505,18 @@ require_once __DIR__ . '/includes/header.php';
                             <?php endif; ?>
                         </td>
                         <td class="text-end">
-                            <div class="btn-group btn-group-sm">
+                                <?php if (empty($u['email_verified_at'])): ?>
+                                    <!-- Tombol Verifikasi Akun Manual oleh Admin -->
+                                    <form method="POST" action="<?= BASE_URL ?>/admin/users.php" class="d-inline" onsubmit="return confirm('Verifikasi akun ini sekarang secara manual?')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="action" value="manual_verify_user">
+                                        <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                        <button type="submit" class="btn btn-success py-1 px-2" style="font-size: 0.75rem;" title="Verifikasi Akun Manual (Bypass OTP)">
+                                            <i class="fa-solid fa-check-double me-1"></i> Verifikasi Manual
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+
                                 <?php if ($u['role_name'] === 'penyedia'): ?>
                                     <!-- Tombol Verifikasi / Batal Verifikasi KTP Mitra -->
                                     <form method="POST" action="<?= BASE_URL ?>/admin/users.php" class="d-inline">

@@ -28,14 +28,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // 1. Ambil statistik (Hanya akun yang telah menyelesaikan verifikasi OTP)
-$total_users = $db->query("SELECT COUNT(*) FROM users WHERE role_id = 2 AND email_verified_at IS NOT NULL")->fetchColumn();
-$total_providers = $db->query("SELECT COUNT(*) FROM users WHERE role_id = 3 AND email_verified_at IS NOT NULL")->fetchColumn();
-$total_categories = $db->query("SELECT COUNT(*) FROM service_categories")->fetchColumn();
-$total_requests = $db->query("SELECT COUNT(*) FROM service_requests")->fetchColumn();
+$total_users = (int)$db->query("SELECT COUNT(*) FROM users WHERE role_id = 2 AND email_verified_at IS NOT NULL")->fetchColumn();
+$total_providers = (int)$db->query("SELECT COUNT(*) FROM users WHERE role_id = 3 AND email_verified_at IS NOT NULL")->fetchColumn();
+$total_categories = (int)$db->query("SELECT COUNT(*) FROM service_categories")->fetchColumn();
+$total_requests = (int)$db->query("SELECT COUNT(*) FROM service_requests")->fetchColumn();
+$total_unverified = (int)$db->query("SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL")->fetchColumn();
 
 // 2. Daftar mitra penyedia jasa terbaru (yang sudah terverifikasi OTP)
 $stmtProviders = $db->query("
-    SELECT sp.*, u.name as user_name, u.email, u.phone, sc.name as category_name, d.name as district_name
+    SELECT sp.id, sp.user_id, sp.business_name, sp.is_verified, sp.rating_avg, sp.completed_jobs, sp.created_at,
+           u.name as user_name, u.email, u.phone, sc.name as category_name, d.name as district_name
     FROM service_providers sp
     JOIN users u ON sp.user_id = u.id
     JOIN service_categories sc ON sp.primary_category_id = sc.id
@@ -75,6 +77,21 @@ require_once __DIR__ . '/includes/header.php';
         </span>
     </div>
 </div>
+
+<?php if ($total_unverified > 0): ?>
+    <div class="alert alert-warning border-0 shadow-xs mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-clock text-warning fs-5"></i>
+            <div>
+                <strong class="text-dark">Ada <?= $total_unverified ?> akun pendaftar yang belum menyelesaikan verifikasi OTP.</strong>
+                <div class="small text-muted">Anda dapat memeriksa atau langsung memverifikasinya secara manual.</div>
+            </div>
+        </div>
+        <a href="<?= BASE_URL ?>/admin/users.php?role=unverified" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1.5 rounded-pill shadow-xs">
+            Lihat & Verifikasi Manual &rarr;
+        </a>
+    </div>
+<?php endif; ?>
 
 <!-- Stats Row -->
 <div class="row g-3 mb-4">

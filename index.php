@@ -34,8 +34,8 @@ try {
     $stmtDist = $db->query("SELECT id, name FROM districts ORDER BY name ASC");
     $districts = $stmtDist->fetchAll();
 
-    // 3. Penyedia Jasa dengan Filter Dinamis
-    $prov_where = ["u.is_active = 1"];
+    // 3. Penyedia Jasa dengan Filter Dinamis (Hanya akun terverifikasi)
+    $prov_where = ["u.is_active = 1", "u.email_verified_at IS NOT NULL"];
     $prov_params = [];
 
     if (!empty($filter_q)) {
