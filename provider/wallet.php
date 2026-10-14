@@ -125,6 +125,14 @@ $stmtRevTotal = $db->prepare("
 $stmtRevTotal->execute([$provider['id'], $provider['id']]);
 $total_earned_by_provider = (float)($stmtRevTotal->fetchColumn() ?: 0.00);
 
+// URL Bantuan / Pengembalian (Refund) Sisa Saldo Top-Up ke Admin via WhatsApp
+$adminPhone = get_setting('admin_wa', ADMIN_PHONE_WA);
+$refundMsg = "Halo Admin JASA INHU,\n" .
+             "Saya mitra " . $provider['business_name'] . " (" . $user['name'] . " - " . $user['phone'] . ")\n" .
+             "Ingin mengajukan informasi / pengembalian (refund) sisa saldo top-up mandiri saya di akun aplikasi.\n\n" .
+             "Mohon bantuannya. Terima kasih!";
+$refundWaUrl = format_wa_url($adminPhone, $refundMsg);
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -177,13 +185,13 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div class="row align-items-center g-3">
                 <div class="col-sm-7">
-                    <div class="text-white-50 text-uppercase fw-semibold" style="font-size: 0.70rem; letter-spacing: 0.5px;">Saldo Kuota Deposit Pesanan:</div>
+                    <div class="text-white-50 text-uppercase fw-semibold" style="font-size: 0.70rem; letter-spacing: 0.5px;">Saldo Kuota Pesanan Mitra (Non-Tunai):</div>
                     <div class="fs-2 fw-bold text-white my-1" style="letter-spacing: -0.5px;">
                         Rp <?= number_format($current_balance, 0, ',', '.') ?>
                     </div>
-                    <div class="d-inline-flex align-items-center gap-1 px-2 py-0.5 rounded-pill mb-2" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); font-size: 0.68rem; color: rgba(255,255,255,0.85);">
-                        <i class="fa-solid fa-lock text-warning"></i>
-                        <span>Kredit Kuota Aplikasi &bull; Non-Tunai</span>
+                    <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill mb-2" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); font-size: 0.70rem; color: #fff;">
+                        <i class="fa-solid fa-hand-holding-dollar text-warning"></i>
+                        <span>Uang jasa pelanggan 100% diterima tunai di tempat</span>
                     </div>
                 </div>
                 <div class="col-sm-5 text-sm-end">
@@ -215,14 +223,14 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
-    <!-- Edukasi Manfaat Sistem Deposit (Ramping ala Accordion/Tip) -->
+    <!-- Edukasi Manfaat Sistem Deposit & Jaminan Pengembalian Saldo -->
     <div class="accordion mb-3" id="accordionInfoDeposit">
         <div class="accordion-item border-0 shadow-xs rounded-3 overflow-hidden bg-white">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed py-2 px-3 bg-light text-dark fw-bold small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDepositInfo" aria-expanded="false" style="font-size: 0.78rem;">
                     <i class="fa-solid fa-circle-info text-teal me-2"></i>
-                    <span>Bagaimana Sistem Kuota & Biaya Kontak Bekerja?</span>
-                    <span class="badge bg-teal-subtle text-teal ms-auto me-2" style="font-size: 0.65rem;">Info Mitra</span>
+                    <span>Bagaimana Sistem Kuota & Jaminan Saldo Mitra Bekerja?</span>
+                    <span class="badge bg-teal-subtle text-teal ms-auto me-2" style="font-size: 0.65rem;">Info & Garansi</span>
                 </button>
             </h2>
             <div id="collapseDepositInfo" class="accordion-collapse collapse" data-bs-parent="#accordionInfoDeposit">
@@ -240,7 +248,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="p-2.5 rounded-3 bg-light border-start border-3 border-primary h-100">
                                 <div class="fw-bold text-dark mb-1" style="font-size: 0.78rem;"><i class="fa-solid fa-wrench text-primary me-1"></i> Sparepart 100% Hak Anda</div>
                                 <div class="text-muted" style="font-size: 0.72rem; line-height: 1.4;">
-                                    Seluruh ongkos kerja dan pergantian onderdil dari pelanggan sepenuhnya milik Anda 100% tanpa potongan aplikasi.
+                                    Seluruh ongkos kerja dan pergantian onderdil dari pelanggan sepenuhnya milik Anda 100% langsung dibayar tunai di tempat.
                                 </div>
                             </div>
                         </div>
@@ -250,6 +258,21 @@ require_once __DIR__ . '/../includes/header.php';
                                 <div class="text-muted" style="font-size: 0.72rem; line-height: 1.4;">
                                     Toko mitra dengan saldo aktif selalu diprioritaskan tampil di urutan atas pencarian warga se-Kabupaten Inhu.
                                 </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <div class="p-2.5 rounded-3 bg-light border-start border-3 border-teal d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div style="max-width: 600px;">
+                                    <div class="fw-bold text-dark mb-0.5" style="font-size: 0.78rem;">
+                                        <i class="fa-solid fa-shield-halved text-teal me-1"></i> Garansi Pengembalian Sisa Saldo Top-Up (Bebas Resiko)
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.72rem; line-height: 1.4;">
+                                        Saldo bonus pendaftaran adalah kuota promo non-tunai. Namun jika Anda pernah melakukan isi saldo dengan uang pribadi dan di kemudian hari ingin berhenti/pindah kota, sisa uang top-up asli Anda dijamin dapat diajukan pengembaliannya (refund) dengan menghubungi Admin.
+                                    </div>
+                                </div>
+                                <a href="<?= e($refundWaUrl) ?>" target="_blank" class="btn btn-xs btn-outline-teal rounded-pill px-3 py-1.5 fw-bold text-nowrap shadow-2xs">
+                                    <i class="fa-brands fa-whatsapp text-success me-1"></i> Bantuan / Ajukan Refund
+                                </a>
                             </div>
                         </div>
                     </div>
