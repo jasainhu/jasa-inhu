@@ -1061,6 +1061,14 @@ window.IS_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
 
 let currentDirectOrderProvider = null;
 
+function formatMediaUrl(path) {
+    if (!path) return '';
+    if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    return (window.BASE_URL || '') + '/' + path.replace(/^\/+/, '');
+}
+
 function openPortfolioModal(providerId) {
     const prov = window.FEATURED_PROVIDERS[providerId];
     if (!prov) return;
@@ -1107,11 +1115,11 @@ function openPortfolioModal(providerId) {
                 beforeAfterHtml = `
                     <div class="row g-0 border-bottom" style="min-height: 220px;">
                         <div class="col-6 position-relative border-end overflow-hidden" style="background: #0f172a;">
-                            <img src="${window.BASE_URL}/${item.image_before}" alt="Sebelum" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
+                            <img src="${formatMediaUrl(item.image_before)}" alt="Sebelum" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2 fw-bold" style="font-size: 0.65rem;">SEBELUM</span>
                         </div>
                         <div class="col-6 position-relative overflow-hidden" style="background: #0f172a;">
-                            <img src="${window.BASE_URL}/${item.image_after}" alt="Sesudah" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
+                            <img src="${formatMediaUrl(item.image_after)}" alt="Sesudah" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
                             <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">SESUDAH</span>
                         </div>
                     </div>
@@ -1119,7 +1127,7 @@ function openPortfolioModal(providerId) {
             } else {
                 beforeAfterHtml = `
                     <div class="position-relative overflow-hidden border-bottom text-center" style="background: #0f172a; max-height: 320px;">
-                        <img src="${window.BASE_URL}/${item.image_after}" alt="${item.title}" class="img-fluid object-fit-cover w-100" style="max-height: 320px;">
+                        <img src="${formatMediaUrl(item.image_after)}" alt="${item.title}" class="img-fluid object-fit-cover w-100" style="max-height: 320px;">
                         <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">HASIL SELESAI</span>
                     </div>
                 `;

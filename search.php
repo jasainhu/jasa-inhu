@@ -917,6 +917,14 @@ window.IS_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
 window.BASE_URL = '<?= BASE_URL ?>';
 window.PROVIDER_PORTFOLIOS = <?= json_encode($all_portfolios) ?>;
 
+function formatMediaUrl(path) {
+    if (!path) return '';
+    if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    return (window.BASE_URL || '') + '/' + path.replace(/^\/+/, '');
+}
+
 function openPortfolioModal(providerId) {
     const modalEl = document.getElementById('portfolioShowcaseModal');
     const modalBody = document.getElementById('portfolioShowcaseModalBody');
@@ -947,10 +955,10 @@ function openPortfolioModal(providerId) {
                     <div class="card border rounded-3 overflow-hidden shadow-xs h-100">
                         <div class="position-relative" style="height: 190px; background: #f1f5f9;">
                             ${hasAfter ? `
-                                <img src="${window.BASE_URL}/${item.image_after}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
+                                <img src="${formatMediaUrl(item.image_after)}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
                                 <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs">Hasil Selesai</span>
                             ` : (hasBefore ? `
-                                <img src="${window.BASE_URL}/${item.image_before}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
+                                <img src="${formatMediaUrl(item.image_before)}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
                                 <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs">Sebelum Pengerjaan</span>
                             ` : `
                                 <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">
