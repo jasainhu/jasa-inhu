@@ -205,7 +205,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php foreach ($provider_portfolios as $pp): ?>
                     <div class="col-6 col-md-3">
                         <div class="border rounded-3 overflow-hidden position-relative shadow-2xs" style="height: 110px; background: #0f172a;">
-                            <img src="<?= BASE_URL ?>/<?= e($pp['image_after']) ?>" alt="<?= e($pp['title']) ?>" class="w-100 h-100 object-fit-cover">
+                            <img src="<?= e(get_media_url($pp['image_after'])) ?>" alt="<?= e($pp['title']) ?>" class="w-100 h-100 object-fit-cover">
                             <div class="position-absolute bottom-0 start-0 end-0 p-1 text-white bg-dark bg-opacity-75 small text-truncate" style="font-size: 0.68rem;">
                                 <?= e($pp['title']) ?>
                             </div>

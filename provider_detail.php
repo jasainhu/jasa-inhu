@@ -354,16 +354,32 @@ require_once __DIR__ . '/includes/header.php';
 
                     <div class="row g-3">
                         <?php foreach ($portfolios as $port): ?>
+                            <?php 
+                                $hasBefore = has_media($port['image_before'] ?? '');
+                                $hasAfter = has_media($port['image_after'] ?? '');
+                            ?>
                             <div class="col-md-6">
                                 <div class="card border rounded-3 overflow-hidden shadow-xs h-100">
-                                    <div class="position-relative" style="height: 180px; background: #f1f5f9;">
-                                        <?php if (has_media($port['after_image_url'] ?? '')): ?>
-                                            <img src="<?= e(get_media_url($port['after_image_url'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover">
+                                    <div class="position-relative" style="min-height: 180px; background: #0f172a;">
+                                        <?php if ($hasBefore && $hasAfter): ?>
+                                            <div class="row g-0 h-100">
+                                                <div class="col-6 position-relative border-end" style="height: 180px;">
+                                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">SEBELUM</span>
+                                                    <img src="<?= e(get_media_url($port['image_before'])) ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover">
+                                                </div>
+                                                <div class="col-6 position-relative" style="height: 180px;">
+                                                    <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">SESUDAH</span>
+                                                    <img src="<?= e(get_media_url($port['image_after'])) ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover">
+                                                </div>
+                                            </div>
+                                        <?php elseif ($hasAfter): ?>
+                                            <img src="<?= e(get_media_url($port['image_after'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover" style="max-height: 220px;">
                                             <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs">Hasil Selesai</span>
-                                        <?php elseif (has_media($port['before_image_url'] ?? '')): ?>
-                                            <img src="<?= e(get_media_url($port['before_image_url'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover">
+                                        <?php elseif ($hasBefore): ?>
+                                            <img src="<?= e(get_media_url($port['image_before'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover" style="max-height: 220px;">
+                                            <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs">Sebelum Pengerjaan</span>
                                         <?php else: ?>
-                                            <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">
+                                            <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="min-height: 180px;">
                                                 <i class="fa-solid fa-camera fs-2 opacity-50"></i>
                                             </div>
                                         <?php endif; ?>
