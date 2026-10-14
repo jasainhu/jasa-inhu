@@ -126,7 +126,7 @@ if (is_logged_in() && !empty($current_user)) {
         </a>
 
         <!-- Menu Kategori Tepat di Sebelah Logo (Tokopedia Style) -->
-        <div class="dropdown d-none d-md-block flex-shrink-0">
+        <div class="dropdown hover-cat-dropdown d-none d-md-block flex-shrink-0">
             <button class="btn-tokopedia-cat dropdown-toggle d-flex align-items-center gap-1" type="button" id="tokopediaCatDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <span>Kategori</span>
             </button>
@@ -562,6 +562,40 @@ function markSingleNotificationRead(e, id) {
         body: 'id=' + encodeURIComponent(id)
     }).catch(() => {});
 }
+
+// Hover Dropdown Kategori Desktop (Otomatis buka & tetap diam saat disorot)
+document.addEventListener('DOMContentLoaded', function() {
+    const catDropdown = document.querySelector('.hover-cat-dropdown');
+    if (!catDropdown) return;
+    
+    const catBtn = catDropdown.querySelector('#tokopediaCatDropdown');
+    const catMenu = catDropdown.querySelector('.tokopedia-cat-menu');
+    let catHoverTimeout = null;
+
+    function openCatMenu() {
+        if (window.innerWidth < 992) return;
+        clearTimeout(catHoverTimeout);
+        catDropdown.classList.add('show');
+        if (catBtn) catBtn.setAttribute('aria-expanded', 'true');
+        if (catMenu) catMenu.classList.add('show');
+    }
+
+    function closeCatMenu() {
+        if (window.innerWidth < 992) return;
+        catHoverTimeout = setTimeout(() => {
+            catDropdown.classList.remove('show');
+            if (catBtn) catBtn.setAttribute('aria-expanded', 'false');
+            if (catMenu) catMenu.classList.remove('show');
+        }, 180);
+    }
+
+    catDropdown.addEventListener('mouseenter', openCatMenu);
+    catDropdown.addEventListener('mouseleave', closeCatMenu);
+    if (catMenu) {
+        catMenu.addEventListener('mouseenter', openCatMenu);
+        catMenu.addEventListener('mouseleave', closeCatMenu);
+    }
+});
 </script>
 
 <!-- =========================================================

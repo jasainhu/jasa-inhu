@@ -151,19 +151,34 @@ a:hover {
     background-color: var(--primary-subtle);
 }
 
+.hover-cat-dropdown {
+    position: relative;
+}
+
 .tokopedia-cat-menu {
     width: 480px;
     max-width: 95vw;
     border-radius: 16px;
     border: 1px solid var(--border-color);
     box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.16);
-    animation: fadeInDown 0.2s ease-out;
+    animation: fadeInDown 0.18s ease-out;
+}
+
+/* Jembatan transparan agar kursor mouse tidak kehilangan fokus saat bergerak dari tombol ke menu */
+.tokopedia-cat-menu::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: 0;
+    right: 0;
+    height: 16px;
+    background: transparent;
 }
 
 @keyframes fadeInDown {
     from {
         opacity: 0;
-        transform: translateY(-8px);
+        transform: translateY(-6px);
     }
     to {
         opacity: 1;
@@ -172,8 +187,13 @@ a:hover {
 }
 
 @media (min-width: 992px) {
-    .dropdown:hover > .tokopedia-cat-menu {
-        display: block;
+    .hover-cat-dropdown:hover > .tokopedia-cat-menu,
+    .hover-cat-dropdown:focus-within > .tokopedia-cat-menu,
+    .hover-cat-dropdown .tokopedia-cat-menu.show {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
     }
 }
 
