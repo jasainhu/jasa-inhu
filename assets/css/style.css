@@ -69,6 +69,35 @@ a:hover {
     border-color: var(--primary) !important;
 }
 
+/* Student / Pelajar Purple Utilities */
+.text-purple {
+    color: #7c3aed !important;
+}
+.text-purple-dark {
+    color: #5b21b6 !important;
+}
+.bg-purple {
+    background-color: #7c3aed !important;
+    color: #ffffff !important;
+}
+.bg-purple-subtle {
+    background-color: #f5f3ff !important;
+    color: #6d28d9 !important;
+}
+.border-purple-subtle {
+    border-color: #ddd6fe !important;
+}
+.btn-purple {
+    background-color: #7c3aed !important;
+    border-color: #7c3aed !important;
+    color: #ffffff !important;
+}
+.btn-purple:hover {
+    background-color: #6d28d9 !important;
+    border-color: #6d28d9 !important;
+    color: #ffffff !important;
+}
+
 /* Navbar */
 .navbar-custom {
     background-color: rgba(255, 255, 255, 0.98);

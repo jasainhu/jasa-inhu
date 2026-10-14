@@ -197,9 +197,15 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="d-flex align-items-center flex-wrap gap-2 mb-1.5">
                                 <h2 class="fw-bold text-dark mb-0 fs-3"><?= e($provider['business_name']) ?></h2>
                                 <?php if ($provider['is_verified']): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle py-1.5 px-2.5 rounded-pill cursor-pointer shadow-2xs d-inline-flex align-items-center" role="button" onclick="showVerificationInfoModal('ktp', '<?= addslashes($provider['business_name']) ?>')" title="Klik untuk info verifikasi resmi">
-                                        <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP <i class="fa-solid fa-circle-info ms-1.5 opacity-75" style="font-size: 0.68rem;"></i>
-                                    </span>
+                                    <?php if (($provider['id_card_type'] ?? '') === 'pelajar'): ?>
+                                        <span class="badge bg-purple-subtle text-purple border border-purple-subtle py-1.5 px-2.5 rounded-pill cursor-pointer shadow-2xs d-inline-flex align-items-center" role="button" onclick="showVerificationInfoModal('pelajar', '<?= addslashes($provider['business_name']) ?>')" title="Klik untuk info verifikasi pelajar mandiri">
+                                            <i class="fa-solid fa-graduation-cap me-1"></i> Pelajar Terverifikasi <?= !empty($provider['school_name']) ? '• ' . e($provider['school_name']) : '' ?> <i class="fa-solid fa-circle-info ms-1.5 opacity-75" style="font-size: 0.68rem;"></i>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-1.5 px-2.5 rounded-pill cursor-pointer shadow-2xs d-inline-flex align-items-center" role="button" onclick="showVerificationInfoModal('ktp', '<?= addslashes($provider['business_name']) ?>')" title="Klik untuk info verifikasi resmi">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP <i class="fa-solid fa-circle-info ms-1.5 opacity-75" style="font-size: 0.68rem;"></i>
+                                        </span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 <?php 
                                 $is_medical = (isset($provider['category_slug']) && $provider['category_slug'] === 'medical') || (isset($provider['category_name']) && stripos($provider['category_name'], 'med') !== false) || (isset($provider['primary_category_id']) && (int)$provider['primary_category_id'] === 18);
@@ -990,6 +996,9 @@ function showVerificationInfoModal(type, provName) {
     if (type === 'str') {
         title = "Terverifikasi STR Medis";
         text = "Surat Tanda Registrasi (STR) tenaga medis ini telah diverifikasi keabsahannya oleh tim JASA INHU. Dokumen asli disimpan aman di arsip platform demi melindungi privasi tenaga kesehatan.";
+    } else if (type === 'pelajar') {
+        title = "🎓 Pelajar Mandiri Terverifikasi";
+        text = "Identitas pelajar / santri aktif mitra muda ini telah divalidasi keabsahannya menggunakan Kartu Pelajar / NISN resmi oleh tim verifikator JASA INHU demi mendukung kemandirian generasi muda Indragiri Hulu.";
     } else if (type === 'ktp') {
         title = "Identitas KTP & Usaha Terverifikasi";
         text = "Identitas KTP dan domisili tempat usaha mitra telah divalidasi oleh tim verifikator JASA INHU di Kabupaten Indragiri Hulu.";

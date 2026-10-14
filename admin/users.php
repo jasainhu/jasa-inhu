@@ -38,13 +38,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             redirect('/admin/users.php');
         }
 
-        // 1.b. Toggle Verifikasi KTP Mitra
+        // 1.b. Toggle Verifikasi KTP / Pelajar Mitra
         if ($action === 'toggle_ktp_verified') {
             $user_id = (int)$_POST['user_id'];
             $new_status = (int)$_POST['new_status'];
             $stmt = $db->prepare("UPDATE service_providers SET is_verified = ?, updated_at = NOW() WHERE user_id = ?");
             $stmt->execute([$new_status, $user_id]);
-            $msg = ($new_status === 1) ? 'Status identitas KTP mitra berhasil diverifikasi resmi.' : 'Status verifikasi KTP mitra telah dinonaktifkan.';
+
+            // Cek tipe identitas
+            $stmtSp = $db->prepare("SELECT id_card_type FROM service_providers WHERE user_id = ?");
+            $stmtSp->execute([$user_id]);
+            $spData = $stmtSp->fetch();
+            $isPelajar = ($spData && ($spData['id_card_type'] ?? '') === 'pelajar');
+            $docName = $isPelajar ? 'Kartu Pelajar' : 'KTP';
+
+            $msg = ($new_status === 1) ? "Status identitas {$docName} mitra berhasil diverifikasi resmi." : "Status verifikasi {$docName} mitra telah dinonaktifkan.";
             set_flash('success', $msg);
             redirect('/admin/users.php');
         }
@@ -300,7 +308,10 @@ $stmt = $db->prepare("
            r.name as role_name, r.display_name as role_display,
            p.district_id, p.address, p.gender, p.birth_date,
            d.name as district_name, sp.business_name, sp.id as provider_id,
-           sp.is_verified, sp.id_card_number, sp.id_card_image, sp.credential_title, sp.certificate_url
+           sp.is_verified, sp.id_card_number, sp.id_card_type, sp.school_name,
+           IF(sp.id_card_image IS NOT NULL AND sp.id_card_image != '', 1, 0) as has_ktp,
+           sp.credential_title,
+           IF(sp.certificate_url IS NOT NULL AND sp.certificate_url != '', 1, 0) as has_cert
     FROM users u
     JOIN roles r ON u.role_id = r.id
     LEFT JOIN profiles p ON u.id = p.user_id
@@ -428,31 +439,41 @@ require_once __DIR__ . '/includes/header.php';
                                     <i class="fa-solid fa-store me-1"></i> <?= e($u['business_name']) ?>
                                 </div>
                                 <div class="mt-1 d-flex align-items-center gap-1.5 flex-wrap">
+                                    <?php 
+                                    $isPelajar = (($u['id_card_type'] ?? '') === 'pelajar');
+                                    $docTypeLabel = $isPelajar ? 'Kartu Pelajar' : 'KTP';
+                                    ?>
                                     <?php if (!empty($u['is_verified'])): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-1.5" style="font-size: 0.68rem;" title="NIK: <?= e($u['id_card_number'] ?: 'Belum ada NIK') ?>">
-                                            <i class="fa-solid fa-circle-check me-0.5"></i> KTP Terverifikasi
-                                        </span>
-                                    <?php elseif (!empty($u['id_card_image'])): ?>
+                                        <?php if ($isPelajar): ?>
+                                            <span class="badge bg-purple-subtle text-purple border border-purple-subtle py-0.5 px-1.5" style="font-size: 0.68rem;" title="NISN: <?= e($u['id_card_number'] ?: '-') ?> • <?= e($u['school_name'] ?: 'Pelajar') ?>">
+                                                <i class="fa-solid fa-graduation-cap me-0.5"></i> Pelajar Terverifikasi <?= !empty($u['school_name']) ? '(' . e($u['school_name']) . ')' : '' ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle py-0.5 px-1.5" style="font-size: 0.68rem;" title="NIK: <?= e($u['id_card_number'] ?: 'Belum ada NIK') ?>">
+                                                <i class="fa-solid fa-circle-check me-0.5"></i> KTP Terverifikasi
+                                            </span>
+                                        <?php endif; ?>
+                                    <?php elseif (!empty($u['has_ktp'])): ?>
                                         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-0.5 px-1.5" style="font-size: 0.68rem;">
-                                            <i class="fa-solid fa-clock me-0.5"></i> Menunggu Verifikasi KTP
+                                            <i class="fa-solid fa-clock me-0.5"></i> Menunggu Verifikasi <?= $docTypeLabel ?>
                                         </span>
                                     <?php else: ?>
                                         <span class="badge bg-light text-muted border py-0.5 px-1.5" style="font-size: 0.68rem;">
-                                            Belum Unggah KTP
+                                            Belum Unggah Identitas
                                         </span>
                                     <?php endif; ?>
 
-                                    <?php if (has_media($u['id_card_image'] ?? '')): ?>
+                                    <?php if (!empty($u['has_ktp'])): ?>
                                         <a href="<?= BASE_URL ?>/admin/view_doc.php?user_id=<?= $u['id'] ?>&type=ktp" 
-                                           onclick="openAdminDocPreview(event, <?= $u['id'] ?>, 'ktp', '<?= addslashes(htmlspecialchars($u['name'], ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['business_name'] ?? '', ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['id_card_number'] ?? '', ENT_QUOTES)) ?>', <?= !empty($u['is_verified']) ? 'true' : 'false' ?>)"
+                                           onclick="openAdminDocPreview(event, <?= $u['id'] ?>, '<?= $isPelajar ? 'pelajar' : 'ktp' ?>', '<?= addslashes(htmlspecialchars($u['name'], ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['business_name'] ?? '', ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars(($isPelajar && !empty($u['school_name']) ? ($u['school_name'] . ' • ') : '') . ($u['id_card_number'] ?? ''), ENT_QUOTES)) ?>', <?= !empty($u['is_verified']) ? 'true' : 'false' ?>)"
                                            target="_blank" 
-                                           class="badge bg-info-subtle text-info-emphasis border border-info-subtle text-decoration-none py-1 px-2 cursor-pointer shadow-2xs d-inline-flex align-items-center" 
+                                           class="badge <?= $isPelajar ? 'bg-purple-subtle text-purple border border-purple-subtle' : 'bg-info-subtle text-info-emphasis border border-info-subtle' ?> text-decoration-none py-1 px-2 cursor-pointer shadow-2xs d-inline-flex align-items-center" 
                                            style="font-size: 0.68rem;"
-                                           title="Klik untuk pratinjau KTP dan verifikasi">
-                                            <i class="fa-solid fa-id-card me-1 text-info"></i> Foto KTP <i class="fa-solid fa-magnifying-glass-plus ms-1 opacity-75"></i>
+                                           title="Klik untuk pratinjau <?= $docTypeLabel ?> dan verifikasi">
+                                            <i class="fa-solid <?= $isPelajar ? 'fa-graduation-cap me-1' : 'fa-id-card me-1 text-info' ?>"></i> Foto <?= $docTypeLabel ?> <i class="fa-solid fa-magnifying-glass-plus ms-1 opacity-75"></i>
                                         </a>
                                     <?php endif; ?>
-                                    <?php if (has_media($u['certificate_url'] ?? '')): ?>
+                                    <?php if (!empty($u['has_cert'])): ?>
                                         <a href="<?= BASE_URL ?>/admin/view_doc.php?user_id=<?= $u['id'] ?>&type=str" 
                                            onclick="openAdminDocPreview(event, <?= $u['id'] ?>, 'str', '<?= addslashes(htmlspecialchars($u['name'], ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['business_name'] ?? '', ENT_QUOTES)) ?>', '<?= addslashes(htmlspecialchars($u['credential_title'] ?? '', ENT_QUOTES)) ?>', <?= !empty($u['is_verified']) ? 'true' : 'false' ?>)"
                                            target="_blank" 
@@ -828,35 +849,42 @@ function openAdminDocPreview(e, userId, type, userName, businessName, metaInfo, 
     
     const docUrl = `<?= BASE_URL ?>/admin/view_doc.php?user_id=${userId}&type=${type}`;
     const downloadUrl = `<?= BASE_URL ?>/admin/view_doc.php?user_id=${userId}&type=${type}&download=1`;
-    const isKtp = (type === 'ktp');
-    const titleText = isKtp ? `Foto KTP: ${userName}` : `Berkas STR / Sertifikat: ${userName}`;
-    const metaLabel = isKtp ? (metaInfo ? `<strong>NIK:</strong> <code>${metaInfo}</code>` : '<span class="text-danger fw-semibold">Belum mencantumkan nomor NIK</span>') : (metaInfo ? `<strong>Kualifikasi:</strong> ${metaInfo}` : 'STR Medis / Sertifikat Keahlian');
+    const isPelajar = (type === 'pelajar');
+    const isKtp = (type === 'ktp' || isPelajar);
+    const titleText = isPelajar ? `Foto Kartu Pelajar: ${userName}` : (isKtp ? `Foto KTP: ${userName}` : `Berkas STR / Sertifikat: ${userName}`);
+    const metaLabel = isPelajar 
+        ? (metaInfo ? `<strong>Sekolah / NISN:</strong> <code>${metaInfo}</code>` : '<span class="text-danger fw-semibold">Belum mencantumkan nomor Kartu Pelajar</span>')
+        : (isKtp ? (metaInfo ? `<strong>NIK:</strong> <code>${metaInfo}</code>` : '<span class="text-danger fw-semibold">Belum mencantumkan nomor NIK</span>') : (metaInfo ? `<strong>Kualifikasi:</strong> ${metaInfo}` : 'STR Medis / Sertifikat Keahlian'));
 
     let verifyActionBtnHtml = '';
     if (isKtp) {
+        const verifyBtnText = isPelajar ? 'Setujui Verifikasi Pelajar' : 'Setujui Verifikasi KTP';
+        const cancelBtnText = isPelajar ? 'Batalkan Verifikasi Pelajar' : 'Batalkan Verifikasi KTP';
         if (!isVerified) {
             verifyActionBtnHtml = `
-                <button type="button" class="btn btn-success fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 1)">
-                    <i class="fa-solid fa-circle-check"></i> <span>Setujui Verifikasi KTP</span>
+                <button type="button" class="btn ${isPelajar ? 'btn-primary' : 'btn-success'} fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 1)">
+                    <i class="fa-solid fa-circle-check"></i> <span>${verifyBtnText}</span>
                 </button>
             `;
         } else {
             verifyActionBtnHtml = `
                 <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 0)">
-                    <i class="fa-solid fa-xmark"></i> <span>Batalkan Verifikasi KTP</span>
+                    <i class="fa-solid fa-xmark"></i> <span>${cancelBtnText}</span>
                 </button>
             `;
         }
     }
 
     if (typeof Swal !== 'undefined') {
+        const badgeText = isVerified ? (isPelajar ? '🎓 Pelajar Terverifikasi' : 'KTP Terverifikasi') : (isPelajar ? 'Menunggu Verifikasi Pelajar' : 'Menunggu Verifikasi KTP');
+        const badgeClass = isVerified ? (isPelajar ? 'bg-purple-subtle text-purple border border-purple-subtle' : 'bg-success-subtle text-success border border-success-subtle') : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
         Swal.fire({
-            title: `<div class="d-flex align-items-center gap-2 justify-content-center text-dark fs-5 fw-bold"><i class="fa-solid ${isKtp ? 'fa-id-card text-info' : 'fa-file-shield text-teal'}"></i> <span>${titleText}</span></div>`,
+            title: `<div class="d-flex align-items-center gap-2 justify-content-center text-dark fs-5 fw-bold"><i class="fa-solid ${isPelajar ? 'fa-graduation-cap text-purple' : (isKtp ? 'fa-id-card text-info' : 'fa-file-shield text-teal')}"></i> <span>${titleText}</span></div>`,
             html: `
                 <div class="mb-2.5 text-muted small d-flex align-items-center justify-content-center gap-2 flex-wrap">
                     <span class="badge bg-light text-dark border px-2 py-1">${businessName || userName}</span>
-                    <span class="badge ${isVerified ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'} px-2 py-1">
-                        <i class="fa-solid ${isVerified ? 'fa-check-circle' : 'fa-clock'} me-1"></i> ${isVerified ? 'KTP Terverifikasi' : 'Menunggu Verifikasi'}
+                    <span class="badge ${badgeClass} px-2 py-1">
+                        <i class="fa-solid ${isVerified ? 'fa-check-circle' : 'fa-clock'} me-1"></i> ${badgeText}
                     </span>
                     <span class="small">${metaLabel}</span>
                 </div>

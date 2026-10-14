@@ -92,7 +92,7 @@ try {
     $sql = "
         SELECT sp.id, sp.user_id, sp.primary_category_id, sp.business_name, sp.image_url, sp.headline,
                sp.description, sp.experience_years, sp.hourly_rate_min, sp.hourly_rate_max,
-               sp.is_verified, sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
+               sp.is_verified, sp.id_card_type, sp.school_name, sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
                sp.address, u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon,
                d.name as district_name, v.name as village_name,
                (SELECT COUNT(*) FROM provider_portfolios pp WHERE pp.provider_id = sp.id) as portfolio_count
@@ -315,9 +315,15 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
                             <!-- Floating Badges on Photo -->
                             <div class="position-absolute top-0 start-0 m-1.5 m-md-3 d-flex flex-wrap gap-1">
                                 <?php if ($prov['is_verified']): ?>
-                                    <span class="badge bg-white shadow-xs border fw-bold py-1 px-1.5 text-success" title="Identitas KTP & Lokasi Usaha Terverifikasi" style="font-size: 0.65rem;">
-                                        <i class="fa-solid fa-circle-check text-success"></i> <span class="d-none d-sm-inline">KTP</span>
-                                    </span>
+                                    <?php if (($prov['id_card_type'] ?? '') === 'pelajar'): ?>
+                                        <span class="badge bg-purple-subtle text-purple border border-purple-subtle shadow-xs fw-bold py-1 px-1.5" title="Pelajar Mandiri Inhu Terverifikasi <?= !empty($prov['school_name']) ? '• ' . e($prov['school_name']) : '' ?>" style="font-size: 0.65rem;">
+                                            <i class="fa-solid fa-graduation-cap text-purple"></i> <span class="d-none d-sm-inline">Pelajar</span>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge bg-white shadow-xs border fw-bold py-1 px-1.5 text-success" title="Identitas KTP & Lokasi Usaha Terverifikasi" style="font-size: 0.65rem;">
+                                            <i class="fa-solid fa-circle-check text-success"></i> <span class="d-none d-sm-inline">KTP</span>
+                                        </span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 <?php if (has_media($prov['certificate_url'] ?? '') || !empty($prov['credential_title'])): ?>
                                     <span class="badge bg-teal text-white shadow-xs fw-bold py-1 px-1.5" title="Tenaga Medis / Ahli Terverifikasi STR" style="font-size: 0.65rem;">

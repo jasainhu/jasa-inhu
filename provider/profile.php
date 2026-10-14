@@ -171,14 +171,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Gagal menyimpan lokasi layanan: ' . $e->getMessage();
             }
         }
-        // 4. Verifikasi KTP & Sertifikasi STR
+        // 4. Verifikasi KTP / Kartu Pelajar & Sertifikasi STR
         elseif ($form_section === 'ktp') {
+            $id_card_type = in_array($_POST['id_card_type'] ?? '', ['ktp', 'pelajar']) ? $_POST['id_card_type'] : 'ktp';
             $id_card_number = trim($_POST['id_card_number'] ?? '');
+            $school_name = trim($_POST['school_name'] ?? '');
             $credential_title = trim($_POST['credential_title'] ?? '');
             $id_card_image = $provider['id_card_image'] ?? '';
             $certificate_url = $provider['certificate_url'] ?? '';
 
-            // Handle KTP Upload
+            // Handle KTP / Kartu Pelajar Upload
             if (isset($_FILES['id_card_image']) && $_FILES['id_card_image']['error'] !== UPLOAD_ERR_NO_FILE) {
                 try {
                     $newKtpUrl = save_uploaded_media($_FILES['id_card_image'], 'ktp', 'ktp_' . $provider['id'], 1600, 85, false);
@@ -187,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $id_card_image = $newKtpUrl;
                 } catch (Exception $e) {
-                    $error = 'Gagal mengunggah foto KTP: ' . $e->getMessage();
+                    $error = 'Gagal mengunggah foto kartu identitas: ' . $e->getMessage();
                 }
             }
 
@@ -208,12 +210,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $stmtP = $db->prepare("
                         UPDATE service_providers 
-                        SET id_card_number = ?, id_card_image = ?, credential_title = ?, certificate_url = ?, updated_at = NOW()
+                        SET id_card_type = ?, id_card_number = ?, school_name = ?, id_card_image = ?, credential_title = ?, certificate_url = ?, updated_at = NOW()
                         WHERE id = ?
                     ");
-                    $stmtP->execute([$id_card_number, $id_card_image, $credential_title, $certificate_url, $provider['id']]);
+                    $stmtP->execute([$id_card_type, $id_card_number, $school_name, $id_card_image, $credential_title, $certificate_url, $provider['id']]);
 
-                    set_flash('success', 'Dokumen KTP & sertifikasi keahlian Anda berhasil disimpan!');
+                    $docName = ($id_card_type === 'pelajar') ? 'Kartu Pelajar' : 'KTP';
+                    set_flash('success', "Dokumen {$docName} berhasil disimpan dan sedang ditinjau pengelola!");
                     redirect('/provider/profile.php');
                 } catch (Exception $e) {
                     $error = 'Gagal menyimpan dokumen verifikasi: ' . $e->getMessage();
@@ -301,16 +304,22 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="d-flex align-items-center gap-1.5 flex-wrap mb-2">
                         <?php if (!empty($provider['is_verified'])): ?>
-                            <span class="badge bg-white text-teal rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
-                                <i class="fa-solid fa-circle-check text-success me-1"></i> Terverifikasi KTP
-                            </span>
+                            <?php if (($provider['id_card_type'] ?? '') === 'pelajar'): ?>
+                                <span class="badge bg-purple text-white rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
+                                    <i class="fa-solid fa-graduation-cap me-1"></i> Pelajar Terverifikasi
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-white text-teal rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
+                                    <i class="fa-solid fa-circle-check text-success me-1"></i> Terverifikasi KTP
+                                </span>
+                            <?php endif; ?>
                         <?php elseif (!empty($provider['id_card_image'])): ?>
                             <span class="badge bg-warning text-dark rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
-                                <i class="fa-solid fa-clock me-1"></i> KTP Sedang Divalidasi
+                                <i class="fa-solid fa-clock me-1"></i> <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'Kartu Pelajar Divalidasi' : 'KTP Sedang Divalidasi' ?>
                             </span>
                         <?php else: ?>
                             <span class="badge bg-black bg-opacity-30 text-white-50 border border-white border-opacity-20 rounded-pill px-2 py-0.5" style="font-size: 0.65rem;">
-                                <i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Belum Verifikasi KTP
+                                <i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Belum Verifikasi Identitas
                             </span>
                         <?php endif; ?>
 
@@ -410,13 +419,15 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="shopee-list-item-left">
                 <i class="fa-solid fa-shield-halved shopee-list-icon text-success"></i>
                 <div>
-                    <span class="d-block fw-bold text-dark">Verifikasi KTP & Dokumen</span>
+                    <span class="d-block fw-bold text-dark">Verifikasi KTP / Kartu Pelajar</span>
                     <span class="text-muted small" style="font-size: 0.72rem;">Lencana resmi agar toko Anda diprioritaskan</span>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-1.5">
                 <?php if (!empty($provider['is_verified'])): ?>
-                    <span class="badge bg-success-subtle text-success py-0.5 px-2 rounded-pill" style="font-size: 0.68rem;">✓ Terverifikasi</span>
+                    <span class="badge <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'bg-purple-subtle text-purple border border-purple-subtle' : 'bg-success-subtle text-success' ?> py-0.5 px-2 rounded-pill" style="font-size: 0.68rem;">
+                        <i class="fa-solid <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'fa-graduation-cap' : 'fa-circle-check' ?> me-0.5"></i> <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'Pelajar' : 'KTP' ?>
+                    </span>
                 <?php elseif (!empty($provider['id_card_image'])): ?>
                     <span class="badge bg-warning-subtle text-warning-emphasis py-0.5 px-2 rounded-pill" style="font-size: 0.68rem;">Menunggu</span>
                 <?php else: ?>
@@ -736,41 +747,85 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- Status Badge -->
                 <div class="p-3 rounded-3 mb-3 border <?php if (!empty($provider['is_verified'])): ?>bg-success bg-opacity-10 border-success<?php elseif (!empty($provider['id_card_image'])): ?>bg-warning bg-opacity-10 border-warning<?php else: ?>bg-light border-secondary-subtle<?php endif; ?>">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
-                        <span class="small fw-bold text-dark">Status Verifikasi Akun:</span>
+                        <span class="small fw-bold text-dark">Status Verifikasi Identitas:</span>
                         <?php if (!empty($provider['is_verified'])): ?>
-                            <span class="badge bg-success text-white px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP Resmi
-                            </span>
+                            <?php if (($provider['id_card_type'] ?? 'ktp') === 'pelajar'): ?>
+                                <span class="badge bg-purple text-white px-2.5 py-1 rounded-pill fw-semibold shadow-xs" style="font-size: 0.72rem; background-color: #7c3aed;">
+                                    <i class="fa-solid fa-graduation-cap me-1"></i> Terverifikasi Pelajar Mandiri
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-success text-white px-2.5 py-1 rounded-pill fw-semibold shadow-xs" style="font-size: 0.72rem;">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP Resmi
+                                </span>
+                            <?php endif; ?>
                         <?php elseif (!empty($provider['id_card_image'])): ?>
                             <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                <i class="fa-solid fa-clock me-1"></i> Berkas KTP Sedang Divalidasi
+                                <i class="fa-solid fa-clock me-1"></i> Berkas Sedang Divalidasi Admin
                             </span>
                         <?php else: ?>
                             <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                <i class="fa-solid fa-circle-exclamation me-1"></i> Belum Mengunggah KTP
+                                <i class="fa-solid fa-circle-exclamation me-1"></i> Belum Mengunggah Identitas
                             </span>
                         <?php endif; ?>
                     </div>
                     <div class="text-muted small" style="font-size: 0.72rem; line-height: 1.4;">
-                        Toko yang terverifikasi KTP diprioritaskan di hasil pencarian dan lebih dipercaya pelanggan se-Kabupaten Indragiri Hulu.
+                        Toko/jasa yang terverifikasi resmi diprioritaskan di hasil pencarian dan lebih dipercaya pelanggan se-Kabupaten Indragiri Hulu.
                     </div>
                 </div>
 
-                <!-- Input NIK -->
+                <!-- Pilihan Jenis Identitas (KTP vs Pelajar) -->
                 <div class="mb-3">
-                    <label class="form-label mb-1 small fw-bold text-dark">Nomor Induk Kependudukan (NIK KTP)</label>
-                    <input type="text" name="id_card_number" class="form-control form-control-sm rounded-3 py-2 px-2.5" maxlength="20" placeholder="16 digit NIK KTP Anda" value="<?= e($provider['id_card_number'] ?? '') ?>">
+                    <label class="form-label mb-1.5 small fw-bold text-dark">Jenis Kartu Identitas</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="card p-2 border rounded-3 cursor-pointer h-100 d-flex flex-row align-items-center gap-2 <?= (($provider['id_card_type'] ?? 'ktp') !== 'pelajar') ? 'border-primary bg-primary bg-opacity-10' : 'bg-light' ?>" id="labelTypeKtp">
+                                <input type="radio" name="id_card_type" value="ktp" class="form-check-input mt-0" <?= (($provider['id_card_type'] ?? 'ktp') !== 'pelajar') ? 'checked' : '' ?> onchange="toggleIdCardType(this.value)">
+                                <div>
+                                    <div class="fw-bold text-dark small" style="font-size: 0.78rem;"><i class="fa-solid fa-id-card text-primary me-1"></i> KTP Umum</div>
+                                    <div class="text-muted" style="font-size: 0.68rem;">Warga usia 17+ thn</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <label class="card p-2 border rounded-3 cursor-pointer h-100 d-flex flex-row align-items-center gap-2 <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'border-purple bg-purple-subtle' : 'bg-light' ?>" id="labelTypePelajar">
+                                <input type="radio" name="id_card_type" value="pelajar" class="form-check-input mt-0" <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'checked' : '' ?> onchange="toggleIdCardType(this.value)">
+                                <div>
+                                    <div class="fw-bold text-dark small" style="font-size: 0.78rem;"><i class="fa-solid fa-graduation-cap text-purple me-1"></i> Kartu Pelajar</div>
+                                    <div class="text-muted" style="font-size: 0.68rem;">Siswa SMK/SMA/SMP</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Upload KTP -->
+                <!-- Input Nomor Identitas -->
                 <div class="mb-3">
-                    <label class="form-label mb-1 small fw-bold text-dark">Unggah Foto KTP Asli</label>
+                    <label class="form-label mb-1 small fw-bold text-dark" id="labelCardNumber">
+                        <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'Nomor Kartu Pelajar / NISN' : 'Nomor Induk Kependudukan (NIK KTP)' ?>
+                    </label>
+                    <input type="text" name="id_card_number" id="inputCardNumber" class="form-control form-control-sm rounded-3 py-2 px-2.5" maxlength="30" placeholder="<?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'Contoh: 0072381923 (NISN) atau No. Pelajar' : '16 digit NIK KTP Anda' ?>" value="<?= e($provider['id_card_number'] ?? '') ?>">
+                </div>
+
+                <!-- Input Nama Sekolah (Khusus Pelajar) -->
+                <div class="mb-3 <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? '' : 'd-none' ?>" id="boxSchoolName">
+                    <label class="form-label mb-1 small fw-bold text-dark">Nama Asal Sekolah / Madrasah / Kampus</label>
+                    <input type="text" name="school_name" class="form-control form-control-sm rounded-3 py-2 px-2.5" placeholder="Contoh: SMKN 1 Pasir Penyu / SMAN 1 Rengat" value="<?= e($provider['school_name'] ?? '') ?>">
+                    <div class="text-muted" style="font-size: 0.68rem; margin-top: 3px;">
+                        Nama sekolah akan ditampilkan di profil agar pelanggan percaya dan bangga memesan jasa pelajar mandiri.
+                    </div>
+                </div>
+
+                <!-- Upload Kartu Identitas -->
+                <div class="mb-3">
+                    <label class="form-label mb-1 small fw-bold text-dark" id="labelCardUpload">
+                        <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'Unggah Foto Kartu Pelajar (Depan)' : 'Unggah Foto KTP Asli' ?>
+                    </label>
                     <input type="file" name="id_card_image" class="form-control form-control-sm rounded-3" accept="image/jpeg,image/png,image/webp,image/*">
                     <?php if (has_media($provider['id_card_image'] ?? '')): ?>
                         <div class="mt-2 d-flex align-items-center justify-content-between p-2 rounded-2 bg-light border" style="font-size: 0.72rem;">
-                            <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto KTP tersimpan aman</span>
+                            <span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Foto kartu identitas tersimpan aman</span>
                             <a href="<?= BASE_URL ?>/view_doc.php?user_id=<?= $user['id'] ?>&type=ktp" target="_blank" class="fw-semibold text-teal text-decoration-none">
-                                <i class="fa-solid fa-eye me-0.5"></i> Lihat Foto ↗
+                                <i class="fa-solid fa-eye me-0.5"></i> Lihat Dokumen ↗
                             </a>
                         </div>
                     <?php endif; ?>
@@ -779,7 +834,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="p-2.5 rounded-3 border bg-light small text-muted d-flex align-items-start gap-2 mb-3" style="font-size: 0.72rem;">
                     <i class="fa-solid fa-lock text-success mt-0.5 fs-6 flex-shrink-0"></i>
                     <div>
-                        <strong>Privasi Terjamin:</strong> Foto KTP hanya digunakan untuk validasi internal pengelola <?= APP_NAME ?> dan <strong>tidak akan pernah ditampilkan ke publik</strong>.
+                        <strong>Privasi Terjamin:</strong> Foto identitas hanya digunakan untuk validasi internal pengelola <?= APP_NAME ?> dan <strong>tidak akan pernah disebarkan ke publik</strong>.
                     </div>
                 </div>
 
@@ -989,6 +1044,44 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+function toggleIdCardType(type) {
+    const isPelajar = (type === 'pelajar');
+    const labelCardNumber = document.getElementById('labelCardNumber');
+    const inputCardNumber = document.getElementById('inputCardNumber');
+    const boxSchoolName = document.getElementById('boxSchoolName');
+    const labelCardUpload = document.getElementById('labelCardUpload');
+    const labelTypeKtp = document.getElementById('labelTypeKtp');
+    const labelTypePelajar = document.getElementById('labelTypePelajar');
+
+    if (isPelajar) {
+        if (labelCardNumber) labelCardNumber.textContent = 'Nomor Kartu Pelajar / NISN';
+        if (inputCardNumber) inputCardNumber.placeholder = 'Contoh: 0072381923 (NISN) atau No. Pelajar';
+        if (boxSchoolName) boxSchoolName.classList.remove('d-none');
+        if (labelCardUpload) labelCardUpload.textContent = 'Unggah Foto Kartu Pelajar (Depan)';
+        if (labelTypePelajar) {
+            labelTypePelajar.classList.add('border-purple', 'bg-purple-subtle');
+            labelTypePelajar.classList.remove('bg-light');
+        }
+        if (labelTypeKtp) {
+            labelTypeKtp.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+            labelTypeKtp.classList.add('bg-light');
+        }
+    } else {
+        if (labelCardNumber) labelCardNumber.textContent = 'Nomor Induk Kependudukan (NIK KTP)';
+        if (inputCardNumber) inputCardNumber.placeholder = '16 digit NIK KTP Anda';
+        if (boxSchoolName) boxSchoolName.classList.add('d-none');
+        if (labelCardUpload) labelCardUpload.textContent = 'Unggah Foto KTP Asli';
+        if (labelTypeKtp) {
+            labelTypeKtp.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+            labelTypeKtp.classList.remove('bg-light');
+        }
+        if (labelTypePelajar) {
+            labelTypePelajar.classList.remove('border-purple', 'bg-purple-subtle');
+            labelTypePelajar.classList.add('bg-light');
+        }
+    }
+}
+
 function previewProviderPhoto(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
