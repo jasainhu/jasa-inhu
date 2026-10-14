@@ -90,7 +90,10 @@ try {
     }
 
     $sql = "
-        SELECT sp.*, u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon,
+        SELECT sp.id, sp.user_id, sp.primary_category_id, sp.business_name, sp.image_url, sp.headline,
+               sp.description, sp.experience_years, sp.hourly_rate_min, sp.hourly_rate_max,
+               sp.is_verified, sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
+               sp.address, u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon,
                d.name as district_name, v.name as village_name,
                (SELECT COUNT(*) FROM provider_portfolios pp WHERE pp.provider_id = sp.id) as portfolio_count
         FROM service_providers sp
@@ -105,18 +108,6 @@ try {
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $providers = $stmt->fetchAll();
-
-    // Portofolio
-    $all_portfolios = [];
-    if (!empty($providers)) {
-        $p_ids = array_column($providers, 'id');
-        $in_clause = implode(',', array_map('intval', $p_ids));
-        $stmtPort = $db->query("SELECT * FROM provider_portfolios WHERE provider_id IN ($in_clause) ORDER BY id DESC");
-        $raw_ports = $stmtPort->fetchAll();
-        foreach ($raw_ports as $rp) {
-            $all_portfolios[$rp['provider_id']][] = $rp;
-        }
-    }
 } catch (Exception $e) {
     error_log("Search page query error: " . $e->getMessage());
 }
@@ -915,8 +906,6 @@ if (!empty($current_user)) {
 window.CSRF_TOKEN = '<?= csrf_token() ?>';
 window.IS_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
 window.BASE_URL = '<?= BASE_URL ?>';
-window.PROVIDER_PORTFOLIOS = <?= json_encode($all_portfolios) ?>;
-
 function formatMediaUrl(path) {
     if (!path) return '';
     if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
@@ -925,63 +914,89 @@ function formatMediaUrl(path) {
     return (window.BASE_URL || '') + '/' + path.replace(/^\/+/, '');
 }
 
-function openPortfolioModal(providerId) {
+async function openPortfolioModal(providerId) {
     const modalEl = document.getElementById('portfolioShowcaseModal');
     const modalBody = document.getElementById('portfolioShowcaseModalBody');
     const modalTitle = document.getElementById('modalPortProviderName');
     const modalCategory = document.getElementById('modalPortCategory');
     
-    const portfolios = window.PROVIDER_PORTFOLIOS[providerId] || [];
-    
-    if (portfolios.length === 0) {
-        modalBody.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="fa-regular fa-image fs-1 mb-2 opacity-40"></i>
-                <div class="fw-semibold">Belum Ada Portofolio Foto</div>
-                <div class="small">Mitra belum mengunggah foto hasil pekerjaan.</div>
+    modalTitle.textContent = 'Memuat Portofolio...';
+    modalCategory.textContent = 'Layanan Inhu';
+    modalBody.innerHTML = `
+        <div class="text-center py-5 text-muted">
+            <div class="spinner-border text-teal mb-3" role="status">
+                <span class="visually-hidden">Memuat...</span>
             </div>
-        `;
-    } else {
-        modalTitle.textContent = portfolios[0].business_name || 'Portofolio Hasil Kerja';
-        modalCategory.textContent = 'Kategori: ' + (portfolios[0].category_name || 'Layanan Inhu');
-
-        let html = '<div class="row g-3">';
-        portfolios.forEach(item => {
-            const hasBefore = item.image_before && item.image_before.trim() !== '';
-            const hasAfter = item.image_after && item.image_after.trim() !== '';
-            
-            html += `
-                <div class="col-md-6">
-                    <div class="card border rounded-3 overflow-hidden shadow-xs h-100">
-                        <div class="position-relative" style="height: 190px; background: #f1f5f9;">
-                            ${hasAfter ? `
-                                <img src="${formatMediaUrl(item.image_after)}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
-                                <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs">Hasil Selesai</span>
-                            ` : (hasBefore ? `
-                                <img src="${formatMediaUrl(item.image_before)}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
-                                <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs">Sebelum Pengerjaan</span>
-                            ` : `
-                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">
-                                    <i class="fa-solid fa-camera fs-2 opacity-50"></i>
-                                </div>
-                            `)}
-                        </div>
-                        <div class="p-3">
-                            <h6 class="fw-bold text-dark mb-1">${item.title || 'Dokumentasi Pekerjaan'}</h6>
-                            <p class="text-muted small mb-0" style="font-size: 0.78rem; line-height: 1.4;">
-                                ${item.description || 'Pengerjaan jasa profesional untuk pelanggan di Kabupaten Indragiri Hulu.'}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        html += '</div>';
-        modalBody.innerHTML = html;
-    }
+            <div class="fw-semibold">Mengambil bukti pekerjaan mitra...</div>
+        </div>
+    `;
 
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
+
+    try {
+        const response = await fetch(`${window.BASE_URL}/api/provider_portfolio.php?provider_id=${providerId}`);
+        const result = await response.json();
+        const portfolios = (result && result.data) ? result.data : [];
+        const provider = (result && result.provider) ? result.provider : null;
+
+        if (provider) {
+            modalTitle.textContent = provider.business_name || 'Portofolio Hasil Kerja';
+            modalCategory.textContent = 'Kategori: ' + (provider.category_name || 'Layanan Inhu');
+        }
+
+        if (portfolios.length === 0) {
+            modalBody.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="fa-regular fa-image fs-1 mb-2 opacity-40"></i>
+                    <div class="fw-semibold">Belum Ada Portofolio Foto</div>
+                    <div class="small">Mitra belum mengunggah foto hasil pekerjaan.</div>
+                </div>
+            `;
+        } else {
+            let html = '<div class="row g-3">';
+            portfolios.forEach(item => {
+                const hasBefore = item.image_before && item.image_before.trim() !== '';
+                const hasAfter = item.image_after && item.image_after.trim() !== '';
+                
+                html += `
+                    <div class="col-md-6">
+                        <div class="card border rounded-3 overflow-hidden shadow-xs h-100">
+                            <div class="position-relative" style="height: 190px; background: #f1f5f9;">
+                                ${hasAfter ? `
+                                    <img src="${formatMediaUrl(item.image_after)}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
+                                    <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs">Hasil Selesai</span>
+                                ` : (hasBefore ? `
+                                    <img src="${formatMediaUrl(item.image_before)}" alt="${item.title}" class="w-100 h-100 object-fit-cover">
+                                    <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs">Sebelum Pengerjaan</span>
+                                ` : `
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">
+                                        <i class="fa-solid fa-camera fs-2 opacity-50"></i>
+                                    </div>
+                                `)}
+                            </div>
+                            <div class="p-3">
+                                <h6 class="fw-bold text-dark mb-1">${item.title || 'Dokumentasi Pekerjaan'}</h6>
+                                <p class="text-muted small mb-0" style="font-size: 0.78rem; line-height: 1.4;">
+                                    ${item.description || 'Pengerjaan jasa profesional untuk pelanggan di Kabupaten Indragiri Hulu.'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            modalBody.innerHTML = html;
+        }
+    } catch (err) {
+        modalBody.innerHTML = `
+            <div class="text-center py-4 text-danger">
+                <i class="fa-solid fa-triangle-exclamation fs-2 mb-2"></i>
+                <div class="fw-semibold">Gagal memuat portofolio</div>
+                <div class="small text-muted">Silakan periksa koneksi internet Anda atau coba lagi.</div>
+            </div>
+        `;
+    }
 }
 
 let orderRecipientModeSearch = 'self';

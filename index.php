@@ -57,7 +57,10 @@ try {
     }
 
     $sqlProv = "
-        SELECT sp.*, u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon,
+        SELECT sp.id, sp.user_id, sp.primary_category_id, sp.business_name, sp.image_url, sp.headline,
+               sp.description, sp.experience_years, sp.hourly_rate_min, sp.hourly_rate_max,
+               sp.is_verified, sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
+               u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon,
                d.name as district_name, v.name as village_name,
                (SELECT COUNT(*) FROM provider_portfolios pp WHERE pp.provider_id = sp.id) as portfolio_count
         FROM service_providers sp
@@ -72,18 +75,6 @@ try {
     $stmtProv = $db->prepare($sqlProv);
     $stmtProv->execute($prov_params);
     $featured_providers = $stmtProv->fetchAll();
-
-    // Mapping Foto Portofolio Mitra untuk Modal Galeri Instan
-    $all_portfolios = [];
-    if (!empty($featured_providers)) {
-        $prov_ids = array_column($featured_providers, 'id');
-        $in_clause = implode(',', array_map('intval', $prov_ids));
-        $stmtPortAll = $db->query("SELECT * FROM provider_portfolios WHERE provider_id IN ($in_clause) ORDER BY id DESC");
-        $raw_ports = $stmtPortAll->fetchAll();
-        foreach ($raw_ports as $rp) {
-            $all_portfolios[$rp['provider_id']][] = $rp;
-        }
-    }
 
     // 4. Permintaan Jasa Terbaru (Open)
     $stmtReq = $db->query("
@@ -1052,9 +1043,20 @@ if (!empty($current_user)) {
 </style>
 
 <script>
-// Data Portofolio Lengkap dari PHP
-window.ALL_PORTFOLIOS = <?= json_encode($all_portfolios, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-window.FEATURED_PROVIDERS = <?= json_encode(array_column($featured_providers, null, 'id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+<?php
+$featured_providers_map = [];
+foreach ($featured_providers as $fp) {
+    $featured_providers_map[$fp['id']] = [
+        'id' => $fp['id'],
+        'business_name' => $fp['business_name'],
+        'category_name' => $fp['category_name'],
+        'district_name' => $fp['district_name'],
+        'phone' => $fp['phone'],
+        'hourly_rate_min' => $fp['hourly_rate_min'],
+    ];
+}
+?>
+window.FEATURED_PROVIDERS = <?= json_encode($featured_providers_map, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 window.BASE_URL = "<?= BASE_URL ?>";
 window.CSRF_TOKEN = "<?= csrf_token() ?>";
 window.IS_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
@@ -1069,11 +1071,10 @@ function formatMediaUrl(path) {
     return (window.BASE_URL || '') + '/' + path.replace(/^\/+/, '');
 }
 
-function openPortfolioModal(providerId) {
+async function openPortfolioModal(providerId) {
     const prov = window.FEATURED_PROVIDERS[providerId];
     if (!prov) return;
 
-    const portfolios = window.ALL_PORTFOLIOS[providerId] || [];
     document.getElementById('portModalTitle').textContent = "Portofolio Kerja: " + prov.business_name;
     document.getElementById('portModalCategory').textContent = prov.category_name + " • Kec. " + (prov.district_name || 'Inhu');
     
@@ -1098,62 +1099,83 @@ function openPortfolioModal(providerId) {
     }
 
     const container = document.getElementById('portfolioGalleryContainer');
-    container.innerHTML = '';
-
-    if (portfolios.length === 0) {
-        container.innerHTML = `
-            <div class="text-center py-5 text-muted">
-                <i class="fa-solid fa-camera fs-1 mb-2 opacity-50"></i>
-                <p>Belum ada foto portofolio untuk mitra ini.</p>
+    container.innerHTML = `
+        <div class="text-center py-5 text-muted">
+            <div class="spinner-border text-teal mb-3" role="status">
+                <span class="visually-hidden">Memuat...</span>
             </div>
-        `;
-    } else {
-        let html = '<div class="row g-4">';
-        portfolios.forEach(item => {
-            let beforeAfterHtml = '';
-            if (item.image_before) {
-                beforeAfterHtml = `
-                    <div class="row g-0 border-bottom" style="min-height: 220px;">
-                        <div class="col-6 position-relative border-end overflow-hidden" style="background: #0f172a;">
-                            <img src="${formatMediaUrl(item.image_before)}" alt="Sebelum" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
-                            <span class="badge bg-danger position-absolute top-0 start-0 m-2 fw-bold" style="font-size: 0.65rem;">SEBELUM</span>
-                        </div>
-                        <div class="col-6 position-relative overflow-hidden" style="background: #0f172a;">
-                            <img src="${formatMediaUrl(item.image_after)}" alt="Sesudah" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
-                            <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">SESUDAH</span>
-                        </div>
-                    </div>
-                `;
-            } else {
-                beforeAfterHtml = `
-                    <div class="position-relative overflow-hidden border-bottom text-center" style="background: #0f172a; max-height: 320px;">
-                        <img src="${formatMediaUrl(item.image_after)}" alt="${item.title}" class="img-fluid object-fit-cover w-100" style="max-height: 320px;">
-                        <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">HASIL SELESAI</span>
-                    </div>
-                `;
-            }
+            <div class="fw-semibold">Memuat bukti hasil kerja...</div>
+        </div>
+    `;
 
-            html += `
-                <div class="col-12 col-md-6">
-                    <div class="card h-100 border shadow-xs rounded-4 overflow-hidden bg-white">
-                        ${beforeAfterHtml}
-                        <div class="card-body p-3">
-                            <h6 class="fw-bold mb-1 text-dark">${item.title}</h6>
-                            ${item.description ? `<p class="text-muted small mb-2" style="font-size: 0.8rem; line-height: 1.4;">${item.description}</p>` : ''}
-                            <div class="text-muted small" style="font-size: 0.72rem;">
-                                <i class="fa-regular fa-calendar me-1"></i> Selesai: ${item.service_date || item.created_at.substring(0, 10)}
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('portfolioGalleryModal'));
+    modal.show();
+
+    try {
+        const response = await fetch(`${window.BASE_URL}/api/provider_portfolio.php?provider_id=${providerId}`);
+        const result = await response.json();
+        const portfolios = (result && result.data) ? result.data : [];
+
+        if (portfolios.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-camera fs-1 mb-2 opacity-50"></i>
+                    <p>Belum ada foto portofolio untuk mitra ini.</p>
+                </div>
+            `;
+        } else {
+            let html = '<div class="row g-4">';
+            portfolios.forEach(item => {
+                let beforeAfterHtml = '';
+                if (item.image_before) {
+                    beforeAfterHtml = `
+                        <div class="row g-0 border-bottom" style="min-height: 220px;">
+                            <div class="col-6 position-relative border-end overflow-hidden" style="background: #0f172a;">
+                                <img src="${formatMediaUrl(item.image_before)}" alt="Sebelum" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
+                                <span class="badge bg-danger position-absolute top-0 start-0 m-2 fw-bold" style="font-size: 0.65rem;">SEBELUM</span>
+                            </div>
+                            <div class="col-6 position-relative overflow-hidden" style="background: #0f172a;">
+                                <img src="${formatMediaUrl(item.image_after)}" alt="Sesudah" class="w-100 h-100 object-fit-cover" style="max-height: 260px;">
+                                <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">SESUDAH</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    beforeAfterHtml = `
+                        <div class="position-relative overflow-hidden border-bottom text-center" style="background: #0f172a; max-height: 320px;">
+                            <img src="${formatMediaUrl(item.image_after)}" alt="${item.title}" class="img-fluid object-fit-cover w-100" style="max-height: 320px;">
+                            <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">HASIL SELESAI</span>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="col-12 col-md-6">
+                        <div class="card h-100 border shadow-xs rounded-4 overflow-hidden bg-white">
+                            ${beforeAfterHtml}
+                            <div class="card-body p-3">
+                                <h6 class="fw-bold mb-1 text-dark">${item.title}</h6>
+                                ${item.description ? `<p class="text-muted small mb-2" style="font-size: 0.8rem; line-height: 1.4;">${item.description}</p>` : ''}
+                                <div class="text-muted small" style="font-size: 0.72rem;">
+                                    <i class="fa-regular fa-calendar me-1"></i> Selesai: ${item.service_date || (item.created_at ? item.created_at.substring(0, 10) : 'Terbaru')}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-        });
-        html += '</div>';
-        container.innerHTML = html;
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+    } catch (err) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-danger">
+                <i class="fa-solid fa-triangle-exclamation fs-2 mb-2"></i>
+                <div class="fw-semibold">Gagal memuat portofolio</div>
+                <div class="small text-muted">Silakan periksa koneksi internet Anda atau coba lagi.</div>
+            </div>
+        `;
     }
-
-    const modal = new bootstrap.Modal(document.getElementById('portfolioGalleryModal'));
-    modal.show();
 }
 
 // 1-Click Instant Order Modal Functions
