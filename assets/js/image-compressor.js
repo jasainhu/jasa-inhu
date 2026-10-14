@@ -160,6 +160,18 @@
                     }
                 }
 
+                // Simpan juga Data URL ke hidden input jika tersedia (fallback aman untuk Android/iOS)
+                if (inputEl.form) {
+                    const b64Input = inputEl.form.querySelector(`input[name="${inputEl.name}_base64"]`);
+                    if (b64Input) {
+                        const b64Reader = new FileReader();
+                        b64Reader.onload = function(e) {
+                            b64Input.value = e.target.result;
+                        };
+                        b64Reader.readAsDataURL(compressed);
+                    }
+                }
+
                 if (statusEl) {
                     if (compressed.size < file.size) {
                         statusEl.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2 mt-1"><i class="fa-solid fa-check-circle me-1"></i> Foto dioptimasi: <strong>${newSizeKB} KB</strong> (hemat ${Math.round((1 - compressed.size/file.size)*100)}%). Siap disimpan!</span>`;

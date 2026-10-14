@@ -100,8 +100,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (empty($phone)) {
                 $error = 'Nomor WhatsApp usaha wajib diisi.';
             } else {
-                // Upload foto baru jika ada
-                if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+                // Upload foto baru jika ada (dukung base64 dari kompresor client-side & file multipart)
+                $base64Image = trim($_POST['image_base64'] ?? '');
+                if (!empty($base64Image) && str_starts_with($base64Image, 'data:image/')) {
+                    $image_url = $base64Image;
+                } elseif (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
                     try {
                         $newImageUrl = save_uploaded_media($_FILES['image'], 'providers', 'provider_' . $provider['id'], 1200, 82);
                         if (!empty($provider['image_url']) && !str_starts_with($provider['image_url'], 'data:') && file_exists(__DIR__ . '/../' . $provider['image_url'])) {
@@ -578,6 +581,7 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                         <div class="flex-grow-1">
                             <input type="file" name="image" id="providerImageInput" class="form-control form-control-sm mb-1" accept="image/jpeg,image/png,image/webp,image/*" onchange="previewProviderPhoto(this)">
+                            <input type="hidden" name="image_base64" id="providerImageBase64" value="">
                             <div id="imageCompressStatus"></div>
                             <div class="text-muted" style="font-size: 0.68rem;">Format: JPG, PNG, WebP (Otomatis dikompresi).</div>
                         </div>
@@ -597,8 +601,11 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label mb-1 small fw-bold text-dark">Slogan / Headline Promosi Singkat</label>
-                    <input type="text" name="headline" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= e($provider['headline'] ?? '') ?>" placeholder="Contoh: Ahli Servis AC & Kelistrikan Bergaransi di Rengat">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0 small fw-bold text-dark">Slogan / Headline Promosi Singkat</label>
+                        <span class="text-muted" style="font-size: 0.68rem;">Maks. 500 karakter</span>
+                    </div>
+                    <textarea name="headline" rows="2" class="form-control form-control-sm rounded-3 py-2 px-2.5" maxlength="500" placeholder="Contoh: Joki tugas SD, SMP, SMA rapi, tepat waktu & terpercaya di Inhu"><?= e($provider['headline'] ?? '') ?></textarea>
                 </div>
 
                 <div class="row g-2 mb-3">
