@@ -883,20 +883,42 @@ function get_order_timeline(int $request_id): array {
 }
 
 /**
- * Filter Keamanan Kata Kunci Terlarang (Anti-Pinjol, Anti-Gadai Liar, Anti-Judi)
- * Memastikan platform JASA INHU hanya memuat jasa riil, tukang, teknisi, dan profesi legal
+ * Filter Keamanan Kata Kunci Terlarang (Anti-Asusila/Open BO, Anti-Pinjol, Anti-Gadai Liar, Anti-Judi)
+ * Memastikan platform JASA INHU hanya memuat jasa riil, tukang, teknisi, dan profesi legal bermartabat
  */
 function check_prohibited_service_keywords(string ...$texts): ?string {
     $blacklist = [
+        // 1. Larangan Asusila & Prostitusi Online
+        'open bo', 'openbo', 'vcs', 'bisyar', 'cewek panggilan', 'wanita panggilan',
+        'pijat plus', 'massage plus', 'pijat sensual', 'plus plus', 'esek esek', 'esek-esek',
+        'prostitusi', 'bokingan', 'st lt', 'avail bo',
+
+        // 2. Larangan Pinjaman Online Ilegal & Rentenir Liar
         'pinjol', 'dana pinjam', 'pinjam dana', 'pinjaman dana', 'pinjaman uang', 'pinjam uang',
         'gadai barang', 'gadai uang', 'gadai bpkb', 'bunga terjangkau', 'dapin', 'rentenir',
-        'bunga pinjaman', 'slot online', 'judi online', 'togel', 'gacor', 'dana gaib'
+        'bunga pinjaman', 'dana gaib', 'dana talangan', 'dana cepat cair', 'pinjaman tanpa jaminan',
+
+        // 3. Larangan Judi Online & Narkoba
+        'slot online', 'judi online', 'togel', 'gacor', 'judi slot', 'judi bola', 'obat kuat', 'sabu'
     ];
     
-    $combined = strtolower(implode(' ', $texts));
+    $raw_combined = strtolower(implode(' ', $texts));
+
+    // Normalisasi teks untuk menangkal kamuflase (misal: "0.p.e.n  b.o", "p!nj0l", "v.c.s")
+    $normalized = str_replace(
+        ['0', '1', '3', '4', '5', '@', '$', '!', '.', ',', '-', '_', '/', '\\', '*'],
+        ['o', 'i', 'e', 'a', 's', 'a', 's', 'i', '',  '',  ' ', ' ', ' ', ' ', ''],
+        $raw_combined
+    );
+    // Hapus spasi ganda
+    $normalized = preg_replace('/\s+/', ' ', $normalized);
+
     foreach ($blacklist as $bad) {
-        if (str_contains($combined, $bad)) {
-            return "Informasi usaha terdeteksi mengandung kata terlarang ('$bad'). JASA INHU adalah marketplace khusus jasa keahlian, pertukangan, dan keterampilan profesional resmi (tidak diperkenankan untuk pinjaman dana, gadai barang, atau layanan non-jasa lainnya).";
+        $badClean = str_replace([' ', '-'], '', $bad);
+        $normNoSpace = str_replace(' ', '', $normalized);
+
+        if (str_contains($raw_combined, $bad) || str_contains($normalized, $bad) || str_contains($normNoSpace, $badClean)) {
+            return "Informasi usaha terdeteksi mengandung indikasi kata terlarang ('$bad'). JASA INHU adalah marketplace khusus jasa keahlian, pertukangan, dan keterampilan profesional resmi. Dilarang keras mempromosikan layanan asusila/prostitusi, pinjaman uang/gadai liar, atau perjudian.";
         }
     }
     return null;
