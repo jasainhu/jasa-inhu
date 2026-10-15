@@ -104,14 +104,17 @@ foreach ($reviews as $rev) {
 
 // 6. Mitra Lainnya di Kategori yang Sama (Rekomendasi)
 $stmtRelated = $db->prepare("
-    SELECT sp.*, u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon, d.name as district_name
+    SELECT sp.*, u.name as owner_name, u.phone,
+           p.avatar as owner_avatar,
+           sc.name as category_name, sc.icon as category_icon, d.name as district_name
     FROM service_providers sp
     JOIN users u ON sp.user_id = u.id
+    LEFT JOIN profiles p ON p.user_id = u.id
     JOIN service_categories sc ON sp.primary_category_id = sc.id
     LEFT JOIN districts d ON sp.district_id = d.id
     WHERE sp.primary_category_id = ? AND sp.id != ? AND u.is_active = 1
     ORDER BY sp.rating_avg DESC, sp.completed_jobs DESC
-    LIMIT 3
+    LIMIT 4
 ");
 $stmtRelated->execute([$provider['primary_category_id'], $provider_id]);
 $related_providers = $stmtRelated->fetchAll();
@@ -651,29 +654,71 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
 
-                <!-- Mitra Serupa di Kategori Sama -->
+                <!-- Mitra Serupa di Kategori Sama (Tampilan Petak-Petak Modern Ala Beranda) -->
                 <?php if (!empty($related_providers)): ?>
-                    <div class="card border-0 shadow-sm rounded-4 p-3.5 bg-white">
-                        <h6 class="fw-bold text-dark small mb-3">
-                            <i class="fa-solid fa-wrench text-teal me-1"></i> Rekomendasi Mitra <?= e($provider['category_name']) ?> Lainnya:
-                        </h6>
-                        <div class="d-flex flex-column gap-2.5">
+                    <?php 
+                        $cat_clean_name = rtrim($provider['category_name']);
+                        $rec_title = str_ends_with(strtolower($cat_clean_name), 'lainnya') 
+                            ? 'Rekomendasi Mitra ' . e($cat_clean_name) 
+                            : 'Rekomendasi Mitra ' . e($cat_clean_name) . ' Lainnya'; 
+                    ?>
+                    <div class="card border-0 shadow-sm rounded-4 p-3.5 bg-white mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="fw-bold text-dark small mb-0 d-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-store text-teal"></i>
+                                <span><?= $rec_title ?></span>
+                            </h6>
+                            <a href="<?= BASE_URL ?>/?kategori=<?= $provider['primary_category_id'] ?>" class="small text-teal text-decoration-none fw-semibold" style="font-size: 0.72rem;">
+                                Lihat Semua &rarr;
+                            </a>
+                        </div>
+                        
+                        <!-- Grid 2-Kolom Petak Mini Ala Beranda -->
+                        <div class="row g-2">
                             <?php foreach ($related_providers as $rel): ?>
-                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $rel['id'] ?>" class="text-decoration-none text-dark p-2 rounded-3 border bg-light d-flex align-items-center justify-content-between hover-shadow">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="rounded-circle bg-white text-teal d-flex align-items-center justify-content-center border" style="width: 36px; height: 36px;">
-                                            <i class="fa-solid <?= e($rel['category_icon'] ?: 'fa-wrench') ?> small"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold small text-truncate" style="max-width: 170px;"><?= e($rel['business_name']) ?></div>
-                                            <div class="text-muted" style="font-size: 0.7rem;">Kec. <?= e($rel['district_name'] ?: 'Inhu') ?></div>
+                                <?php $rel_cover = has_media($rel['image_url'] ?? '') ? $rel['image_url'] : ($rel['owner_avatar'] ?? ''); ?>
+                                <div class="col-6">
+                                    <div class="provider-card-modern h-100 rounded-3 border bg-white shadow-2xs overflow-hidden d-flex flex-column transition-all hover-shadow">
+                                        <!-- Foto Cover Usaha -->
+                                        <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $rel['id'] ?>" class="provider-cover-wrap position-relative d-block text-decoration-none" style="height: 105px;">
+                                            <?php if (has_media($rel_cover)): ?>
+                                                <img src="<?= e(get_media_url($rel_cover)) ?>" alt="<?= e($rel['business_name']) ?>" class="provider-cover-img">
+                                            <?php else: ?>
+                                                <div class="provider-cover-fallback d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0d9488 0%, #0f172a 100%);">
+                                                    <i class="fa-solid <?= e($rel['category_icon'] ?: 'fa-wrench') ?> text-white fs-4 opacity-75"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Starting Rate Tag Overlay -->
+                                            <div class="position-absolute bottom-0 start-0 m-1">
+                                                <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-0.5 px-1.5 rounded-pill" style="font-size: 0.62rem;">
+                                                    <?= (!empty($rel['hourly_rate_min']) && $rel['hourly_rate_min'] > 0) ? 'Rp ' . number_format((float)$rel['hourly_rate_min'], 0, ',', '.') : 'Fleksibel' ?>
+                                                </span>
+                                            </div>
+                                        </a>
+
+                                        <!-- Card Info -->
+                                        <div class="p-2 d-flex flex-column flex-grow-1">
+                                            <h6 class="fw-bold mb-1 text-dark lh-sm text-truncate" style="font-size: 0.8rem;" title="<?= e($rel['business_name']) ?>">
+                                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $rel['id'] ?>" class="text-decoration-none text-dark hover-teal">
+                                                    <?= e($rel['business_name']) ?>
+                                                </a>
+                                            </h6>
+                                            <div class="d-flex align-items-center gap-1 text-muted small text-truncate mb-2" style="font-size: 0.68rem;">
+                                                <i class="fa-solid fa-location-dot text-danger flex-shrink-0" style="font-size: 0.62rem;"></i>
+                                                <span class="text-truncate">Kec. <?= e($rel['district_name'] ?: 'Inhu') ?></span>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top mt-auto" style="font-size: 0.72rem;">
+                                                <span class="fw-bold text-dark d-flex align-items-center gap-0.5">
+                                                    <i class="fa-solid fa-star text-warning" style="font-size: 0.65rem;"></i> <?= number_format((float)$rel['rating_avg'], 1) ?>
+                                                </span>
+                                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $rel['id'] ?>" class="text-teal fw-semibold text-decoration-none" style="font-size: 0.72rem;">
+                                                    Cek &rarr;
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="text-end">
-                                        <div class="fw-bold text-dark small"><i class="fa-solid fa-star text-warning"></i> <?= number_format((float)$rel['rating_avg'], 1) ?></div>
-                                        <div class="text-muted" style="font-size: 0.68rem;"><?= $rel['completed_jobs'] ?> order</div>
-                                    </div>
-                                </a>
+                                </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
