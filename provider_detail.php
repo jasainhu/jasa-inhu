@@ -53,8 +53,8 @@ if (has_media($provider_photo)) {
     } elseif (!str_starts_with($provider_photo, 'data:')) {
         $og_image = BASE_URL . '/' . ltrim($provider_photo, '/');
     } else {
-        // Gambar base64 dialirkan via api/provider_og_image.php agar terbaca 100% oleh WhatsApp crawler
-        $og_image = BASE_URL . '/api/provider_og_image.php?id=' . (int)$provider['id'];
+        // Gambar base64 dialirkan via provider_og_image.php agar terbaca 100% oleh WhatsApp crawler
+        $og_image = BASE_URL . '/provider_og_image.php?id=' . (int)$provider['id'];
     }
 } else {
     $og_image = BASE_URL . '/assets/images/og-banner.jpg';
