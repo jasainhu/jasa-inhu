@@ -183,6 +183,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_card_image = $provider['id_card_image'] ?? '';
             $certificate_url = $provider['certificate_url'] ?? '';
 
+            // Validasi persetujuan eksplisit (UU PDP No. 27/2022)
+            $is_uploading_new = (isset($_FILES['id_card_image']) && $_FILES['id_card_image']['error'] !== UPLOAD_ERR_NO_FILE);
+            $has_existing = has_media($provider['id_card_image'] ?? '');
+            if (($is_uploading_new || !$has_existing) && empty($_POST['id_card_consent'])) {
+                $error = 'Anda wajib mencentang persetujuan dan pernyataan keabsahan identitas sebelum menyimpan dokumen.';
+            }
+
             // Handle KTP / Kartu Pelajar Upload
             if (isset($_FILES['id_card_image']) && $_FILES['id_card_image']['error'] !== UPLOAD_ERR_NO_FILE) {
                 try {
@@ -841,8 +848,29 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="p-2.5 rounded-3 border bg-light small text-muted d-flex align-items-start gap-2 mb-3" style="font-size: 0.72rem;">
                     <i class="fa-solid fa-lock text-success mt-0.5 fs-6 flex-shrink-0"></i>
                     <div>
-                        <strong>Privasi Terjamin:</strong> Foto identitas hanya digunakan untuk validasi internal pengelola <?= APP_NAME ?> dan <strong>tidak akan pernah disebarkan ke publik</strong>.
+                        <strong>Privasi Terjamin (UU PDP No. 27/2022):</strong> Foto identitas hanya digunakan untuk validasi internal pengelola <?= APP_NAME ?> dan <strong>tidak akan pernah disebarkan ke publik</strong>.
                     </div>
+                </div>
+
+                <!-- Checkbox Pernyataan & Persetujuan Sukarela -->
+                <div class="p-3 rounded-3 border bg-light-subtle mb-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div class="form-check d-flex align-items-start gap-2 mb-0">
+                        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="id_card_consent" value="1" id="idCardConsent" <?= (has_media($provider['id_card_image'] ?? '') || !empty($provider['is_verified'])) ? 'checked' : '' ?> required>
+                        <label class="form-check-label text-dark" for="idCardConsent" style="font-size: 0.75rem; line-height: 1.45;">
+                            <span class="fw-bold d-block text-dark mb-0.5">
+                                <i class="fa-solid fa-file-signature text-teal me-1"></i> Pernyataan Persetujuan & Keaslian Identitas
+                            </span>
+                            <span class="text-secondary">
+                                Saya menyatakan bahwa data dan dokumen identitas yang saya unggah adalah <strong>asli dan sah milik saya sendiri</strong>. Saya mengunggahnya secara <strong>sadar, sukarela, dan tanpa paksaan</strong> khusus untuk keperluan verifikasi resmi mitra di <strong><?= APP_NAME ?></strong>. Saya memahami bahwa data ini dilindungi kerahasiaannya sesuai ketentuan UU Pelindungan Data Pribadi.
+                            </span>
+                        </label>
+                    </div>
+                    <?php if (has_media($provider['id_card_image'] ?? '') || !empty($provider['is_verified'])): ?>
+                        <div class="mt-2 pt-2 border-top d-flex align-items-center gap-1.5 text-success small" style="font-size: 0.72rem;">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Persetujuan terverifikasi sah dan tercatat di sistem JASA INHU.</span>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Khusus Tenaga Medis (STR) -->

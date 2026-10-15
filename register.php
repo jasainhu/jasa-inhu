@@ -228,7 +228,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <div class="mt-3 mb-2 small text-muted text-center" style="font-size: 0.78rem;">
-                Dengan mendaftar, Anda menyatakan menyetujui <a href="<?= BASE_URL ?>/terms.php" target="_blank" class="text-teal fw-semibold">Syarat & Ketentuan Layanan</a> serta pedoman perlindungan platform JASA INHU.
+                Dengan mendaftar, Anda menyatakan menyetujui <a href="<?= BASE_URL ?>/terms.php" target="_blank" class="text-teal fw-semibold">Syarat & Ketentuan</a> serta <a href="<?= BASE_URL ?>/privacy.php" target="_blank" class="text-teal fw-semibold">Kebijakan Privasi</a> platform JASA INHU.
             </div>
 
             <button type="submit" class="btn btn-primary-custom w-100 py-2 mt-2">
