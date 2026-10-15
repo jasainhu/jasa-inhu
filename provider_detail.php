@@ -161,19 +161,36 @@ $wa_url = "https://wa.me/" . $intl_phone . "?text=" . urlencode($wa_message);
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="bg-light py-2.5 border-bottom mb-4">
+<div class="bg-light py-2 py-md-2.5 border-bottom mb-3 mb-md-4">
     <div class="container d-flex align-items-center justify-content-between">
-        <nav aria-label="breadcrumb">
+        <!-- Desktop Breadcrumb -->
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
             <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/" class="text-decoration-none text-muted"><i class="fa-solid fa-house me-1"></i> Beranda</a></li>
                 <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/?kategori=<?= $provider['primary_category_id'] ?>" class="text-decoration-none text-muted"><?= e($provider['category_name']) ?></a></li>
                 <li class="breadcrumb-item active fw-bold text-dark text-truncate" aria-current="page" style="max-width: 260px;"><?= e($provider['business_name']) ?></li>
             </ol>
         </nav>
-        <button type="button" class="btn btn-sm btn-white bg-white border rounded-pill px-3 py-1 text-dark shadow-xs d-flex align-items-center gap-1.5 fw-semibold hover-lift" onclick="shareProviderProfile()" title="Bagikan profil usaha ini">
-            <i class="fa-solid fa-share-nodes text-teal"></i>
-            <span>Bagikan</span>
-        </button>
+        <!-- Mobile Clean Back & Category Pill -->
+        <div class="d-flex d-md-none align-items-center gap-2 text-truncate" style="max-width: 65%;">
+            <a href="javascript:history.back()" class="btn btn-sm btn-white bg-white border rounded-circle shadow-2xs text-dark d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;" title="Kembali">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <span class="badge text-bg-light border text-teal text-truncate small fw-semibold">
+                <i class="fa-solid <?= e($provider['category_icon'] ?: 'fa-wrench') ?> me-1"></i> <?= e($provider['category_name']) ?>
+            </span>
+        </div>
+
+        <div class="d-flex align-items-center gap-1.5">
+            <button type="button" class="btn btn-sm btn-white bg-white border rounded-pill px-2.5 py-1 text-teal shadow-2xs d-flex align-items-center gap-1 fw-semibold hover-lift" onclick="triggerCardModal()" title="Lihat & Unduh Kartu Jasa Digital Mitra">
+                <i class="fa-solid fa-id-card"></i>
+                <span class="small d-none d-sm-inline">Kartu Jasa</span>
+            </button>
+            <button type="button" class="btn btn-sm btn-white bg-white border rounded-pill px-2.5 py-1 text-dark shadow-2xs d-flex align-items-center gap-1 fw-semibold hover-lift" onclick="shareProviderProfile()" title="Bagikan profil usaha ini">
+                <i class="fa-solid fa-share-nodes text-secondary"></i>
+                <span class="small">Bagikan</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -416,6 +433,22 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
                         <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="card border-0 shadow-sm rounded-4 p-3.5 p-md-4 mb-4" id="section-portofolio">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-images text-teal"></i>
+                            <span>Bukti Hasil Kerja</span>
+                        </h5>
+                    </div>
+                    <div class="text-center py-4 px-3 bg-light rounded-3 border">
+                        <div class="rounded-circle bg-white text-teal d-inline-flex align-items-center justify-content-center p-3 mb-2 shadow-xs" style="width: 52px; height: 52px;">
+                            <i class="fa-solid fa-camera-retro fs-4 opacity-75"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1 small">Dokumentasi Portofolio Segera Hadir</h6>
+                        <p class="text-muted small mb-0" style="font-size: 0.78rem;">Mitra sedang menyiapkan dokumentasi pengerjaan proyek terbaru. Anda dapat langsung berkonsultasi mengenai kebutuhan jasa Anda melalui tombol Chat & Pesan.</p>
                     </div>
                 </div>
             <?php endif; ?>
@@ -972,23 +1005,33 @@ if (str_contains($cat_slug, 'med')) {
 }
 </style>
 
+<!-- Spacer agar konten paling bawah tidak tertutup oleh bar melayang di HP -->
+<div class="d-lg-none" style="height: 80px;" aria-hidden="true"></div>
+
 <!-- Mobile Sticky Bottom Action Bar (Tokopedia / Shopee Style for Service Booking) -->
 <div class="provider-mobile-bottom-bar d-lg-none" aria-label="Aksi Cepat Mobile">
-    <div class="container d-flex align-items-center justify-content-between gap-2 px-2 py-1.5">
+    <div class="container d-flex align-items-center justify-content-between gap-1.5 px-2 py-1.5">
         <?php if ($current_user && (int)$provider['user_id'] === (int)$current_user['id']): ?>
             <a href="<?= BASE_URL ?>/provider/profile.php" class="btn btn-warning flex-grow-1 py-2 fw-bold rounded-3 shadow-xs small">
-                <i class="fa-solid fa-pen-to-square me-1"></i> Edit Profil Usaha
+                <i class="fa-solid fa-pen-to-square me-1"></i> Edit Profil
             </a>
             <a href="<?= BASE_URL ?>/provider/portfolio.php" class="btn btn-outline-teal flex-grow-1 py-2 fw-semibold rounded-3 shadow-xs small">
                 <i class="fa-solid fa-camera me-1"></i> Portofolio
             </a>
+            <button type="button" class="btn btn-teal text-white flex-grow-1 py-2 fw-semibold rounded-3 shadow-xs small" onclick="triggerCardModal()">
+                <i class="fa-solid fa-id-card me-1"></i> Kartu Digital
+            </button>
         <?php else: ?>
             <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $provider['id'] ?>" class="btn-mobile-action-icon" title="Chat Mitra">
+                <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $provider['id'] ?>" class="btn-mobile-action-icon" title="Chat & Nego Jasa">
                     <i class="fa-solid fa-comments text-teal"></i>
                     <span>Chat</span>
                 </a>
-                <button type="button" class="btn-mobile-action-icon border-0 bg-transparent" onclick="shareProviderProfile()" title="Bagikan Usaha">
+                <button type="button" class="btn-mobile-action-icon" onclick="triggerCardModal()" title="Lihat & Unduh Kartu Jasa Digital Mitra">
+                    <i class="fa-solid fa-id-card text-teal"></i>
+                    <span>Kartu</span>
+                </button>
+                <button type="button" class="btn-mobile-action-icon" onclick="shareProviderProfile()" title="Bagikan Usaha">
                     <i class="fa-solid fa-share-nodes text-secondary"></i>
                     <span>Bagikan</span>
                 </button>

@@ -1699,6 +1699,8 @@ body.modal-open .mobile-bottom-nav {
     align-items: center;
     gap: 8px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
     padding: 6px 2px 14px 2px;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -2749,10 +2751,13 @@ body.modal-open .mobile-bottom-nav {
         margin-bottom: 3px !important;
     }
 
-    /* Padding bottom untuk halaman detail mitra agar tidak tertutup sticky bar */
+    /* Jaminan padding bottom aman di HP agar konten paling bawah tidak tertutup navigasi melayang */
+    body {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
     .container:has(.provider-mobile-bottom-bar),
     body:has(.provider-mobile-bottom-bar) {
-        padding-bottom: 80px !important;
+        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 

@@ -87,12 +87,15 @@
     </div>
 </footer>
 
+<?php if (empty($hide_floating_wa) && !str_contains($_SERVER['REQUEST_URI'] ?? '', 'provider_detail.php')): ?>
 <!-- Floating WhatsApp Support Button -->
 <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=Halo%20Admin%20Jasa%20Inhu,%20saya%20butuh%20bantuan%20layanan" target="_blank" class="floating-wa-btn shadow-lg" title="Hubungi CS Admin via WhatsApp" aria-label="Bantuan WhatsApp Admin">
     <i class="fa-brands fa-whatsapp"></i>
     <span class="floating-wa-text d-none d-sm-inline">Bantuan CS</span>
 </a>
+<?php endif; ?>
 
+<?php if (empty($hide_mobile_bottom_nav) && !str_contains($_SERVER['REQUEST_URI'] ?? '', 'provider_detail.php')): ?>
 <!-- Mobile Bottom Navigation Bar (Tokopedia/Shopee Style on Mobile) -->
 <nav class="mobile-bottom-nav d-lg-none" aria-label="Mobile Navigation">
     <a href="<?= BASE_URL ?>/" class="mobile-nav-item <?= empty($_SERVER['REQUEST_URI']) || $_SERVER['REQUEST_URI'] === '/' || (str_contains($_SERVER['REQUEST_URI'], 'index.php') && !str_contains($_SERVER['REQUEST_URI'], '/user/') && !str_contains($_SERVER['REQUEST_URI'], '/provider/') && !str_contains($_SERVER['REQUEST_URI'], '/admin/')) ? 'active' : '' ?>">
@@ -176,6 +179,7 @@
         </a>
     <?php endif; ?>
 </nav>
+<?php endif; ?>
 
 <!-- Global Tokopedia Style Login Modal -->
 <?php require_once __DIR__ . '/login_modal.php'; ?>
