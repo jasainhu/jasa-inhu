@@ -163,11 +163,11 @@ $shopee_hub = [
         'link' => BASE_URL . '/search.php?q=sawit'
     ],
     [
-        'title' => "Sewa\nPickup",
-        'icon' => 'fa-truck-pickup',
-        'color' => '#475569',
-        'bg' => '#f1f5f9',
-        'link' => BASE_URL . '/search.php?q=pickup'
+        'title' => "Kuliner &\nKatering",
+        'icon' => 'fa-utensils',
+        'color' => '#ea580c',
+        'bg' => '#ffedd5',
+        'link' => BASE_URL . '/search.php?kategori=120019'
     ],
     [
         'title' => "Servis\nAC",
