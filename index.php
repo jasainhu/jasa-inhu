@@ -61,11 +61,12 @@ try {
                sp.description, sp.experience_years, sp.hourly_rate_min, sp.hourly_rate_max,
                sp.is_verified, sp.id_card_type, sp.school_name, sp.credential_title, sp.certificate_url,
                sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
-               u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon,
+               u.name as owner_name, u.phone, p.avatar as owner_avatar, sc.name as category_name, sc.icon as category_icon,
                d.name as district_name, v.name as village_name,
                (SELECT COUNT(*) FROM provider_portfolios pp WHERE pp.provider_id = sp.id) as portfolio_count
         FROM service_providers sp
         JOIN users u ON sp.user_id = u.id
+        LEFT JOIN profiles p ON p.user_id = u.id
         JOIN service_categories sc ON sp.primary_category_id = sc.id
         LEFT JOIN districts d ON sp.district_id = d.id
         LEFT JOIN villages v ON sp.village_id = v.id
@@ -487,9 +488,10 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="col-6 col-md-6 col-lg-4">
                         <div class="provider-card-modern h-100 rounded-3 rounded-md-4 border bg-white shadow-sm overflow-hidden d-flex flex-column">
                             <!-- Cover Foto Usaha / Workshop (Dengan Fallback Cantik) -->
+                            <?php $prov_cover = has_media($prov['image_url'] ?? '') ? $prov['image_url'] : ($prov['owner_avatar'] ?? ''); ?>
                             <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="provider-cover-wrap position-relative d-block text-decoration-none">
-                                <?php if (has_media($prov['image_url'] ?? '')): ?>
-                                    <img src="<?= e(get_media_url($prov['image_url'])) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img">
+                                <?php if (has_media($prov_cover)): ?>
+                                    <img src="<?= e(get_media_url($prov_cover)) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img">
                                 <?php else: ?>
                                     <div class="provider-cover-fallback d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0d9488 0%, #0f172a 100%);">
                                         <div class="text-center text-white p-2 p-md-3">

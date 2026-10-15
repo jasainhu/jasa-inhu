@@ -21,10 +21,12 @@ $current_user = current_user();
 // 1. Ambil Data Detail Mitra
 $stmtProv = $db->prepare("
     SELECT sp.*, u.name as owner_name, u.phone, u.email,
+           p.avatar as owner_avatar,
            sc.name as category_name, sc.icon as category_icon,
            d.name as district_name, v.name as village_name
     FROM service_providers sp
     JOIN users u ON sp.user_id = u.id
+    LEFT JOIN profiles p ON p.user_id = u.id
     JOIN service_categories sc ON sp.primary_category_id = sc.id
     LEFT JOIN districts d ON sp.district_id = d.id
     LEFT JOIN villages v ON sp.village_id = v.id
@@ -39,11 +41,13 @@ if (!$provider) {
     redirect('/');
 }
 
+$provider_photo = has_media($provider['image_url'] ?? '') ? $provider['image_url'] : ($provider['owner_avatar'] ?? '');
+
 $page_title = e($provider['business_name']) . ' - Profil & Testimoni Mitra JASA INHU';
 $og_title = e($provider['business_name']) . ' (' . e($provider['category_name']) . ') - JASA INHU';
 $og_description = 'Layanan ' . e($provider['category_name']) . ' terpercaya di Kec. ' . e($provider['district_name'] ?: 'Kab. Indragiri Hulu') . '. Hubungi langsung via WhatsApp atau pesan instan di platform JASA INHU.';
-if (has_media($provider['image_url'] ?? '') && !str_starts_with($provider['image_url'], 'data:')) {
-    $og_image = get_media_url($provider['image_url']);
+if (has_media($provider_photo) && !str_starts_with($provider_photo, 'data:')) {
+    $og_image = get_media_url($provider_photo);
 }
 
 // 2. Ambil Wilayah Layanan yang Dicakup di Kab. Inhu
@@ -171,8 +175,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
                 <!-- Cover Photo Banner -->
                 <div class="position-relative" style="height: 220px; background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
-                    <?php if (has_media($provider['image_url'] ?? '')): ?>
-                        <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover" style="opacity: 0.85;">
+                    <?php if (has_media($provider_photo)): ?>
+                        <img src="<?= e(get_media_url($provider_photo)) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover" style="opacity: 0.92;">
                     <?php else: ?>
                         <div class="w-100 h-100 d-flex align-items-center justify-content-center text-white opacity-40">
                             <i class="fa-solid <?= e($provider['category_icon'] ?: 'fa-wrench') ?>" style="font-size: 5rem;"></i>

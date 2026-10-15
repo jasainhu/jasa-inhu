@@ -131,6 +131,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ");
                         $stmtP->execute([$business_name, $headline, $category_id, $experience, $rate_min, $rate_max, $description, $image_url, $provider['id']]);
 
+                        if (!empty($image_url)) {
+                            $stmtSyncP = $db->prepare("UPDATE profiles SET avatar = ?, updated_at = NOW() WHERE user_id = ?");
+                            $stmtSyncP->execute([$image_url, $user['id']]);
+                        }
+
                         $db->commit();
                         set_flash('success', 'Informasi jasa & tarif berhasil diperbarui!');
                         redirect('/provider/profile.php');

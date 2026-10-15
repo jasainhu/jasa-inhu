@@ -61,6 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmtIn->execute([$user['id'], $avatarVal]);
                 }
 
+                // Sinkronkan ke foto usaha jika user adalah mitra
+                $stmtSyncSp = $db->prepare("UPDATE service_providers SET image_url = ?, updated_at = NOW() WHERE user_id = ?");
+                $stmtSyncSp->execute([$avatarVal, $user['id']]);
+
                 $finalUrl = get_avatar_url($avatarVal);
                 echo json_encode([
                     'success' => true,
@@ -116,6 +120,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             VALUES (?, ?, ?, ?, ?, NOW(), NOW())
                         ");
                         $stmtP->execute([$user['id'], $bio, $avatar_filename, $gender, $birth_date]);
+                    }
+
+                    if (!empty($avatar_filename)) {
+                        $stmtSyncSp = $db->prepare("UPDATE service_providers SET image_url = ?, updated_at = NOW() WHERE user_id = ?");
+                        $stmtSyncSp->execute([$avatar_filename, $user['id']]);
                     }
 
                     $db->commit();
