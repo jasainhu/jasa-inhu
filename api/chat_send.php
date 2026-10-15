@@ -111,8 +111,9 @@ try {
     $stmtUpd = $db->prepare("UPDATE conversations SET last_message = ?, last_message_at = NOW() WHERE id = ?");
     $stmtUpd->execute([$message, $conversation_id]);
 
-    // 4. Kirim Notifikasi Lonceng ke Penerima
-    $preview = mb_substr($message, 0, 75) . (mb_strlen($message) > 75 ? '...' : '');
+    $db->commit();
+
+    // 4. Info Pengirim untuk Notifikasi Eksternal (WhatsApp)
     $senderName = $user['name'];
     
     // Cek apakah pengirim adalah mitra penyedia jasa
@@ -123,14 +124,9 @@ try {
         $senderName = $provName;
     }
 
-    $notifTitle = "Pesan Obrolan Baru dari {$senderName}";
-    $notifMsg = "\"{$preview}\"";
-    $notifLink = "/chat.php?c={$conversation_id}";
-
-    $stmtNotif = $db->prepare("INSERT INTO notifications (user_id, title, message, link, created_at) VALUES (?, ?, ?, ?, NOW())");
-    $stmtNotif->execute([$receiver_id, $notifTitle, $notifMsg, $notifLink]);
-
-    $db->commit();
+    // CATATAN UX: Pesan obrolan sengaja TIDAK dimasukkan ke tabel `notifications` (lonceng),
+    // karena sudah memiliki tab/menu "Obrolan" sendiri dengan badge unread counter terpisah.
+    // Lonceng notifikasi diprioritaskan untuk pembaruan pesanan/order, dompet, dan akun.
 
     // 5. Kirim Notifikasi WhatsApp Otomatis ke Penerima (Real-Time Alert)
     try {
