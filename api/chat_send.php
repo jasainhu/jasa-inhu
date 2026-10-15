@@ -132,6 +132,83 @@ try {
 
     $db->commit();
 
+    // 5. Kirim Notifikasi WhatsApp Otomatis ke Penerima (Real-Time Alert)
+    try {
+        $stmtRec = $db->prepare("
+            SELECT u.id, u.name, u.phone, sp.business_name 
+            FROM users u 
+            LEFT JOIN service_providers sp ON sp.user_id = u.id 
+            WHERE u.id = ? 
+            LIMIT 1
+        ");
+        $stmtRec->execute([$receiver_id]);
+        $recUser = $stmtRec->fetch(PDO::FETCH_ASSOC);
+
+        if ($recUser && !empty($recUser['phone'])) {
+            $recPhone = trim($recUser['phone']);
+            $recName = !empty($recUser['business_name']) ? $recUser['business_name'] : $recUser['name'];
+            $isReceiverProvider = !empty($recUser['business_name']);
+
+            // Cek cooldown: Apakah sudah ada notifikasi WA chat ke nomor ini dalam 10 menit terakhir?
+            $cleanRecPhone = preg_replace('/[^0-9]/', '', $recPhone);
+            $phoneSuffix = substr($cleanRecPhone, -8);
+
+            $stmtCheckCooldown = $db->prepare("
+                SELECT id FROM whatsapp_logs 
+                WHERE recipient_phone LIKE ? 
+                  AND event_type = 'chat_message' 
+                  AND created_at >= (NOW() - INTERVAL 10 MINUTE)
+                LIMIT 1
+            ");
+            $stmtCheckCooldown->execute(['%' . $phoneSuffix]);
+            $isCooldown = (bool)$stmtCheckCooldown->fetchColumn();
+
+            if (!$isCooldown) {
+                $appUrl = rtrim(defined('APP_URL') ? APP_URL : 'https://jasainhu.gafahrandi.my.id', '/');
+                $chatUrl = "{$appUrl}/chat.php?c={$conversation_id}";
+
+                $senderPhone = $user['phone'] ?? '';
+                $cleanSenderPhone = preg_replace('/[^0-9]/', '', $senderPhone);
+                if (str_starts_with($cleanSenderPhone, '0')) {
+                    $cleanSenderPhone = '62' . substr($cleanSenderPhone, 1);
+                } elseif (str_starts_with($cleanSenderPhone, '8')) {
+                    $cleanSenderPhone = '62' . $cleanSenderPhone;
+                }
+
+                // Potong pesan jika terlalu panjang untuk WA preview
+                $waMsgContent = mb_strlen($message) > 250 ? mb_substr($message, 0, 247) . '...' : $message;
+
+                if ($isReceiverProvider) {
+                    $waMsg = "🔔 *Pesan Masuk di JASA INHU*\n\n"
+                           . "Halo *{$recName}*,\n"
+                           . "Ada calon pelanggan (*{$senderName}*) yang mengirim pesan obrolan untuk Anda di platform JASA INHU:\n\n"
+                           . "💬 _\"{$waMsgContent}\"_\n\n"
+                           . "👉 *Buka & Balas di Aplikasi:*\n"
+                           . "{$chatUrl}\n\n";
+
+                    if (!empty($cleanSenderPhone)) {
+                        $waMsg .= "📞 *Atau Hubungi Pelanggan via WhatsApp Langsung:*\n"
+                               . "https://wa.me/{$cleanSenderPhone}\n\n";
+                    }
+
+                    $waMsg .= "— *Sistem Notifikasi JASA INHU*";
+                } else {
+                    $waMsg = "🔔 *Balasan Pesan dari Mitra JASA INHU*\n\n"
+                           . "Halo *{$recName}*,\n"
+                           . "Mitra *{$senderName}* telah membalas pesan obrolan Anda di JASA INHU:\n\n"
+                           . "💬 _\"{$waMsgContent}\"_\n\n"
+                           . "👉 *Buka Obrolan Sekarang:*\n"
+                           . "{$chatUrl}\n\n"
+                           . "— *Sistem Notifikasi JASA INHU*";
+                }
+
+                send_wa_notification($recPhone, $waMsg, 'chat_message', null, $recName);
+            }
+        }
+    } catch (Throwable $waEx) {
+        error_log("WA Chat Notification Error: " . $waEx->getMessage());
+    }
+
     echo json_encode([
         'success' => true,
         'message' => 'Pesan berhasil dikirim.',

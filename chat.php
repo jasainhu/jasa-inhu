@@ -554,9 +554,9 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="d-flex align-items-center gap-2">
                             <!-- WhatsApp Shortcut Button -->
                             <?php if (!empty($active_partner['wa_clean'])): ?>
-                                <a href="https://wa.me/<?= $active_partner['wa_clean'] ?>?text=<?= urlencode('Halo ' . $active_partner['name'] . ', saya menghubungkan dari Kotak Obrolan Jasa Inhu.') ?>" target="_blank" class="btn btn-wa-header d-inline-flex align-items-center gap-1 shadow-xs" title="Lanjut Obrolan atau Telepon via WhatsApp">
+                                <a href="https://wa.me/<?= $active_partner['wa_clean'] ?>?text=<?= urlencode('Halo ' . $active_partner['name'] . ', saya menghubungkan dari Kotak Obrolan Jasa Inhu.') ?>" target="_blank" class="btn btn-wa-header d-inline-flex align-items-center gap-1.5 shadow-xs" title="Lanjut Obrolan atau Telepon via WhatsApp">
                                     <i class="fa-brands fa-whatsapp fs-6"></i>
-                                    <span class="d-none d-sm-inline">WhatsApp</span>
+                                    <span class="fw-bold" style="font-size: 0.75rem;">Chat WA</span>
                                 </a>
                             <?php endif; ?>
 
@@ -593,9 +593,13 @@ require_once __DIR__ . '/includes/header.php';
                     <!-- 3. Pesan Chat Body (Scrollable with Modern Pattern) -->
                     <div class="flex-grow-1 p-3 chat-messages-viewport d-flex flex-column gap-2.5" id="chatMessagesArea">
                         <!-- Date & Privacy Pill -->
-                        <div class="text-center my-1">
+                        <div class="text-center my-1 d-flex flex-column align-items-center gap-1">
                             <span class="badge bg-white text-muted border shadow-xs px-3 py-1 fw-normal rounded-pill" style="font-size: 0.72rem;">
                                 <i class="fa-solid fa-shield-halved text-teal me-1"></i> Percakapan resmi dilindungi sistem JASA INHU
+                            </span>
+                            <span class="text-muted small px-3 py-1 bg-white border border-dashed rounded-3 shadow-2xs" style="font-size: 0.7rem; max-width: 90%;">
+                                <i class="fa-brands fa-whatsapp text-success me-1"></i>
+                                <span>Pesan obrolan otomatis diteruskan ke WhatsApp mitra. Butuh respon instan? Klik tombol <strong>Chat WA</strong> di atas.</span>
                             </span>
                         </div>
 
