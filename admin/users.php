@@ -341,9 +341,9 @@ $stmt = $db->prepare("
            p.district_id, p.address, p.gender, p.birth_date,
            d.name as district_name, sp.business_name, sp.id as provider_id,
            sp.is_verified, sp.id_card_number, sp.id_card_type, sp.school_name,
-           IF(sp.id_card_image IS NOT NULL AND sp.id_card_image != '', 1, 0) as has_ktp,
+           IF(sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50, 1, 0) as has_ktp,
            sp.credential_title,
-           IF(sp.certificate_url IS NOT NULL AND sp.certificate_url != '', 1, 0) as has_cert
+           IF(sp.certificate_url IS NOT NULL AND LENGTH(sp.certificate_url) > 50, 1, 0) as has_cert
     FROM users u
     JOIN roles r ON u.role_id = r.id
     LEFT JOIN profiles p ON u.id = p.user_id

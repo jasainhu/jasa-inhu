@@ -91,9 +91,20 @@ if ($topup_id > 0 || $type === 'topup' || $type === 'struk') {
 // 1. Jika Base64 Data URI
 if (str_starts_with($rawMedia, 'data:')) {
     $parts = explode(',', $rawMedia, 2);
-    if (count($parts) !== 2) {
-        http_response_code(500);
-        die('Format data dokumen tidak valid.');
+    if (count($parts) !== 2 || empty($parts[1]) || strlen(trim($parts[1])) < 30) {
+        http_response_code(400);
+        die("
+            <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; text-align: center; padding: 60px 20px; color: #334155;'>
+                <div style='font-size: 48px; margin-bottom: 16px;'>⚠️</div>
+                <h2 style='font-weight: 700; color: #0f172a; margin-bottom: 8px;'>Dokumen Tidak Lengkap / Rusak</h2>
+                <p style='max-width: 480px; margin: 0 auto 20px; line-height: 1.6; color: #64748b; font-size: 14px;'>
+                    Dokumen identitas yang diunggah oleh <strong>" . htmlspecialchars($doc['name'] ?? 'Mitra', ENT_QUOTES) . "</strong> berukuran 0 bytes (tidak terkirim secara utuh saat pengguna mengunggah).
+                </p>
+                <div style='background: #f1f5f9; padding: 12px 20px; border-radius: 8px; display: inline-block; font-size: 13px; color: #475569;'>
+                    💡 <strong>Solusi:</strong> Silakan minta mitra ini untuk mengunggah ulang foto dokumen KTP aslinya di menu profil.
+                </div>
+            </div>
+        ");
     }
 
     $meta = $parts[0];
@@ -103,9 +114,17 @@ if (str_starts_with($rawMedia, 'data:')) {
     }
 
     $binary = base64_decode($parts[1]);
-    if ($binary === false) {
-        http_response_code(500);
-        die('Gagal menguraikan berkas dokumen.');
+    if ($binary === false || strlen($binary) === 0) {
+        http_response_code(400);
+        die("
+            <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; text-align: center; padding: 60px 20px; color: #334155;'>
+                <div style='font-size: 48px; margin-bottom: 16px;'>⚠️</div>
+                <h2 style='font-weight: 700; color: #0f172a; margin-bottom: 8px;'>Dokumen Gagal Diuraikan</h2>
+                <p style='max-width: 480px; margin: 0 auto 20px; line-height: 1.6; color: #64748b; font-size: 14px;'>
+                    Format foto dokumen rusak atau tidak terbaca. Silakan minta mitra mengunggah foto ulang.
+                </p>
+            </div>
+        ");
     }
 
     $ext = 'jpg';

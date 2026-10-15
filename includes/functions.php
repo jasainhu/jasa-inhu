@@ -339,7 +339,10 @@ function has_media(?string $path): bool {
     if (empty($path)) {
         return false;
     }
-    if (str_starts_with($path, 'data:') || str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+    if (str_starts_with($path, 'data:')) {
+        return strlen($path) > 50 && str_contains($path, ',');
+    }
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
         return true;
     }
     $localFile = dirname(__DIR__) . '/' . ltrim($path, '/');
