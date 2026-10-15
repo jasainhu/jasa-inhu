@@ -92,6 +92,11 @@ $stmtMyProv = $db->prepare("SELECT id FROM service_providers WHERE user_id = ? L
 $stmtMyProv->execute([$current_user['id']]);
 $my_provider_id = (int)$stmtMyProv->fetchColumn();
 
+// Ambil alamat profil tersimpan pengguna saat ini untuk kemudahan pemesanan langsung dari chat
+$stmtUserProf = $db->prepare("SELECT address FROM profiles WHERE user_id = ? LIMIT 1");
+$stmtUserProf->execute([$current_user['id']]);
+$user_saved_address = $stmtUserProf->fetchColumn() ?: '';
+
 if ($active_conv_id > 0) {
     foreach ($conversations as $cv) {
         if ((int)$cv['id'] === $active_conv_id) {
@@ -541,10 +546,10 @@ require_once __DIR__ . '/includes/header.php';
                         <div class="d-flex align-items-center gap-2">
                             <!-- Provider Profile & Order Actions -->
                             <?php if ($active_partner['is_provider'] && !empty($active_partner['provider'])): ?>
-                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" class="btn btn-primary-custom btn-sm fw-bold d-inline-flex align-items-center gap-1.5 shadow-xs px-3 py-1.5 rounded-pill" style="font-size: 0.75rem;" title="Buat Pesanan Resmi">
-                                    <i class="fa-solid fa-bolt text-warning"></i>
-                                    <span>Pesan Jasa</span>
-                                </a>
+                                <button type="button" class="btn btn-primary-custom btn-sm fw-bold d-inline-flex align-items-center gap-1.5 shadow-xs px-3 py-1.5 rounded-pill" style="font-size: 0.75rem;" title="Buat Pesanan Resmi & Deal Harga Sesuai Obrolan" onclick="openOrderModalFromChat()">
+                                    <i class="fa-solid fa-handshake text-warning"></i>
+                                    <span>Deal / Pesan Jasa</span>
+                                </button>
                                 <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" target="_blank" class="btn btn-light border btn-sm fw-semibold d-none d-sm-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill text-dark" style="font-size: 0.75rem;" title="Lihat Profil & Portofolio">
                                     <i class="fa-solid fa-store text-teal"></i>
                                     <span>Toko ↗</span>
@@ -588,17 +593,44 @@ require_once __DIR__ . '/includes/header.php';
 
                         <?php if (!empty($active_messages)): ?>
                             <?php foreach ($active_messages as $msg): ?>
-                                <?php $isMe = ((int)$msg['sender_id'] === (int)$current_user['id']); ?>
+                                <?php 
+                                    $isMe = ((int)$msg['sender_id'] === (int)$current_user['id']); 
+                                    $isOrderCard = str_contains($msg['message'], '[PESANAN RESMI DIBUAT]');
+                                ?>
                                 <div class="d-flex flex-column <?= $isMe ? 'align-items-end' : 'align-items-start' ?> msg-bubble-wrap" id="msg-<?= $msg['id'] ?>" data-id="<?= $msg['id'] ?>">
-                                    <div class="<?= $isMe ? 'bubble-me' : 'bubble-partner' ?>">
-                                        <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;"><?= e($msg['message']) ?></p>
-                                        <div class="bubble-meta <?= $isMe ? 'text-white-50' : 'text-muted' ?>">
-                                            <span><?= date('H:i', strtotime($msg['created_at'])) ?></span>
-                                            <?php if ($isMe): ?>
-                                                <i class="fa-solid <?= $msg['is_read'] ? 'fa-check-double' : 'fa-check' ?>" style="<?= $msg['is_read'] ? 'color: #fef08a;' : '' ?>" title="<?= $msg['is_read'] ? 'Sudah Dibaca' : 'Terkirim' ?>"></i>
-                                            <?php endif; ?>
+                                    <?php if ($isOrderCard): ?>
+                                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-1 text-start" style="max-width: 380px; background: #ffffff; border: 1.5px solid #0d9488 !important;">
+                                            <div class="px-3 py-2 text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fa-solid fa-receipt text-warning fs-6"></i>
+                                                    <span class="fw-bold small" style="font-size: 0.78rem;">PESANAN RESMI DIBUAT</span>
+                                                </div>
+                                                <span class="badge bg-warning text-dark rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">Terverifikasi</span>
+                                            </div>
+                                            <div class="p-3 text-dark">
+                                                <p class="small text-dark mb-2" style="white-space: pre-line; font-size: 0.82rem; line-height: 1.5;"><?= e($msg['message']) ?></p>
+                                                <div class="pt-2 border-top">
+                                                    <a href="<?= BASE_URL ?>/user/orders.php" class="btn btn-teal btn-sm fw-bold rounded-pill w-100" style="font-size: 0.75rem;">
+                                                        <i class="fa-solid fa-file-lines me-1"></i> Buka Rincian Pesanan
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="bubble-meta text-muted px-3 pb-2 pt-0 d-flex justify-content-between">
+                                                <span class="small text-muted" style="font-size: 0.65rem;">JASA INHU Verified Order</span>
+                                                <span><?= date('H:i', strtotime($msg['created_at'])) ?></span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    <?php else: ?>
+                                        <div class="<?= $isMe ? 'bubble-me' : 'bubble-partner' ?>">
+                                            <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;"><?= e($msg['message']) ?></p>
+                                            <div class="bubble-meta <?= $isMe ? 'text-white-50' : 'text-muted' ?>">
+                                                <span><?= date('H:i', strtotime($msg['created_at'])) ?></span>
+                                                <?php if ($isMe): ?>
+                                                    <i class="fa-solid <?= $msg['is_read'] ? 'fa-check-double' : 'fa-check' ?>" style="<?= $msg['is_read'] ? 'color: #fef08a;' : '' ?>" title="<?= $msg['is_read'] ? 'Sudah Dibaca' : 'Terkirim' ?>"></i>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -614,21 +646,36 @@ require_once __DIR__ . '/includes/header.php';
 
                     <!-- 4. Smart Quick Reply Chips -->
                     <div class="quick-chips-bar">
-                        <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Halo, apakah layanan jasa ini bisa dipanggil hari ini?')">
-                            ⚡ Bisa hari ini?
-                        </button>
-                        <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Berapa perkiraan total biaya untuk perbaikan ini?')">
-                            💰 Perkiraan biaya?
-                        </button>
-                        <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Apakah bisa survei atau cek kondisi lokasi terlebih dahulu?')">
-                            🔍 Survei lokasi dulu?
-                        </button>
-                        <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Lokasi saya di daerah: ')">
-                            📍 Kirim alamat saya
-                        </button>
-                        <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Boleh minta nomor WhatsApp untuk kirim foto / video kondisi kerusakan?')">
-                            📸 Minta WA untuk kirim foto
-                        </button>
+                        <?php if ($active_partner['is_provider']): ?>
+                            <button type="button" class="quick-chip-btn bg-teal-subtle text-teal border-teal-subtle fw-bold" onclick="openOrderModalFromChat()">
+                                🤝 Buat Pesanan Resmi
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Halo, apakah layanan jasa ini bisa dipanggil hari ini?')">
+                                ⚡ Bisa hari ini?
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Berapa perkiraan total biaya untuk pekerjaan ini?')">
+                                💰 Perkiraan biaya?
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Apakah bisa survei atau cek kondisi lokasi terlebih dahulu?')">
+                                🔍 Survei lokasi dulu?
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Lokasi saya di daerah: ')">
+                                📍 Kirim alamat saya
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Halo kak, bisa jelaskan detail keluhan atau kirim foto kondisinya?')">
+                                🔍 Detail keluhan?
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Bisa kirimkan alamat lengkap atau patokan lokasi untuk survei?')">
+                                📍 Minta alamat lokasi
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Baik kak, untuk biaya jasa tersebut perkiraannya Rp ')">
+                                💰 Berikan estimasi biaya
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Silakan klik tombol [Deal / Pesan Jasa] di atas ya kak agar tercatat resmi.')">
+                                📋 Arahkan pesan resmi
+                            </button>
+                        <?php endif; ?>
                     </div>
 
                     <!-- 5. Modern Floating Input Bar -->
@@ -668,6 +715,127 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </div>
+
+<?php if (!empty($active_partner) && $active_partner['is_provider'] && !empty($active_partner['provider'])): ?>
+<!-- Modal Pesan Jasa Langsung dari Chat (Deal Harga) -->
+<div class="modal fade" id="modalInChatOrder" tabindex="-1" aria-labelledby="modalInChatOrderLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-circle bg-white bg-opacity-20 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-file-invoice-dollar fs-5 text-warning"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0" id="modalInChatOrderLabel">Buat Pesanan & Deal Biaya</h6>
+                        <small class="text-white-50" style="font-size: 0.72rem;">Kunci kesepakatan dengan <?= e($active_partner['name']) ?></small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="formInChatOrder" onsubmit="submitInChatOrder(event)">
+                <input type="hidden" id="inChatProviderId" value="<?= (int)$active_partner['provider']['id'] ?>">
+                <input type="hidden" id="inChatMapsUrl" value="">
+                
+                <div class="modal-body p-4">
+                    <!-- Banner Info Aman -->
+                    <div class="alert alert-teal-subtle border-0 rounded-3 p-3 mb-3 d-flex align-items-start gap-2.5">
+                        <i class="fa-solid fa-shield-halved text-teal mt-0.5 fs-6"></i>
+                        <div class="small text-dark" style="font-size: 0.78rem; line-height: 1.45;">
+                            Pesanan ini otomatis tercatat resmi di sistem <strong>JASA INHU</strong>, rincian muncul di obrolan ini, dan notifikasi terkirim otomatis ke WhatsApp mitra.
+                        </div>
+                    </div>
+
+                    <!-- Kebutuhan Jasa -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-1">
+                            Layanan / Pekerjaan yang Disepakati <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-1" id="inChatProblem" required 
+                                   value="Layanan <?= e($active_partner['provider']['category_name'] ?? 'Jasa') ?>" 
+                                   placeholder="Contoh: Servis AC 1 PK cuci + tambah freon, dll">
+                        </div>
+                    </div>
+
+                    <!-- Kesepakatan Biaya (Budget) -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-1 d-flex justify-content-between">
+                            <span>Biaya yang Disepakati (Rp)</span>
+                            <span class="text-muted fw-normal" style="font-size: 0.72rem;">Kosongkan jika masih nego/survei</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 fw-bold text-teal">Rp</span>
+                            <input type="number" class="form-control border-start-0 ps-1 fw-bold text-dark" id="inChatBudget" 
+                                   placeholder="Contoh: 150000" min="0" step="5000">
+                        </div>
+                        <small class="text-muted" style="font-size: 0.7rem;">Nominal yang sudah Anda sepakati bersama mitra dalam obrolan.</small>
+                    </div>
+
+                    <!-- Waktu Kunjungan / Pengerjaan -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-1">
+                            Waktu Kunjungan / Pengerjaan <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="inChatTime" required>
+                            <option value="Hari ini / Secepatnya" selected>⚡ Hari ini / Secepatnya</option>
+                            <option value="Besok Pagi (08:00 - 12:00)">☀️ Besok Pagi (08:00 - 12:00)</option>
+                            <option value="Besok Siang / Sore (13:00 - 17:00)">🌤️ Besok Siang / Sore (13:00 - 17:00)</option>
+                            <option value="Akhir Pekan (Sabtu / Minggu)">🗓️ Akhir Pekan (Sabtu / Minggu)</option>
+                            <option value="Sesuai Kesepakatan di Chat">💬 Sesuai Kesepakatan di Chat</option>
+                        </select>
+                    </div>
+
+                    <!-- Alamat / Lokasi -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-bold text-dark mb-0">
+                                Alamat / Lokasi Pengerjaan <span class="text-danger">*</span>
+                            </label>
+                            <button type="button" class="btn btn-link text-teal p-0 text-decoration-none fw-semibold" style="font-size: 0.72rem;" onclick="detectGPSInChatOrder()" id="btnGpsInChat">
+                                <i class="fa-solid fa-crosshairs me-1"></i> Deteksi GPS
+                            </button>
+                        </div>
+                        <textarea class="form-control" id="inChatAddress" rows="2" required placeholder="Contoh: Jl. Narasinga No. 12, Kel. Kampung Dagang, patokan dekat Masjid..."><?= e($user_saved_address) ?></textarea>
+                        <div id="gpsInChatStatus" class="small text-success mt-1 d-none" style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-circle-check me-1"></i> Titik koordinat GPS berhasil dikunci!
+                        </div>
+                    </div>
+
+                    <!-- Opsi Pesan untuk Orang Lain -->
+                    <div class="border rounded-3 p-2.5 bg-light mb-1">
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="switchOrderOther" onchange="toggleOrderOther(this.checked)">
+                            <label class="form-check-label small fw-semibold text-dark" for="switchOrderOther" style="font-size: 0.78rem;">
+                                Pesankan untuk Kerabat / Orang Lain
+                            </label>
+                        </div>
+                        <div id="boxOrderOther" class="mt-2 pt-2 border-top d-none">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="text" class="form-control form-control-sm" id="inChatRecipientName" placeholder="Nama Penerima">
+                                </div>
+                                <div class="col-6">
+                                    <input type="tel" class="form-control form-control-sm" id="inChatRecipientPhone" placeholder="No. HP Penerima">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light px-4 py-2.5 border-top d-flex justify-content-between">
+                    <button type="button" class="btn btn-light border btn-sm fw-semibold rounded-pill px-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" id="btnSubmitInChatOrder" class="btn btn-teal btn-sm fw-bold rounded-pill px-4 shadow-sm">
+                        <i class="fa-solid fa-paper-plane me-1.5"></i> Kirim & Kunci Pesanan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <script>
 window.CSRF_TOKEN = '<?= csrf_token() ?>';
@@ -738,6 +906,182 @@ function filterConversations() {
     });
 }
 
+function openOrderModalFromChat() {
+    const modalEl = document.getElementById('modalInChatOrder');
+    if (!modalEl) {
+        alert('Fitur pemesanan langsung tersedia saat membuka obrolan dengan mitra penyedia jasa.');
+        return;
+    }
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+function toggleOrderOther(checked) {
+    const box = document.getElementById('boxOrderOther');
+    if (!box) return;
+    if (checked) {
+        box.classList.remove('d-none');
+    } else {
+        box.classList.add('d-none');
+    }
+}
+
+function detectGPSInChatOrder() {
+    const btn = document.getElementById('btnGpsInChat');
+    const status = document.getElementById('gpsInChatStatus');
+    const hiddenMaps = document.getElementById('inChatMapsUrl');
+    const addrArea = document.getElementById('inChatAddress');
+
+    if (!navigator.geolocation) {
+        alert('Fitur GPS tidak didukung di perangkat ini.');
+        return;
+    }
+
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Mendeteksi...';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+            hiddenMaps.value = mapsUrl;
+            
+            if (status) {
+                status.classList.remove('d-none');
+                status.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> Koordinat GPS terkunci: (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            }
+            if (!addrArea.value.trim() || addrArea.value.startsWith('Lokasi GPS:')) {
+                addrArea.value = `Lokasi GPS: ${mapsUrl}`;
+            }
+            btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> GPS Terkunci';
+            btn.disabled = false;
+        },
+        (err) => {
+            btn.innerHTML = origText;
+            btn.disabled = false;
+            alert('Gagal mendeteksi lokasi GPS. Pastikan izin lokasi diaktifkan di browser Anda.');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+function submitInChatOrder(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitInChatOrder');
+    const providerId = document.getElementById('inChatProviderId').value;
+    const problem = document.getElementById('inChatProblem').value.trim();
+    const budget = document.getElementById('inChatBudget').value.trim();
+    const preferredTime = document.getElementById('inChatTime').value;
+    const address = document.getElementById('inChatAddress').value.trim();
+    const mapsUrl = document.getElementById('inChatMapsUrl').value.trim();
+    const isOther = document.getElementById('switchOrderOther').checked;
+    const recipientName = isOther ? document.getElementById('inChatRecipientName').value.trim() : '';
+    const recipientPhone = isOther ? document.getElementById('inChatRecipientPhone').value.trim() : '';
+
+    if (!problem) {
+        alert('Mohon sebutkan layanan atau keluhan yang disepakati.');
+        return;
+    }
+    if (!address) {
+        alert('Mohon isi alamat atau lokasi pengerjaan.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Memproses Pesanan...';
+
+    const formData = new FormData();
+    formData.append('csrf_token', window.CSRF_TOKEN);
+    formData.append('provider_id', providerId);
+    formData.append('problem', problem);
+    if (budget) formData.append('budget', budget);
+    formData.append('preferred_time', preferredTime);
+    formData.append('address', address);
+    if (mapsUrl) formData.append('maps_url', mapsUrl);
+    formData.append('order_for', isOther ? 'other' : 'self');
+    if (isOther) {
+        formData.append('recipient_name', recipientName);
+        formData.append('recipient_phone', recipientPhone);
+    }
+
+    fetch(window.BASE_URL + '/api/direct_order.php', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1.5"></i> Kirim & Kunci Pesanan';
+        if (data.success) {
+            const modalEl = document.getElementById('modalInChatOrder');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+
+            alert('🎉 Pesanan Resmi Berhasil Dibuat!\nNo. Pesanan: #' + data.request_id + '\n\nNotifikasi telah dikirimkan ke WhatsApp mitra.');
+            window.location.reload();
+        } else {
+            alert(data.message || 'Gagal membuat pesanan resmi.');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1.5"></i> Kirim & Kunci Pesanan';
+        alert('Terjadi kesalahan jaringan saat memproses pesanan.');
+    });
+}
+
+function formatBubbleHtml(msgText, isMe, time, isRead) {
+    if (msgText.includes('[PESANAN RESMI DIBUAT]')) {
+        return `
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-1 text-start" style="max-width: 380px; background: #ffffff; border: 1.5px solid #0d9488 !important;">
+                <div class="px-3 py-2 text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-receipt text-warning fs-6"></i>
+                        <span class="fw-bold small" style="font-size: 0.78rem;">PESANAN RESMI DIBUAT</span>
+                    </div>
+                    <span class="badge bg-warning text-dark rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">Terverifikasi</span>
+                </div>
+                <div class="p-3 text-dark">
+                    <p class="small text-dark mb-2" style="white-space: pre-line; font-size: 0.82rem; line-height: 1.5;">${escapeHtml(msgText)}</p>
+                    <div class="pt-2 border-top">
+                        <a href="${window.BASE_URL}/user/orders.php" class="btn btn-teal btn-sm fw-bold rounded-pill w-100" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-file-lines me-1"></i> Buka Rincian Pesanan
+                        </a>
+                    </div>
+                </div>
+                <div class="bubble-meta text-muted px-3 pb-2 pt-0 d-flex justify-content-between">
+                    <span class="small text-muted" style="font-size: 0.65rem;">JASA INHU Verified Order</span>
+                    <span>${time}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    if (isMe) {
+        return `
+            <div class="bubble-me">
+                <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(msgText)}</p>
+                <div class="bubble-meta text-white-50">
+                    <span>${time}</span>
+                    <i class="fa-solid ${isRead ? 'fa-check-double text-warning' : 'fa-check'}"></i>
+                </div>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="bubble-partner">
+                <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(msgText)}</p>
+                <div class="bubble-meta text-muted">
+                    <span>${time}</span>
+                </div>
+            </div>
+        `;
+    }
+}
+
 function sendChatMessage(e) {
     e.preventDefault();
     const input = document.getElementById('chatMessageInput');
@@ -780,15 +1124,7 @@ function sendChatMessage(e) {
             bubbleWrap.className = 'd-flex flex-column align-items-end msg-bubble-wrap';
             bubbleWrap.id = 'msg-' + d.id;
             bubbleWrap.setAttribute('data-id', d.id);
-            bubbleWrap.innerHTML = `
-                <div class="bubble-me">
-                    <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(d.message)}</p>
-                    <div class="bubble-meta text-white-50">
-                        <span>${d.time}</span>
-                        <i class="fa-solid fa-check"></i>
-                    </div>
-                </div>
-            `;
+            bubbleWrap.innerHTML = formatBubbleHtml(d.message, true, d.time, false);
             area.appendChild(bubbleWrap);
             scrollChatToBottom();
         } else {
@@ -839,27 +1175,7 @@ if (window.ACTIVE_CONV_ID > 0) {
                     bubbleWrap.className = 'd-flex flex-column ' + (m.is_me ? 'align-items-end' : 'align-items-start') + ' msg-bubble-wrap';
                     bubbleWrap.id = 'msg-' + m.id;
                     bubbleWrap.setAttribute('data-id', m.id);
-
-                    if (m.is_me) {
-                        bubbleWrap.innerHTML = `
-                            <div class="bubble-me">
-                                <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(m.message)}</p>
-                                <div class="bubble-meta text-white-50">
-                                    <span>${m.time}</span>
-                                    <i class="fa-solid fa-check"></i>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        bubbleWrap.innerHTML = `
-                            <div class="bubble-partner">
-                                <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(m.message)}</p>
-                                <div class="bubble-meta text-muted">
-                                    <span>${m.time}</span>
-                                </div>
-                            </div>
-                        `;
-                    }
+                    bubbleWrap.innerHTML = formatBubbleHtml(m.message, m.is_me, m.time, false);
 
                     area.appendChild(bubbleWrap);
                 });

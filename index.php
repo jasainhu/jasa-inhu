@@ -201,17 +201,17 @@ $shopee_hub = [
     ]
 ];
 
-// Kecamatan Populer untuk Pill Filter
+// Kecamatan Populer untuk Pill Filter (Disesuaikan dengan sebaran mitra aktif)
 $popular_districts = [
     ['id' => 0, 'name' => '📍 Semua Wilayah'],
-    ['id' => 1, 'name' => 'Rengat'],
-    ['id' => 2, 'name' => 'Rengat Barat (Pematang Reba)'],
     ['id' => 3, 'name' => 'Pasir Penyu (Air Molek)'],
+    ['id' => 1, 'name' => 'Rengat'],
     ['id' => 4, 'name' => 'Seberida (Belilas)'],
-    ['id' => 9, 'name' => 'Peranap'],
     ['id' => 13, 'name' => 'Lirik'],
-    ['id' => 11, 'name' => 'Kuala Cenaku'],
-    ['id' => 5, 'name' => 'Batang Cenaku']
+    ['id' => 2, 'name' => 'Rengat Barat (Pematang Reba)'],
+    ['id' => 7, 'name' => 'Kelayang'],
+    ['id' => 9, 'name' => 'Peranap'],
+    ['id' => 11, 'name' => 'Kuala Cenaku']
 ];
 require_once __DIR__ . '/includes/header.php';
 ?>

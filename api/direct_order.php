@@ -46,6 +46,7 @@ $order_for = trim($_POST['order_for'] ?? 'self');
 $recipient_name = trim($_POST['recipient_name'] ?? '');
 $recipient_phone = trim($_POST['recipient_phone'] ?? '');
 $maps_url = trim($_POST['maps_url'] ?? '');
+$budget = !empty($_POST['budget']) ? (float)$_POST['budget'] : null;
 
 if ($provider_id <= 0) {
     echo json_encode(['success' => false, 'message' => 'Penyedia jasa tidak valid.']);
@@ -106,8 +107,8 @@ try {
     // Simpan ke service_requests
     $stmtIns = $db->prepare("
         INSERT INTO service_requests 
-        (user_id, category_id, provider_id, district_id, title, description, address_detail, urgency, status, progress_step, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'normal', 'open', 'created', NOW())
+        (user_id, category_id, provider_id, district_id, title, description, address_detail, budget, urgency, status, progress_step, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'normal', 'open', 'created', NOW())
     ");
     $stmtIns->execute([
         $user['id'],
@@ -116,7 +117,8 @@ try {
         $district_id,
         $title,
         $full_desc,
-        $address
+        $address,
+        $budget
     ]);
     $request_id = (int)$db->lastInsertId();
 
@@ -129,6 +131,36 @@ try {
         'customer'
     );
 
+    // Masukkan kartu pesan resmi ke percakapan chat jika percakapan aktif
+    $stmtFindConv = $db->prepare("
+        SELECT id FROM conversations 
+        WHERE (user_one_id = ? AND user_two_id = ?) OR (user_one_id = ? AND user_two_id = ?) 
+        LIMIT 1
+    ");
+    $u1 = min((int)$user['id'], (int)$provider['user_id']);
+    $u2 = max((int)$user['id'], (int)$provider['user_id']);
+    $stmtFindConv->execute([$u1, $u2, $u1, $u2]);
+    $convId = (int)$stmtFindConv->fetchColumn();
+
+    if ($convId > 0) {
+        $cardMsg = "📋 *[PESANAN RESMI DIBUAT]*\n"
+                 . "No. Pesanan: #{$request_id}\n"
+                 . "Layanan: {$title}\n"
+                 . ($budget ? "Biaya Disepakati: " . format_rupiah($budget) . "\n" : "")
+                 . "Lokasi: " . ($address ?: 'Sesuai kesepakatan') . "\n"
+                 . "Waktu: {$preferred_time}\n"
+                 . "Status: Menunggu Konfirmasi Mitra";
+
+        $stmtMsg = $db->prepare("
+            INSERT INTO chat_messages (conversation_id, sender_id, receiver_id, message, is_read, created_at)
+            VALUES (?, ?, ?, ?, 0, NOW())
+        ");
+        $stmtMsg->execute([$convId, $user['id'], $provider['user_id'], $cardMsg]);
+
+        $stmtUpdC = $db->prepare("UPDATE conversations SET last_message = ?, last_message_at = NOW() WHERE id = ?");
+        $stmtUpdC->execute([$cardMsg, $convId]);
+    }
+
     // Notifikasi ke Mitra
     $notifTitle = "Pesanan Jasa Baru Langsung Masuk!";
     $notifMsg = "Warga " . $user['name'] . " memesan jasa: '" . $title . "'.";
@@ -139,9 +171,13 @@ try {
     if (!empty($provider['provider_phone'])) {
         $autoWaMsg = "🔔 *PESANAN JASA BARU DARI WARGA!* (No: #{$request_id})\n\n" .
                      "Halo *{$provider['business_name']}*, ada pesanan baru dari *{$user['name']}*:\n" .
-                     "📌 *Layanan*: {$problem}\n" .
-                     "📍 *Lokasi*: " . ($address ?: 'Sesuai kesepakatan') . "\n\n" .
-                     "Segera cek aplikasi Jasa Inhu: " . BASE_URL . "/provider/index.php";
+                     "📌 *Layanan*: {$title}\n" .
+                     ($budget ? "💰 *Biaya Disepakati*: " . format_rupiah($budget) . "\n" : "") .
+                     "📍 *Lokasi*: " . ($address ?: 'Sesuai kesepakatan') . "\n" .
+                     "⏰ *Waktu*: {$preferred_time}\n\n" .
+                     "👉 *Buka & Konfirmasi Pesanan*:\n" .
+                     BASE_URL . "/provider/index.php\n\n" .
+                     "— *Sistem Resmi JASA INHU*";
         send_wa_notification($provider['provider_phone'], $autoWaMsg, 'new_order', $request_id, $provider['business_name']);
     }
 
