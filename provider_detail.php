@@ -171,12 +171,9 @@ require_once __DIR__ . '/includes/header.php';
                 <li class="breadcrumb-item active fw-bold text-dark text-truncate" aria-current="page" style="max-width: 260px;"><?= e($provider['business_name']) ?></li>
             </ol>
         </nav>
-        <!-- Mobile Clean Back & Category Pill -->
-        <div class="d-flex d-md-none align-items-center gap-2 text-truncate" style="max-width: 65%;">
-            <a href="javascript:history.back()" class="btn btn-sm btn-white bg-white border rounded-circle shadow-2xs text-dark d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;" title="Kembali">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-            <span class="badge text-bg-light border text-teal text-truncate small fw-semibold">
+        <!-- Mobile Category Pill -->
+        <div class="d-flex d-md-none align-items-center gap-1.5 text-truncate" style="max-width: 60%;">
+            <span class="badge text-bg-light border text-teal text-truncate small fw-semibold py-1 px-2">
                 <i class="fa-solid <?= e($provider['category_icon'] ?: 'fa-wrench') ?> me-1"></i> <?= e($provider['category_name']) ?>
             </span>
         </div>
