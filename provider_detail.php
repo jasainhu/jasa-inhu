@@ -570,8 +570,8 @@ require_once __DIR__ . '/includes/header.php';
         <!-- Kolom Kanan: Sticky Booking Card & Rekomendasi -->
         <div class="col-lg-4">
             <div class="sticky-top" style="top: 85px; z-index: 10;">
-                <!-- Booking Box Card -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-top border-4 border-teal">
+                <!-- Booking Box Card (Hanya Tampil di Desktop, di HP sudah ada Bar Melayang di Bawah) -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-top border-4 border-teal d-none d-lg-block">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <span class="text-muted small text-uppercase fw-semibold" style="font-size: 0.72rem;">Estimasi Tarif Layanan:</span>
