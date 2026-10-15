@@ -580,6 +580,10 @@ require_once __DIR__ . '/includes/header.php';
                                 <i class="fa-solid fa-pen-to-square"></i>
                                 <span>Edit Informasi & Tarif Usaha</span>
                             </a>
+                            <button type="button" class="btn btn-teal text-white w-100 py-2.5 fw-bold shadow-xs rounded-3 d-flex align-items-center justify-content-center gap-2" onclick="triggerCardModal()">
+                                <i class="fa-solid fa-id-card text-warning"></i>
+                                <span>Bagikan Kartu Jasa Saya</span>
+                            </button>
                             <a href="<?= BASE_URL ?>/provider/portfolio.php" class="btn btn-outline-teal w-100 py-2 fw-semibold shadow-xs rounded-3 d-flex align-items-center justify-content-center gap-2">
                                 <i class="fa-solid fa-camera"></i>
                                 <span>Kelola Portofolio Hasil Kerja</span>
@@ -593,6 +597,10 @@ require_once __DIR__ . '/includes/header.php';
                                 <i class="fa-solid fa-comments"></i>
                                 <span>Chat</span>
                             </a>
+                            <button type="button" class="btn btn-light border w-100 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2 text-dark small" onclick="triggerCardModal()" title="Lihat & Bagikan Kartu Jasa Digital Mitra">
+                                <i class="fa-solid fa-id-card text-teal"></i>
+                                <span>Kartu Jasa Digital (QR)</span>
+                            </button>
                         <?php endif; ?>
                     </div>
 
@@ -1341,6 +1349,23 @@ function showShareToast(message) {
         toast.style.transform = 'translateX(-50%) translateY(15px)';
     }, 2800);
 }
+
+function triggerCardModal() {
+    openBusinessCardModal({
+        id: <?= (int)$provider['id'] ?>,
+        name: <?= json_encode($provider['business_name']) ?>,
+        category: <?= json_encode($provider['category_name']) ?>,
+        categoryIcon: <?= json_encode($provider['category_icon'] ?: 'fa-wrench') ?>,
+        district: <?= json_encode($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?>,
+        rating: '<?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?>',
+        jobs: '<?= (int)($provider['completed_jobs'] ?? 0) ?> Selesai',
+        avatar: '<?= e(has_media($provider_photo) ? get_media_url($provider_photo) : asset_url('images/logo.png')) ?>',
+        url: '<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>'
+    });
+}
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php 
+require_once __DIR__ . '/includes/business_card_modal.php';
+require_once __DIR__ . '/includes/footer.php'; 
+?>

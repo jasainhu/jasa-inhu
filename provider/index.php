@@ -18,15 +18,17 @@ $error = '';
 
 // Ambil data detail profil usaha penyedia
 $stmtProv = $db->prepare("
-    SELECT sp.*, sc.name as category_name, sc.icon as category_icon, d.name as district_name
+    SELECT sp.*, sc.name as category_name, sc.icon as category_icon, d.name as district_name, p.avatar as owner_avatar
     FROM service_providers sp
     JOIN service_categories sc ON sp.primary_category_id = sc.id
     LEFT JOIN districts d ON sp.district_id = d.id
+    LEFT JOIN profiles p ON sp.user_id = p.user_id
     WHERE sp.user_id = ?
     LIMIT 1
 ");
 $stmtProv->execute([$user['id']]);
 $provider = $stmtProv->fetch();
+$prov_avatar_url = has_media($provider['image_url'] ?? '') ? get_media_url($provider['image_url']) : (has_media($provider['owner_avatar'] ?? '') ? get_media_url($provider['owner_avatar']) : asset_url('images/logo.png'));
 $lead_fee_amount = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
 
 // Handle aksi-aksi pesanan oleh penyedia
@@ -782,11 +784,11 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                     <div class="d-flex gap-2 mb-2">
                         <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-light btn-sm fw-bold flex-fill rounded-3 text-teal">
-                            <i class="fa-solid fa-store me-1"></i> Lihat Toko Publik ↗
+                            <i class="fa-solid fa-store me-1"></i> Toko Publik ↗
                         </a>
-                        <a href="<?= BASE_URL ?>/provider/portfolios.php" class="btn btn-outline-light btn-sm fw-bold rounded-3" title="Unggah Hasil Kerja">
-                            <i class="fa-solid fa-plus me-1"></i> Portofolio
-                        </a>
+                        <button type="button" class="btn btn-warning btn-sm fw-bold rounded-3 text-dark flex-fill" onclick="triggerCardModal()" title="Bagikan Kartu Usaha Digital & Status WA">
+                            <i class="fa-solid fa-id-card me-1"></i> Kartu Digital
+                        </button>
                     </div>
                     <!-- Sound & Notification Controller Bar -->
                     <div class="pt-2 border-top border-white border-opacity-20 d-flex gap-2">
@@ -1438,6 +1440,20 @@ function openCompleteOrderModal(requestId, title, customerName, defaultPrice) {
     modal.show();
 }
 
+function triggerCardModal() {
+    openBusinessCardModal({
+        id: <?= (int)$provider['id'] ?>,
+        name: <?= json_encode($provider['business_name'] ?? $user['name']) ?>,
+        category: <?= json_encode($provider['category_name'] ?? 'Layanan Jasa') ?>,
+        categoryIcon: <?= json_encode($provider['category_icon'] ?? 'fa-wrench') ?>,
+        district: <?= json_encode($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?>,
+        rating: '<?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?>',
+        jobs: '<?= (int)($provider['completed_jobs'] ?? 0) ?> Selesai',
+        avatar: '<?= e($prov_avatar_url) ?>',
+        url: '<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>'
+    });
+}
+
 // Inisialisasi Deteksi Order Baru & Nada Dering Masuk
 document.addEventListener('DOMContentLoaded', () => {
     if (window.ProviderNotification) {
@@ -1446,4 +1462,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php 
+require_once __DIR__ . '/../includes/business_card_modal.php';
+require_once __DIR__ . '/../includes/footer.php'; 
+?>

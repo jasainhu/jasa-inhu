@@ -347,8 +347,11 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="d-flex align-items-center gap-2">
                         <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-xs btn-white fw-bold rounded-pill px-2.5 py-1 shadow-xs bg-white text-teal text-decoration-none" style="font-size: 0.72rem;">
-                            <i class="fa-solid fa-eye me-1 text-teal"></i> Lihat Tampilan Publik ↗
+                            <i class="fa-solid fa-eye me-1 text-teal"></i> Lihat Toko ↗
                         </a>
+                        <button type="button" class="btn btn-xs btn-warning fw-bold rounded-pill px-2.5 py-1 shadow-xs text-dark" onclick="triggerCardModal()" style="font-size: 0.72rem;">
+                            <i class="fa-solid fa-id-card me-1"></i> Kartu Jasa Digital
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1194,6 +1197,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function triggerCardModal() {
+    openBusinessCardModal({
+        id: <?= (int)$provider['id'] ?>,
+        name: <?= json_encode($provider['business_name'] ?? $user['name']) ?>,
+        category: <?= json_encode($provider['category_name'] ?? 'Layanan Jasa') ?>,
+        categoryIcon: <?= json_encode($provider['category_icon'] ?? 'fa-wrench') ?>,
+        district: <?= json_encode($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?>,
+        rating: '<?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?>',
+        jobs: '<?= (int)$total_completed ?> Selesai',
+        avatar: '<?= e(has_media($provider['image_url'] ?? '') ? get_media_url($provider['image_url']) : asset_url('images/logo.png')) ?>',
+        url: '<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>'
+    });
+}
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php 
+require_once __DIR__ . '/../includes/business_card_modal.php';
+require_once __DIR__ . '/../includes/footer.php'; 
+?>
