@@ -390,21 +390,8 @@ require_once __DIR__ . '/includes/header.php';
 .btn-send-gradient:active {
     transform: scale(0.96);
 }
-.btn-wa-header {
-    background: #25D366;
-    color: #ffffff;
-    border: none;
-    font-weight: 600;
-    font-size: 0.78rem;
-    border-radius: 10px;
-    padding: 6px 12px;
-    transition: all 0.2s ease;
-}
-.btn-wa-header:hover {
-    background: #1eb956;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+.floating-wa-btn {
+    display: none !important;
 }
 </style>
 
@@ -552,18 +539,14 @@ require_once __DIR__ . '/includes/header.php';
 
                         <!-- Header Right Quick Actions -->
                         <div class="d-flex align-items-center gap-2">
-                            <!-- WhatsApp Shortcut Button -->
-                            <?php if (!empty($active_partner['wa_clean'])): ?>
-                                <a href="https://wa.me/<?= $active_partner['wa_clean'] ?>?text=<?= urlencode('Halo ' . $active_partner['name'] . ', saya menghubungkan dari Kotak Obrolan Jasa Inhu.') ?>" target="_blank" class="btn btn-wa-header d-inline-flex align-items-center gap-1.5 shadow-xs" title="Lanjut Obrolan atau Telepon via WhatsApp">
-                                    <i class="fa-brands fa-whatsapp fs-6"></i>
-                                    <span class="fw-bold" style="font-size: 0.75rem;">Chat WA</span>
-                                </a>
-                            <?php endif; ?>
-
-                            <!-- Provider Profile Link -->
+                            <!-- Provider Profile & Order Actions -->
                             <?php if ($active_partner['is_provider'] && !empty($active_partner['provider'])): ?>
-                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" target="_blank" class="btn btn-outline-teal btn-sm fw-semibold d-none d-sm-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-3" style="font-size: 0.78rem;" title="Lihat Toko Publik / Portofolio">
-                                    <i class="fa-solid fa-store"></i>
+                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" class="btn btn-primary-custom btn-sm fw-bold d-inline-flex align-items-center gap-1.5 shadow-xs px-3 py-1.5 rounded-pill" style="font-size: 0.75rem;" title="Buat Pesanan Resmi">
+                                    <i class="fa-solid fa-bolt text-warning"></i>
+                                    <span>Pesan Jasa</span>
+                                </a>
+                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" target="_blank" class="btn btn-light border btn-sm fw-semibold d-none d-sm-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill text-dark" style="font-size: 0.75rem;" title="Lihat Profil & Portofolio">
+                                    <i class="fa-solid fa-store text-teal"></i>
                                     <span>Toko ↗</span>
                                 </a>
                             <?php endif; ?>
@@ -597,9 +580,9 @@ require_once __DIR__ . '/includes/header.php';
                             <span class="badge bg-white text-muted border shadow-xs px-3 py-1 fw-normal rounded-pill" style="font-size: 0.72rem;">
                                 <i class="fa-solid fa-shield-halved text-teal me-1"></i> Percakapan resmi dilindungi sistem JASA INHU
                             </span>
-                            <span class="text-muted small px-3 py-1 bg-white border border-dashed rounded-3 shadow-2xs" style="font-size: 0.7rem; max-width: 90%;">
-                                <i class="fa-brands fa-whatsapp text-success me-1"></i>
-                                <span>Pesan obrolan otomatis diteruskan ke WhatsApp mitra. Butuh respon instan? Klik tombol <strong>Chat WA</strong> di atas.</span>
+                            <span class="text-muted small px-3 py-1.5 bg-white border border-dashed rounded-3 shadow-2xs" style="font-size: 0.7rem; max-width: 90%;">
+                                <i class="fa-solid fa-lock text-teal me-1"></i>
+                                <span>Notifikasi chat otomatis diteruskan ke HP mitra. Demi keamanan & garansi komplain, pastikan transaksi resmi dibuat melalui tombol <strong>Pesan Jasa</strong> di atas.</span>
                             </span>
                         </div>
 

@@ -181,25 +181,20 @@ try {
                 if ($isReceiverProvider) {
                     $waMsg = "🔔 *Pesan Masuk di JASA INHU*\n\n"
                            . "Halo *{$recName}*,\n"
-                           . "Ada calon pelanggan (*{$senderName}*) yang mengirim pesan obrolan untuk Anda di platform JASA INHU:\n\n"
+                           . "Ada calon pelanggan yang mengirim pesan obrolan untuk Anda di aplikasi JASA INHU:\n\n"
                            . "💬 _\"{$waMsgContent}\"_\n\n"
                            . "👉 *Buka & Balas di Aplikasi:*\n"
-                           . "{$chatUrl}\n\n";
-
-                    if (!empty($cleanSenderPhone)) {
-                        $waMsg .= "📞 *Atau Hubungi Pelanggan via WhatsApp Langsung:*\n"
-                               . "https://wa.me/{$cleanSenderPhone}\n\n";
-                    }
-
-                    $waMsg .= "— *Sistem Notifikasi JASA INHU*";
+                           . "{$chatUrl}\n\n"
+                           . "🛡️ *Peringatan:* Harap sepakati pesanan melalui sistem resmi JASA INHU untuk jaminan keamanan dan garansi Anda.\n\n"
+                           . "— *Sistem Resmi JASA INHU*";
                 } else {
-                    $waMsg = "🔔 *Balasan Pesan dari Mitra JASA INHU*\n\n"
+                    $waMsg = "🔔 *Pesan Masuk di JASA INHU*\n\n"
                            . "Halo *{$recName}*,\n"
                            . "Mitra *{$senderName}* telah membalas pesan obrolan Anda di JASA INHU:\n\n"
                            . "💬 _\"{$waMsgContent}\"_\n\n"
                            . "👉 *Buka Obrolan Sekarang:*\n"
                            . "{$chatUrl}\n\n"
-                           . "— *Sistem Notifikasi JASA INHU*";
+                           . "— *Sistem Resmi JASA INHU*";
                 }
 
                 send_wa_notification($recPhone, $waMsg, 'chat_message', null, $recName);
