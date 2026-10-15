@@ -882,5 +882,26 @@ function get_order_timeline(int $request_id): array {
     }
 }
 
+/**
+ * Filter Keamanan Kata Kunci Terlarang (Anti-Pinjol, Anti-Gadai Liar, Anti-Judi)
+ * Memastikan platform JASA INHU hanya memuat jasa riil, tukang, teknisi, dan profesi legal
+ */
+function check_prohibited_service_keywords(string ...$texts): ?string {
+    $blacklist = [
+        'pinjol', 'dana pinjam', 'pinjam dana', 'pinjaman dana', 'pinjaman uang', 'pinjam uang',
+        'gadai barang', 'gadai uang', 'gadai bpkb', 'bunga terjangkau', 'dapin', 'rentenir',
+        'bunga pinjaman', 'slot online', 'judi online', 'togel', 'gacor', 'dana gaib'
+    ];
+    
+    $combined = strtolower(implode(' ', $texts));
+    foreach ($blacklist as $bad) {
+        if (str_contains($combined, $bad)) {
+            return "Informasi usaha terdeteksi mengandung kata terlarang ('$bad'). JASA INHU adalah marketplace khusus jasa keahlian, pertukangan, dan keterampilan profesional resmi (tidak diperkenankan untuk pinjaman dana, gadai barang, atau layanan non-jasa lainnya).";
+        }
+    }
+    return null;
+}
+
+
 
 

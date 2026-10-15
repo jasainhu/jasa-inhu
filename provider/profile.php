@@ -99,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Kategori utama keahlian wajib dipilih.';
             } elseif (empty($phone)) {
                 $error = 'Nomor WhatsApp usaha wajib diisi.';
+            } elseif ($prohibited_err = check_prohibited_service_keywords($business_name, $headline, $description)) {
+                $error = $prohibited_err;
             } else {
                 // Upload foto baru jika ada (dukung base64 dari kompresor client-side & file multipart)
                 $base64Image = trim($_POST['image_base64'] ?? '');

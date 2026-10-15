@@ -309,6 +309,10 @@ function register_user(array $data): array {
         if (empty($category_id)) {
             return ['success' => false, 'message' => 'Pilih kategori utama keahlian/jasa Anda.'];
         }
+        $prohibited_err = check_prohibited_service_keywords($business_name, $data['headline'] ?? '', $data['description'] ?? '');
+        if ($prohibited_err) {
+            return ['success' => false, 'message' => $prohibited_err];
+        }
     }
 
     // Cek duplikasi email atau telepon (kecuali akun unverified milik user sendiri)
