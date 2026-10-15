@@ -46,8 +46,18 @@ $provider_photo = has_media($provider['image_url'] ?? '') ? $provider['image_url
 $page_title = e($provider['business_name']) . ' - Profil & Testimoni Mitra JASA INHU';
 $og_title = e($provider['business_name']) . ' (' . e($provider['category_name']) . ') - JASA INHU';
 $og_description = 'Layanan ' . e($provider['category_name']) . ' terpercaya di Kec. ' . e($provider['district_name'] ?: 'Kab. Indragiri Hulu') . '. Hubungi langsung via WhatsApp atau pesan instan di platform JASA INHU.';
-if (has_media($provider_photo) && !str_starts_with($provider_photo, 'data:')) {
-    $og_image = get_media_url($provider_photo);
+// Pastikan selalu menyediakan URL gambar toko mitra yang didukung WhatsApp crawler
+if (has_media($provider_photo)) {
+    if (str_starts_with($provider_photo, 'http://') || str_starts_with($provider_photo, 'https://')) {
+        $og_image = $provider_photo;
+    } elseif (!str_starts_with($provider_photo, 'data:')) {
+        $og_image = BASE_URL . '/' . ltrim($provider_photo, '/');
+    } else {
+        // Gambar base64 dialirkan via api/provider_og_image.php agar terbaca 100% oleh WhatsApp crawler
+        $og_image = BASE_URL . '/api/provider_og_image.php?id=' . (int)$provider['id'];
+    }
+} else {
+    $og_image = BASE_URL . '/assets/images/og-banner.jpg';
 }
 
 // 2. Ambil Wilayah Layanan yang Dicakup di Kab. Inhu
