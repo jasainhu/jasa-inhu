@@ -59,7 +59,8 @@ try {
     $sqlProv = "
         SELECT sp.id, sp.user_id, sp.primary_category_id, sp.business_name, sp.image_url, sp.headline,
                sp.description, sp.experience_years, sp.hourly_rate_min, sp.hourly_rate_max,
-               sp.is_verified, sp.id_card_type, sp.school_name, sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
+               sp.is_verified, sp.id_card_type, sp.school_name, sp.credential_title, sp.certificate_url,
+               sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
                u.name as owner_name, u.phone, sc.name as category_name, sc.icon as category_icon,
                d.name as district_name, v.name as village_name,
                (SELECT COUNT(*) FROM provider_portfolios pp WHERE pp.provider_id = sp.id) as portfolio_count
