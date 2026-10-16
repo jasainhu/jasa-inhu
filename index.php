@@ -192,6 +192,13 @@ $shopee_hub = [
         'link' => BASE_URL . '/search.php?sort=cheap'
     ],
     [
+        'title' => "Bersih Rumah\n& ART",
+        'icon' => 'fa-broom',
+        'color' => '#0d9488',
+        'bg' => '#ccfbf1',
+        'link' => BASE_URL . '/search.php?kategori=16'
+    ],
+    [
         'title' => "Spesialis\nSawit",
         'icon' => 'fa-tree',
         'color' => '#16a34a',
