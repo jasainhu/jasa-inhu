@@ -72,7 +72,7 @@ try {
         LEFT JOIN villages v ON sp.village_id = v.id
         WHERE " . implode(' AND ', $prov_where) . "
         ORDER BY sp.is_verified DESC, sp.rating_avg DESC, sp.completed_jobs DESC, sp.id DESC
-        LIMIT 24
+        LIMIT 60
     ";
     $stmtProv = $db->prepare($sqlProv);
     $stmtProv->execute($prov_params);
