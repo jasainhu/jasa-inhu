@@ -382,39 +382,74 @@ require_once __DIR__ . '/includes/header.php';
             <?php if (!empty($portfolios)): ?>
                 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" id="section-portofolio">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                            <i class="fa-solid fa-images text-teal"></i>
-                            <span>Bukti Hasil Kerja (<?= count($portfolios) ?>)</span>
-                        </h5>
-                        <span class="text-muted small">Dokumentasi pekerjaan sebelumnya</span>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-images text-teal"></i>
+                                <span>Bukti Hasil Kerja & Layanan (<?= count($portfolios) ?>)</span>
+                            </h5>
+                            <span class="text-muted small">Klik pada gambar untuk melihat ukuran penuh / brosur lengkap</span>
+                        </div>
                     </div>
 
                     <div class="row g-3">
-                        <?php foreach ($portfolios as $port): ?>
+                        <?php foreach ($portfolios as $idx => $port): ?>
                             <?php 
                                 $hasBefore = has_media($port['image_before'] ?? '');
                                 $hasAfter = has_media($port['image_after'] ?? '');
+                                $portTitleSafe = e($port['title']);
+                                $portDescSafe = e($port['description'] ?? '');
+                                $portDateFormatted = format_date($port['service_date'] ?: $port['created_at']);
+                                $imgAfterUrl = $hasAfter ? e(get_media_url($port['image_after'])) : '';
+                                $imgBeforeUrl = $hasBefore ? e(get_media_url($port['image_before'])) : '';
                             ?>
                             <div class="col-md-6">
-                                <div class="card border rounded-3 overflow-hidden shadow-xs h-100">
-                                    <div class="position-relative" style="min-height: 180px; background: #0f172a;">
+                                <div class="card border rounded-3 overflow-hidden shadow-xs h-100 hover-lift-subtle">
+                                    <div class="position-relative overflow-hidden" style="min-height: 190px; background: #0f172a;">
                                         <?php if ($hasBefore && $hasAfter): ?>
                                             <div class="row g-0 h-100">
-                                                <div class="col-6 position-relative border-end" style="height: 180px;">
+                                                <div class="col-6 position-relative border-end cursor-pointer portfolio-zoom-trigger" style="height: 190px;" 
+                                                     onclick="openPortfolioModal('<?= $imgBeforeUrl ?>', '<?= $portTitleSafe ?> (Sebelum)', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
+                                                     title="Klik untuk lihat foto sebelum">
                                                     <span class="badge bg-danger position-absolute top-0 start-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">SEBELUM</span>
-                                                    <img src="<?= e(get_media_url($port['image_before'])) ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover">
+                                                    <img src="<?= $imgBeforeUrl ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
+                                                    <div class="portfolio-hover-overlay">
+                                                        <i class="fa-solid fa-magnifying-glass-plus text-white fs-4"></i>
+                                                    </div>
                                                 </div>
-                                                <div class="col-6 position-relative" style="height: 180px;">
+                                                <div class="col-6 position-relative cursor-pointer portfolio-zoom-trigger" style="height: 190px;" 
+                                                     onclick="openPortfolioModal('<?= $imgAfterUrl ?>', '<?= $portTitleSafe ?> (Sesudah)', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
+                                                     title="Klik untuk lihat foto sesudah">
                                                     <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">SESUDAH</span>
-                                                    <img src="<?= e(get_media_url($port['image_after'])) ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover">
+                                                    <img src="<?= $imgAfterUrl ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
+                                                    <div class="portfolio-hover-overlay">
+                                                        <i class="fa-solid fa-magnifying-glass-plus text-white fs-4"></i>
+                                                    </div>
                                                 </div>
                                             </div>
                                         <?php elseif ($hasAfter): ?>
-                                            <img src="<?= e(get_media_url($port['image_after'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover" style="max-height: 220px;">
-                                            <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs">Hasil Selesai</span>
+                                            <div class="position-relative cursor-pointer portfolio-zoom-trigger" style="height: 220px;" 
+                                                 onclick="openPortfolioModal('<?= $imgAfterUrl ?>', '<?= $portTitleSafe ?>', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
+                                                 title="Klik untuk memperbesar gambar">
+                                                <img src="<?= $imgAfterUrl ?>" alt="<?= $portTitleSafe ?>" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
+                                                <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2;">Hasil Selesai</span>
+                                                <div class="portfolio-hover-overlay">
+                                                    <div class="badge bg-dark bg-opacity-80 text-white px-3 py-1.5 rounded-pill shadow-sm d-flex align-items-center gap-1.5">
+                                                        <i class="fa-solid fa-magnifying-glass-plus"></i> Klik untuk perbesar
+                                                    </div>
+                                                </div>
+                                            </div>
                                         <?php elseif ($hasBefore): ?>
-                                            <img src="<?= e(get_media_url($port['image_before'])) ?>" alt="<?= e($port['title']) ?>" class="w-100 h-100 object-fit-cover" style="max-height: 220px;">
-                                            <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs">Sebelum Pengerjaan</span>
+                                            <div class="position-relative cursor-pointer portfolio-zoom-trigger" style="height: 220px;" 
+                                                 onclick="openPortfolioModal('<?= $imgBeforeUrl ?>', '<?= $portTitleSafe ?>', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
+                                                 title="Klik untuk memperbesar gambar">
+                                                <img src="<?= $imgBeforeUrl ?>" alt="<?= $portTitleSafe ?>" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
+                                                <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2;">Sebelum Pengerjaan</span>
+                                                <div class="portfolio-hover-overlay">
+                                                    <div class="badge bg-dark bg-opacity-80 text-white px-3 py-1.5 rounded-pill shadow-sm d-flex align-items-center gap-1.5">
+                                                        <i class="fa-solid fa-magnifying-glass-plus"></i> Klik untuk perbesar
+                                                    </div>
+                                                </div>
+                                            </div>
                                         <?php else: ?>
                                             <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="min-height: 180px;">
                                                 <i class="fa-solid fa-camera fs-2 opacity-50"></i>
@@ -422,12 +457,18 @@ require_once __DIR__ . '/includes/header.php';
                                         <?php endif; ?>
                                     </div>
                                     <div class="card-body p-3">
-                                        <h6 class="fw-bold text-dark mb-1 fs-6"><?= e($port['title']) ?></h6>
+                                        <h6 class="fw-bold text-dark mb-1 fs-6"><?= $portTitleSafe ?></h6>
                                         <?php if (!empty($port['description'])): ?>
-                                            <p class="text-muted small mb-2" style="font-size: 0.8rem; line-height: 1.45;"><?= e($port['description']) ?></p>
+                                            <p class="text-muted small mb-2" style="font-size: 0.8rem; line-height: 1.45;"><?= $portDescSafe ?></p>
                                         <?php endif; ?>
-                                        <div class="text-muted small" style="font-size: 0.72rem;">
-                                            <i class="fa-regular fa-calendar me-1"></i> Selesai: <?= format_date($port['service_date'] ?: $port['created_at']) ?>
+                                        <div class="d-flex align-items-center justify-content-between text-muted small pt-1 border-top mt-2" style="font-size: 0.72rem;">
+                                            <span><i class="fa-regular fa-calendar me-1"></i> Selesai: <?= $portDateFormatted ?></span>
+                                            <?php if ($hasAfter || $hasBefore): ?>
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-teal text-decoration-none fw-semibold d-inline-flex align-items-center gap-1" 
+                                                        onclick="openPortfolioModal('<?= $imgAfterUrl ?: $imgBeforeUrl ?>', '<?= $portTitleSafe ?>', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')">
+                                                    <i class="fa-solid fa-expand"></i> Lihat Detail
+                                                </button>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -1458,7 +1499,104 @@ function triggerCardModal() {
         url: '<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>'
     });
 }
+
+function openPortfolioModal(imgSrc, title, desc, date) {
+    if (!imgSrc) return;
+    const imgEl = document.getElementById('portfolioModalImg');
+    const titleEl = document.getElementById('portfolioModalTitle');
+    const dateEl = document.getElementById('portfolioModalDate');
+    const descEl = document.getElementById('portfolioModalDesc');
+    const descBox = document.getElementById('portfolioModalDescBox');
+    const dlBtn = document.getElementById('portfolioModalDownload');
+
+    if (imgEl) imgEl.src = imgSrc;
+    if (titleEl) titleEl.textContent = title || 'Pratinjau Foto Portofolio';
+    if (dateEl) dateEl.textContent = date ? 'Pengerjaan / Selesai: ' + date : '';
+    
+    if (desc && desc.trim()) {
+        if (descEl) descEl.textContent = desc;
+        if (descBox) descBox.style.display = 'block';
+    } else {
+        if (descBox) descBox.style.display = 'none';
+    }
+
+    if (dlBtn) dlBtn.href = imgSrc;
+
+    const modalEl = document.getElementById('portfolioImageModal');
+    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+}
 </script>
+
+<!-- Styles Khusus Portfolio Lightbox Preview -->
+<style>
+.portfolio-zoom-trigger {
+    cursor: pointer;
+}
+.portfolio-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.22s ease-in-out;
+    pointer-events: none;
+    z-index: 3;
+}
+.portfolio-zoom-trigger:hover .portfolio-hover-overlay {
+    opacity: 1;
+}
+.portfolio-thumb-img {
+    transition: transform 0.35s ease;
+}
+.portfolio-zoom-trigger:hover .portfolio-thumb-img {
+    transform: scale(1.05);
+}
+.hover-lift-subtle {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift-subtle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}
+</style>
+
+<!-- Modal Lightbox / Pratinjau Foto Portofolio Ukuran Penuh -->
+<div class="modal fade" id="portfolioImageModal" tabindex="-1" aria-labelledby="portfolioModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden" style="background: #0b1120;">
+            <div class="modal-header border-bottom border-white border-opacity-10 py-3 px-4 text-white">
+                <div class="pe-3">
+                    <h5 class="modal-title fw-bold text-white mb-0 fs-6" id="portfolioModalTitle"></h5>
+                    <small class="text-white-50" style="font-size: 0.75rem;" id="portfolioModalDate"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body p-2 p-md-3 text-center position-relative" style="background: #020617;">
+                <div class="d-flex align-items-center justify-content-center" style="min-height: 250px;">
+                    <img id="portfolioModalImg" src="" alt="Pratinjau Ukuran Penuh" class="img-fluid rounded-3 shadow-lg" 
+                         style="max-height: 75vh; width: auto; object-fit: contain; user-select: none;">
+                </div>
+                <div class="p-3 text-start bg-slate-900 bg-opacity-75 rounded-3 mt-2 text-light small border border-white border-opacity-10" id="portfolioModalDescBox" style="display: none; background: #0f172a;">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-circle-info text-teal mt-0.5"></i>
+                        <span id="portfolioModalDesc" style="line-height: 1.5; color: #cbd5e1;"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-white border-opacity-10 py-2.5 px-4 d-flex justify-content-between align-items-center" style="background: #0b1120;">
+                <a id="portfolioModalDownload" href="" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 fw-medium d-inline-flex align-items-center gap-1.5" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Gambar Asli
+                </a>
+                <button type="button" class="btn btn-sm btn-light rounded-pill px-4 py-1.5 fw-semibold" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php 
 require_once __DIR__ . '/includes/business_card_modal.php';
