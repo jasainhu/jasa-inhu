@@ -135,16 +135,21 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="small fw-semibold text-muted">Permintaan Jasa</span>
-                <div class="stat-icon" style="background: #f3e8ff; color: #9333ea;">
-                    <i class="fa-solid fa-clipboard-list"></i>
+        <a href="<?= BASE_URL ?>/admin/orders.php" class="text-decoration-none text-dark">
+            <div class="stat-card hover-lift transition">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="small fw-semibold text-muted">Pesanan Masuk</span>
+                    <div class="stat-icon" style="background: #f3e8ff; color: #9333ea;">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                </div>
+                <div class="h3 fw-bold mb-1"><?= $total_requests ?></div>
+                <div class="small text-muted d-flex align-items-center justify-content-between">
+                    <span>Total pesanan warga</span>
+                    <span class="text-primary fw-semibold" style="font-size: 0.72rem;">Buka &rarr;</span>
                 </div>
             </div>
-            <div class="h3 fw-bold mb-1"><?= $total_requests ?></div>
-            <div class="small text-muted">Total kebutuhan dibuat</div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -172,7 +177,9 @@ require_once __DIR__ . '/includes/header.php';
                             <?php foreach ($recent_providers as $p): ?>
                                 <tr>
                                     <td>
-                                        <div class="fw-bold text-dark"><?= e($p['business_name']) ?></div>
+                                        <a href="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $p['id'] ?>" class="fw-bold text-dark text-decoration-none hover-teal" title="Buka Lembar Berkas Arsip Mitra">
+                                            <?= e($p['business_name']) ?> <i class="fa-solid fa-arrow-up-right-from-square text-teal ms-0.5" style="font-size: 0.65rem;"></i>
+                                        </a>
                                         <div class="text-muted" style="font-size: 0.75rem;"><?= e($p['user_name']) ?> &bull; <?= e($p['phone']) ?></div>
                                     </td>
                                     <td><span class="badge text-bg-light border"><?= e($p['category_name']) ?></span></td>
@@ -189,15 +196,20 @@ require_once __DIR__ . '/includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end">
-                                        <form method="POST" action="<?= BASE_URL ?>/admin/index.php" class="d-inline">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="action" value="toggle_verify">
-                                            <input type="hidden" name="provider_id" value="<?= $p['id'] ?>">
-                                            <input type="hidden" name="new_status" value="<?= $p['is_verified'] ? 0 : 1 ?>">
-                                            <button type="submit" class="btn btn-xs <?= $p['is_verified'] ? 'btn-outline-danger' : 'btn-success' ?> btn-sm py-1 px-2" style="font-size: 0.72rem;">
-                                                <?= $p['is_verified'] ? 'Batalkan' : 'Verifikasi' ?>
-                                            </button>
-                                        </form>
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <a href="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $p['id'] ?>" class="btn btn-outline-teal btn-sm py-1 px-2" style="font-size: 0.72rem;" title="Lembar Arsip Mitra">
+                                                <i class="fa-solid fa-file-invoice"></i>
+                                            </a>
+                                            <form method="POST" action="<?= BASE_URL ?>/admin/index.php" class="d-inline">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="action" value="toggle_verify">
+                                                <input type="hidden" name="provider_id" value="<?= $p['id'] ?>">
+                                                <input type="hidden" name="new_status" value="<?= $p['is_verified'] ? 0 : 1 ?>">
+                                                <button type="submit" class="btn btn-xs <?= $p['is_verified'] ? 'btn-outline-danger' : 'btn-success' ?> btn-sm py-1 px-2" style="font-size: 0.72rem;">
+                                                    <?= $p['is_verified'] ? 'Batalkan' : 'Verifikasi' ?>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -215,6 +227,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="card border shadow-sm">
             <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                 <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-bullhorn me-2 text-warning"></i> Permintaan Jasa Masuk</h6>
+                <a href="<?= BASE_URL ?>/admin/orders.php" class="small text-decoration-none">Kelola Semua Pesanan &rarr;</a>
             </div>
             <div class="list-group list-group-flush small">
                 <?php if (!empty($recent_requests)): ?>

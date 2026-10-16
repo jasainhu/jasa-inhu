@@ -71,10 +71,26 @@ $page_title = $page_title ?? 'Admin Dashboard';
                     <div class="fw-bold small text-dark"><i class="fa-solid fa-map-pin text-danger me-1"></i> Kab. Indragiri Hulu</div>
                 </div>
 
+                <?php
+                $open_orders_count = 0;
+                try {
+                    $db_hdr = get_db();
+                    $open_orders_count = (int)$db_hdr->query("SELECT COUNT(*) FROM service_requests WHERE status IN ('open', 'in_progress')")->fetchColumn();
+                } catch (Exception $e) {}
+                ?>
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="sidebar-link <?= ($admin_active ?? '') === 'dashboard' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/index.php">
                             <i class="fa-solid fa-gauge"></i> Ringkasan Utama
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="sidebar-link <?= ($admin_active ?? '') === 'orders' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/orders.php">
+                            <i class="fa-solid fa-clipboard-list text-info"></i> 
+                            <span>Pesanan Masuk</span>
+                            <?php if ($open_orders_count > 0): ?>
+                                <span class="badge rounded-pill bg-danger ms-auto" style="font-size: 0.7rem;"><?= $open_orders_count ?></span>
+                            <?php endif; ?>
                         </a>
                     </li>
                     <li class="nav-item">

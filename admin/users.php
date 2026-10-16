@@ -539,7 +539,13 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                             <?php if ($u['business_name']): ?>
                                 <div class="text-teal fw-semibold" style="font-size: 0.75rem;">
-                                    <i class="fa-solid fa-store me-1"></i> <?= e($u['business_name']) ?>
+                                    <?php if (!empty($u['provider_id'])): ?>
+                                        <a href="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $u['provider_id'] ?>" class="text-teal text-decoration-none hover-underline" title="Buka Berkas Lembar Arsip Satuan Mitra">
+                                            <i class="fa-solid fa-store me-1"></i> <?= e($u['business_name']) ?> <i class="fa-solid fa-arrow-up-right-from-square ms-0.5 opacity-75" style="font-size: 0.65rem;"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <i class="fa-solid fa-store me-1"></i> <?= e($u['business_name']) ?>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="mt-1 d-flex align-items-center gap-1.5 flex-wrap">
                                     <?php 
@@ -664,6 +670,13 @@ require_once __DIR__ . '/includes/header.php';
                                     </form>
                                 <?php endif; ?>
 
+                                <?php if ($u['role_name'] === 'penyedia' && !empty($u['provider_id'])): ?>
+                                    <!-- Tombol Lembar Arsip Satuan Mitra -->
+                                    <a href="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $u['provider_id'] ?>" class="btn btn-sm btn-outline-teal py-1 px-2" style="font-size: 0.75rem;" title="Lembar Arsip Master & Cetak PDF Mitra">
+                                        <i class="fa-solid fa-file-invoice"></i>
+                                    </a>
+                                <?php endif; ?>
+
                                 <!-- Tombol Edit Akun -->
                                 <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $u['id'] ?>" style="font-size: 0.75rem;" title="Edit Data Akun">
                                     <i class="fa-solid fa-pen-to-square"></i>
@@ -674,7 +687,15 @@ require_once __DIR__ . '/includes/header.php';
                                     <button class="btn btn-sm btn-outline-secondary py-1 px-2 dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Menu Aksi Lainnya">
                                         <i class="fa-solid fa-ellipsis-vertical"></i>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-1.5" style="font-size: 0.8rem; min-width: 175px;">
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-1.5" style="font-size: 0.8rem; min-width: 185px;">
+                                        <?php if ($u['role_name'] === 'penyedia' && !empty($u['provider_id'])): ?>
+                                            <li>
+                                                <a class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2 text-teal fw-semibold" href="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $u['provider_id'] ?>">
+                                                    <i class="fa-solid fa-file-invoice text-teal"></i> Berkas Arsip Satuan
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider my-1"></li>
+                                        <?php endif; ?>
                                         <li>
                                             <button type="button" class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#resetPassModal<?= $u['id'] ?>">
                                                 <i class="fa-solid fa-key text-warning"></i> Reset Kata Sandi
