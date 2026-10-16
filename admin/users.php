@@ -400,8 +400,14 @@ require_once __DIR__ . '/includes/header.php';
         <h1 class="h3 fw-bold text-dark mb-1">Daftar & Edit Pengguna Platform</h1>
         <p class="text-muted small mb-0">Kelola akun administrator, masyarakat (pengguna), dan penyedia jasa lokal di Inhu</p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-        <a href="<?= BASE_URL ?>/admin/profile.php" class="btn btn-sm btn-primary-custom">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="<?= BASE_URL ?>/admin/export_providers.php" target="_blank" class="btn btn-sm btn-danger shadow-xs fw-bold">
+            <i class="fa-solid fa-file-pdf me-1"></i> Cetak / Unduh PDF Data Mitra
+        </a>
+        <a href="<?= BASE_URL ?>/admin/export_providers.php?format=excel" class="btn btn-sm btn-success shadow-xs fw-bold">
+            <i class="fa-solid fa-file-excel me-1"></i> Unduh Excel (CSV)
+        </a>
+        <a href="<?= BASE_URL ?>/admin/profile.php" class="btn btn-sm btn-outline-secondary">
             <i class="fa-solid fa-user-gear me-1"></i> Edit Akun Admin Saya
         </a>
     </div>
