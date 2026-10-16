@@ -31,7 +31,8 @@ $page_title = $page_title ?? 'Marketplace Jasa Lokal Kabupaten Indragiri Hulu';
 <?php
 $meta_og_title = $og_title ?? ($page_title . ' | ' . APP_NAME);
 $meta_og_desc = $og_description ?? 'Pusat layanan jasa & tukang terpercaya se-Kabupaten Indragiri Hulu, Riau. Temukan bengkel, tukang bangunan, servis AC, montir, tenaga medis, dan lainnya di 14 kecamatan.';
-$meta_og_img = !empty($og_image) ? (str_starts_with($og_image, 'http') ? $og_image : (BASE_URL . '/' . ltrim($og_image, '/'))) : (BASE_URL . '/assets/images/og-banner.jpg');
+$default_og_banner = BASE_URL . '/assets/images/og-banner.jpg?v=' . (file_exists(__DIR__ . '/../assets/images/og-banner.jpg') ? filemtime(__DIR__ . '/../assets/images/og-banner.jpg') : '2');
+$meta_og_img = !empty($og_image) ? (str_starts_with($og_image, 'http') ? $og_image : (BASE_URL . '/' . ltrim($og_image, '/'))) : $default_og_banner;
 $meta_og_url = BASE_URL . ($_SERVER['REQUEST_URI'] ?? '/');
 ?>
     <meta property="og:site_name" content="<?= APP_NAME ?>">

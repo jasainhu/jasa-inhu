@@ -125,8 +125,9 @@ foreach ($targets as $idx => $p) {
     $provName = trim($p['business_name']);
     $ownerName = trim($p['owner_name']);
     $phone = trim($p['phone']);
+    $profileUrl = "{$appUrl}/provider/profile.php";
+    $portfolioUrl = "{$appUrl}/provider/portfolio.php";
     $storeUrl = "{$appUrl}/provider_detail.php?id={$p['id']}";
-    $loginUrl = "{$appUrl}/provider/profile.php";
 
     $missingList = "";
     foreach ($p['missing_items'] as $item) {
@@ -134,19 +135,23 @@ foreach ($targets as $idx => $p) {
     }
 
     $message = "Halo Kak/Pak/Bu *{$ownerName}* (*{$provName}*), salam hangat dari Tim Komunitas *JASA INHU* 🙏✨\n\n"
-             . "Kabar baik! Saat ini JASA INHU sedang gencar promosi besar-besaran di media sosial (TikTok, Instagram, & WhatsApp) untuk mendatangkan pelanggan ke toko mitra di Indragiri Hulu.\n\n"
+             . "Kabar baik! Saat ini JASA INHU sedang gencar promosi besar-besaran di media sosial (TikTok, Instagram, & WhatsApp) untuk mendatangkan banyak pelanggan ke toko mitra di Indragiri Hulu.\n\n"
              . "Setelah kami cek profil toko Anda di:\n"
              . "👉 {$storeUrl}\n\n"
-             . "Ternyata masih ada beberapa data penting yang belum terpasang:\n"
+             . "Ternyata masih ada beberapa data/foto penting yang belum Kakak pasang:\n"
              . "{$missingList}\n"
              . "💡 *Kenapa foto sangat penting?*\n"
-             . "Pelanggan 8x lebih sering memilih dan memesan jasa yang ada foto hasil kerjanya dibandingkan profil yang masih kosong.\n\n"
-             . "👉 *Cara Lengkapi (Sangat Mudah):*\n"
-             . "1. Buka akun Anda di: {$loginUrl}\n"
-             . "2. Masukkan foto terbaik Anda / foto saat sedang bekerja.\n\n"
-             . "🤝 *Mau Dibantu Tim Admin? Gratis!*\n"
-             . "Kakak cukup *balas pesan WhatsApp ini* dan kirimkan 2-3 foto terbaik hasil kerja/layanan toko Anda, biar tim admin kami yang langsung pasangkan ke akun toko Kakak!\n\n"
-             . "Yuk lengkapi sekarang agar toko Kakak kebagian orderan saat promosi berjalan. Semangat dan lancar terus usahanya ya Kak! 💪🔥\n\n"
+             . "Calon pelanggan 8x lebih yakin dan lebih cepat memesan jasa jika melihat langsung foto pengerjaan atau logo usaha Kakak.\n\n"
+             . "Yuk coba lengkapi sendiri lewat akun mitra Kakak, caranya sangat mudah:\n\n"
+             . "1. 📸 *Pasang Foto Toko / Profil:*\n"
+             . "Masuk ke: {$profileUrl}\n"
+             . "Klik tombol ganti foto profil/logo toko, lalu klik simpan.\n\n"
+             . "2. 🖼️ *Upload Hasil Kerja (Portofolio):*\n"
+             . "Masuk ke: {$portfolioUrl}\n"
+             . "Klik tombol *\"Tambah Portofolio\"* dan masukkan foto hasil kerja terbaik Kakak.\n\n"
+             . "3. 🛡️ *Verifikasi KTP (Biar Makin Dipercaya):*\n"
+             . "Upload foto KTP di menu profil untuk dapat lencana resmi terverifikasi agar toko Kakak direkomendasikan di posisi teratas!\n\n"
+             . "Biar Kakak semakin terbiasa dan mandiri mengelola toko di Jasa Inhu, dicoba login dan upload sekarang ya Kak. Jika ada tombol yang membingungkan, balas pesan ini dan admin akan pandu langkah-langkahnya 😊 Semangat dan semoga orderannya semakin ramai! 💪🔥\n\n"
              . "— *Tim Pengembang JASA INHU*";
 
     echo "[{$num}/{$total}] Mengirim ke {$provName} ({$phone})... ";
