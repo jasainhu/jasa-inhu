@@ -41,21 +41,15 @@ if (!$provider) {
     redirect('/');
 }
 
-$provider_photo = has_media($provider['image_url'] ?? '') ? $provider['image_url'] : ($provider['owner_avatar'] ?? '');
+$has_provider_photo = has_media($provider['image_url'] ?? '') || has_media($provider['owner_avatar'] ?? '');
+$provider_photo = $has_provider_photo ? get_provider_cover_url($provider) : '';
 
 $page_title = e($provider['business_name']) . ' - Profil & Testimoni Mitra JASA INHU';
 $og_title = e($provider['business_name']) . ' (' . e($provider['category_name']) . ') - JASA INHU';
 $og_description = 'Layanan ' . e($provider['category_name']) . ' terpercaya di Kec. ' . e($provider['district_name'] ?: 'Kab. Indragiri Hulu') . '. Hubungi langsung via WhatsApp atau pesan instan di platform JASA INHU.';
 // Pastikan selalu menyediakan URL gambar toko mitra yang didukung WhatsApp crawler
-if (has_media($provider_photo)) {
-    if (str_starts_with($provider_photo, 'http://') || str_starts_with($provider_photo, 'https://')) {
-        $og_image = $provider_photo;
-    } elseif (!str_starts_with($provider_photo, 'data:')) {
-        $og_image = BASE_URL . '/' . ltrim($provider_photo, '/');
-    } else {
-        // Gambar base64 dialirkan via provider_og_image.php agar terbaca 100% oleh WhatsApp crawler
-        $og_image = BASE_URL . '/provider_og_image.php?id=' . (int)$provider['id'];
-    }
+if ($has_provider_photo) {
+    $og_image = $provider_photo;
 } else {
     $og_image = BASE_URL . '/assets/images/og-banner.jpg';
 }
@@ -202,8 +196,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
                 <!-- Cover Photo Banner -->
                 <div class="position-relative" style="height: 220px; background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%);">
-                    <?php if (has_media($provider_photo)): ?>
-                        <img src="<?= e(get_media_url($provider_photo)) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover" style="opacity: 0.92;">
+                    <?php if ($has_provider_photo): ?>
+                        <img src="<?= e($provider_photo) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover" style="opacity: 0.92;">
                     <?php else: ?>
                         <div class="w-100 h-100 d-flex align-items-center justify-content-center text-white opacity-40">
                             <i class="fa-solid <?= e($provider['category_icon'] ?: 'fa-wrench') ?>" style="font-size: 5rem;"></i>
@@ -399,8 +393,8 @@ require_once __DIR__ . '/includes/header.php';
                                 $portTitleSafe = e($port['title']);
                                 $portDescSafe = e($port['description'] ?? '');
                                 $portDateFormatted = format_date($port['service_date'] ?: $port['created_at']);
-                                $imgAfterUrl = $hasAfter ? e(get_media_url($port['image_after'])) : '';
-                                $imgBeforeUrl = $hasBefore ? e(get_media_url($port['image_before'])) : '';
+                                $imgAfterUrl = $hasAfter ? e(get_portfolio_image_url($port, 'after')) : '';
+                                $imgBeforeUrl = $hasBefore ? e(get_portfolio_image_url($port, 'before')) : '';
                             ?>
                             <div class="col-md-6">
                                 <div class="card border rounded-3 overflow-hidden shadow-xs h-100 hover-lift-subtle">
@@ -717,13 +711,13 @@ require_once __DIR__ . '/includes/header.php';
                         <!-- Grid 2-Kolom Petak Mini Ala Beranda -->
                         <div class="row g-2">
                             <?php foreach ($related_providers as $rel): ?>
-                                <?php $rel_cover = has_media($rel['image_url'] ?? '') ? $rel['image_url'] : ($rel['owner_avatar'] ?? ''); ?>
+                                <?php $rel_cover = get_provider_cover_url($rel); ?>
                                 <div class="col-6">
                                     <div class="provider-card-modern h-100 rounded-3 border bg-white shadow-2xs overflow-hidden d-flex flex-column transition-all hover-shadow">
                                         <!-- Foto Cover Usaha -->
                                         <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $rel['id'] ?>" class="provider-cover-wrap position-relative d-block text-decoration-none" style="height: 105px;">
-                                            <?php if (has_media($rel_cover)): ?>
-                                                <img src="<?= e(get_media_url($rel_cover)) ?>" alt="<?= e($rel['business_name']) ?>" class="provider-cover-img">
+                                            <?php if (!empty($rel_cover)): ?>
+                                                <img src="<?= e($rel_cover) ?>" alt="<?= e($rel['business_name']) ?>" class="provider-cover-img" loading="lazy">
                                             <?php else: ?>
                                                 <div class="provider-cover-fallback d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0d9488 0%, #0f172a 100%);">
                                                     <i class="fa-solid <?= e($rel['category_icon'] ?: 'fa-wrench') ?> text-white fs-4 opacity-75"></i>
@@ -818,8 +812,8 @@ if (str_contains($cat_slug, 'med')) {
                     <!-- Mini Provider Card di Header -->
                     <div class="d-flex align-items-center gap-2.5 p-2.5 rounded-3 bg-white bg-opacity-10 backdrop-blur border border-white border-opacity-20">
                         <div class="rounded-3 overflow-hidden bg-white shadow-xs flex-shrink-0" style="width: 50px; height: 50px;">
-                            <?php if (has_media($provider['image_url'] ?? '')): ?>
-                                <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover">
+                            <?php if ($has_provider_photo): ?>
+                                <img src="<?= e($provider_photo) ?>" alt="<?= e($provider['business_name']) ?>" class="w-100 h-100 object-fit-cover">
                             <?php else: ?>
                                 <div class="w-100 h-100 d-flex align-items-center justify-content-center text-teal">
                                     <i class="fa-solid <?= e($provider['category_icon'] ?: 'fa-store') ?> fs-4"></i>
@@ -1495,7 +1489,7 @@ function triggerCardModal() {
         district: <?= json_encode($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?>,
         rating: '<?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?>',
         jobs: '<?= (int)($provider['completed_jobs'] ?? 0) ?> Selesai',
-        avatar: '<?= e(has_media($provider_photo) ? get_media_url($provider_photo) : asset_url('images/logo.png')) ?>',
+        avatar: '<?= $has_provider_photo ? e($provider_photo) : asset_url('images/logo.png') ?>',
         url: '<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>'
     });
 }

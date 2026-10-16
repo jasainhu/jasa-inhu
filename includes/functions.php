@@ -333,6 +333,51 @@ function get_media_url(?string $path, string $default = ''): string {
 }
 
 /**
+ * Mendapatkan URL Foto Cover / Profil Usaha Mitra
+ * Mengalirkan gambar via media.php jika berformat Base64 agar hemat bandwidth dan mencegah Vercel Payload Limit (4.5MB)
+ */
+function get_provider_cover_url(array $provider, string $default = ''): string {
+    $raw = !empty($provider['image_url']) ? $provider['image_url'] : ($provider['owner_avatar'] ?? '');
+    if (empty($raw)) {
+        return $default;
+    }
+    if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+        return $raw;
+    }
+    if (!str_starts_with($raw, 'data:')) {
+        return BASE_URL . '/' . ltrim($raw, '/');
+    }
+    $id = (int)($provider['id'] ?? 0);
+    if ($id > 0) {
+        return BASE_URL . '/media.php?type=provider&id=' . $id;
+    }
+    return $raw;
+}
+
+/**
+ * Mendapatkan URL Gambar Portofolio Mitra
+ * Mengalirkan gambar via media.php jika berformat Base64 agar hemat bandwidth dan mencegah Vercel Payload Limit (4.5MB)
+ */
+function get_portfolio_image_url(array $portfolio, string $field = 'after', string $default = ''): string {
+    $raw = ($field === 'before') ? ($portfolio['image_before'] ?? '') : ($portfolio['image_after'] ?? '');
+    if (empty($raw)) {
+        return $default;
+    }
+    if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+        return $raw;
+    }
+    if (!str_starts_with($raw, 'data:')) {
+        return BASE_URL . '/' . ltrim($raw, '/');
+    }
+    $id = (int)($portfolio['id'] ?? 0);
+    if ($id > 0) {
+        return BASE_URL . '/media.php?type=portfolio&id=' . $id . '&field=' . $field;
+    }
+    return $raw;
+}
+
+
+/**
  * Cek apakah media ada / valid untuk ditampilkan
  */
 function has_media(?string $path): bool {

@@ -488,10 +488,10 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="col-6 col-md-6 col-lg-4">
                         <div class="provider-card-modern h-100 rounded-3 rounded-md-4 border bg-white shadow-sm overflow-hidden d-flex flex-column">
                             <!-- Cover Foto Usaha / Workshop (Dengan Fallback Cantik) -->
-                            <?php $prov_cover = has_media($prov['image_url'] ?? '') ? $prov['image_url'] : ($prov['owner_avatar'] ?? ''); ?>
+                            <?php $prov_cover = get_provider_cover_url($prov); ?>
                             <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="provider-cover-wrap position-relative d-block text-decoration-none">
-                                <?php if (has_media($prov_cover)): ?>
-                                    <img src="<?= e(get_media_url($prov_cover)) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img">
+                                <?php if (!empty($prov_cover)): ?>
+                                    <img src="<?= e($prov_cover) ?>" alt="<?= e($prov['business_name']) ?>" class="provider-cover-img" loading="lazy">
                                 <?php else: ?>
                                     <div class="provider-cover-fallback d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0d9488 0%, #0f172a 100%);">
                                         <div class="text-center text-white p-2 p-md-3">

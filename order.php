@@ -158,8 +158,9 @@ require_once __DIR__ . '/includes/header.php';
     <div class="card border-0 shadow-sm p-4 mb-4 text-white" style="background: linear-gradient(135deg, var(--dark) 0%, #0f766e 100%); border-radius: 16px;">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">
-                <?php if (has_media($provider['image_url'] ?? '')): ?>
-                    <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="<?= e($provider['business_name']) ?>" style="width: 68px; height: 68px; object-fit: cover; border-radius: 16px; border: 2px solid rgba(255,255,255,0.3);" class="shadow-sm">
+                <?php $prov_cover_url = get_provider_cover_url($provider); ?>
+                <?php if (!empty($prov_cover_url)): ?>
+                    <img src="<?= e($prov_cover_url) ?>" alt="<?= e($provider['business_name']) ?>" style="width: 68px; height: 68px; object-fit: cover; border-radius: 16px; border: 2px solid rgba(255,255,255,0.3);" class="shadow-sm">
                 <?php else: ?>
                     <div class="provider-avatar" style="width: 64px; height: 64px; font-size: 1.6rem; border-radius: 16px; background: rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center;">
                         <i class="fa-solid <?= e($provider['category_icon']) ?>"></i>
@@ -205,7 +206,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php foreach ($provider_portfolios as $pp): ?>
                     <div class="col-6 col-md-3">
                         <div class="border rounded-3 overflow-hidden position-relative shadow-2xs" style="height: 110px; background: #0f172a;">
-                            <img src="<?= e(get_media_url($pp['image_after'])) ?>" alt="<?= e($pp['title']) ?>" class="w-100 h-100 object-fit-cover">
+                            <img src="<?= e(get_portfolio_image_url($pp, 'after')) ?>" alt="<?= e($pp['title']) ?>" class="w-100 h-100 object-fit-cover" loading="lazy">
                             <div class="position-absolute bottom-0 start-0 end-0 p-1 text-white bg-dark bg-opacity-75 small text-truncate" style="font-size: 0.68rem;">
                                 <?= e($pp['title']) ?>
                             </div>

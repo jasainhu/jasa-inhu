@@ -146,13 +146,13 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php if (has_media($p['image_before'] ?? '')): ?>
                             <div class="row g-0 border-bottom" style="height: 190px;">
                                 <div class="col-6 position-relative border-end overflow-hidden">
-                                    <img src="<?= e(get_media_url($p['image_before'])) ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover">
+                                    <img src="<?= e(get_portfolio_image_url($p, 'before')) ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover" loading="lazy">
                                     <span class="badge bg-danger position-absolute top-0 start-0 m-2 fw-bold" style="font-size: 0.65rem;">
                                         SEBELUM
                                     </span>
                                 </div>
                                 <div class="col-6 position-relative overflow-hidden">
-                                    <img src="<?= e(get_media_url($p['image_after'])) ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover">
+                                    <img src="<?= e(get_portfolio_image_url($p, 'after')) ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover" loading="lazy">
                                     <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">
                                         SESUDAH
                                     </span>
@@ -160,7 +160,7 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                         <?php else: ?>
                             <div class="position-relative overflow-hidden border-bottom" style="height: 190px;">
-                                <img src="<?= e(get_media_url($p['image_after'])) ?>" alt="<?= e($p['title']) ?>" class="w-100 h-100 object-fit-cover">
+                                <img src="<?= e(get_portfolio_image_url($p, 'after')) ?>" alt="<?= e($p['title']) ?>" class="w-100 h-100 object-fit-cover" loading="lazy">
                                 <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">
                                     HASIL PENGERJAAN
                                 </span>
