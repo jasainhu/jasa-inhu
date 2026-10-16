@@ -83,15 +83,13 @@ $stmt = $db->prepare("
            d.name as district_name, v.name as village_name,
            u.id as user_id, u.name as owner_name, u.email as owner_email, u.phone as owner_phone,
            u.is_active as user_active, u.block_reason, u.blocked_at, u.email_verified_at, u.created_at as registered_at,
-           p.avatar_url, p.gender, p.birth_date, p.address as profile_address,
-           w.balance as wallet_balance, w.bonus_balance as wallet_bonus
+           p.avatar_url, p.gender, p.birth_date, p.address as profile_address
     FROM service_providers sp
     JOIN users u ON sp.user_id = u.id
     LEFT JOIN service_categories sc ON sp.primary_category_id = sc.id
     LEFT JOIN districts d ON sp.district_id = d.id
     LEFT JOIN villages v ON sp.village_id = v.id
     LEFT JOIN profiles p ON u.id = p.user_id
-    LEFT JOIN wallets w ON sp.id = w.provider_id
     WHERE sp.id = ?
     LIMIT 1
 ");
@@ -105,11 +103,11 @@ if (!$p) {
 
 // Ambil Wilayah Operasional (Service Areas)
 $stmtAreas = $db->prepare("
-    SELECT sa.*, d.name as district_name, v.name as village_name
+    SELECT d.name as district_name
     FROM service_areas sa
-    LEFT JOIN districts d ON sa.district_id = d.id
-    LEFT JOIN villages v ON sa.village_id = v.id
+    JOIN districts d ON sa.district_id = d.id
     WHERE sa.provider_id = ?
+    ORDER BY d.name ASC
 ");
 $stmtAreas->execute([$provider_id]);
 $service_areas = $stmtAreas->fetchAll();
@@ -444,9 +442,9 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="dossier-label">Saldo Dompet Mitra</div>
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="fw-bold text-teal fs-6"><?= format_rupiah($p['wallet_balance'] ?? 0) ?></span>
-                    <?php if (!empty($p['wallet_bonus']) && $p['wallet_bonus'] > 0): ?>
-                        <span class="badge bg-warning-subtle text-warning-emphasis" title="Saldo Bonus Promosi">+<?= format_rupiah($p['wallet_bonus']) ?></span>
-                    <?php endif; ?>
+                    <a href="<?= BASE_URL ?>/admin/wallet.php" class="badge bg-light text-teal border text-decoration-none no-print" title="Kelola Saldo di Panel Dompet">
+                        <i class="fa-solid fa-wallet me-0.5"></i> Kelola
+                    </a>
                 </div>
             </div>
         </div>
@@ -524,7 +522,7 @@ require_once __DIR__ . '/includes/header.php';
                             <?php if (!empty($service_areas)): ?>
                                 <?php foreach ($service_areas as $area): ?>
                                     <span class="badge bg-light text-dark border py-1 px-2">
-                                        <i class="fa-solid fa-location-dot text-teal me-1"></i> Kec. <?= e($area['district_name']) ?> <?= !empty($area['village_name']) ? ' &bull; ' . e($area['village_name']) : '' ?>
+                                        <i class="fa-solid fa-location-dot text-teal me-1"></i> Kec. <?= e($area['district_name']) ?>
                                     </span>
                                 <?php endforeach; ?>
                             <?php else: ?>
