@@ -27,13 +27,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($action === 'toggle_active') {
             $user_id = (int)$_POST['user_id'];
             $new_status = (int)$_POST['new_status'];
+            $block_reason = trim($_POST['block_reason'] ?? '');
 
             if ($user_id === (int)$_SESSION['user_id']) {
                 set_flash('danger', 'Anda tidak dapat menonaktifkan akun sendiri.');
             } else {
-                $stmt = $db->prepare("UPDATE users SET is_active = ?, updated_at = NOW() WHERE id = ?");
-                $stmt->execute([$new_status, $user_id]);
-                set_flash('success', 'Status akun pengguna berhasil diperbarui.');
+                if ($new_status === 0) {
+                    if (empty($block_reason)) {
+                        $block_reason = 'Dinonaktifkan oleh administrator platform';
+                    }
+                    $stmt = $db->prepare("UPDATE users SET is_active = 0, block_reason = ?, blocked_at = NOW(), updated_at = NOW() WHERE id = ?");
+                    $stmt->execute([$block_reason, $user_id]);
+                    set_flash('warning', 'Akun berhasil diblokir. Alasan: "' . htmlspecialchars($block_reason, ENT_QUOTES) . '"');
+                } else {
+                    $stmt = $db->prepare("UPDATE users SET is_active = 1, block_reason = NULL, blocked_at = NULL, updated_at = NOW() WHERE id = ?");
+                    $stmt->execute([$user_id]);
+                    set_flash('success', 'Akun berhasil diaktifkan kembali (status blokir dicabut).');
+                }
             }
             redirect('/admin/users.php');
         }
@@ -319,6 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 $role_filter = $_GET['role'] ?? '';
+$verif_filter = $_GET['verif'] ?? '';
 $where_clauses = [];
 $params = [];
 
@@ -333,10 +344,21 @@ if ($role_filter === 'unverified') {
     }
 }
 
+// Saring Status Verifikasi & Blokir
+if ($verif_filter === 'verified') {
+    $where_clauses[] = "sp.is_verified = 1";
+} elseif ($verif_filter === 'pending') {
+    $where_clauses[] = "(sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50)";
+} elseif ($verif_filter === 'unuploaded') {
+    $where_clauses[] = "(sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NULL OR LENGTH(sp.id_card_image) <= 50) AND r.name = 'penyedia'";
+} elseif ($verif_filter === 'blocked') {
+    $where_clauses[] = "u.is_active = 0";
+}
+
 $where_sql = !empty($where_clauses) ? "WHERE " . implode(' AND ', $where_clauses) : "";
 
 $stmt = $db->prepare("
-    SELECT u.id, u.role_id, u.name, u.email, u.phone, u.is_active, u.email_verified_at, u.created_at,
+    SELECT u.id, u.role_id, u.name, u.email, u.phone, u.is_active, u.block_reason, u.blocked_at, u.email_verified_at, u.created_at,
            r.name as role_name, r.display_name as role_display,
            p.district_id, p.address, p.gender, p.birth_date,
            d.name as district_name, sp.business_name, sp.id as provider_id,
@@ -355,12 +377,18 @@ $stmt = $db->prepare("
 $stmt->execute($params);
 $users = $stmt->fetchAll();
 
-// Hitung jumlah statistik untuk tab navigasi
+// Hitung jumlah statistik untuk tab navigasi Peran
 $count_all = (int)$db->query("SELECT COUNT(*) FROM users WHERE email_verified_at IS NOT NULL")->fetchColumn();
 $count_pengguna = (int)$db->query("SELECT COUNT(*) FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name = 'pengguna' AND u.email_verified_at IS NOT NULL")->fetchColumn();
 $count_penyedia = (int)$db->query("SELECT COUNT(*) FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name = 'penyedia' AND u.email_verified_at IS NOT NULL")->fetchColumn();
 $count_admin = (int)$db->query("SELECT COUNT(*) FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name = 'admin' AND u.email_verified_at IS NOT NULL")->fetchColumn();
 $count_unverified = (int)$db->query("SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL")->fetchColumn();
+
+// Hitung jumlah statistik untuk tab Status Verifikasi & Blokir
+$count_verif_approved = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE sp.is_verified = 1 AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_verif_pending = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE (sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50) AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_verif_unuploaded = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE (sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NULL OR LENGTH(sp.id_card_image) <= 50) AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_blocked = (int)$db->query("SELECT COUNT(*) FROM users WHERE is_active = 0 AND email_verified_at IS NOT NULL")->fetchColumn();
 
 $districts = get_all_districts();
 
@@ -386,19 +414,56 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Filter Role Tabs -->
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div class="btn-group">
-        <a href="<?= BASE_URL ?>/admin/users.php" class="btn btn-sm <?= empty($role_filter) ? 'btn-primary' : 'btn-outline-secondary' ?>">Semua (<?= $count_all ?>)</a>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=pengguna" class="btn btn-sm <?= $role_filter === 'pengguna' ? 'btn-primary' : 'btn-outline-secondary' ?>">Masyarakat (<?= $count_pengguna ?>)</a>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=penyedia" class="btn btn-sm <?= $role_filter === 'penyedia' ? 'btn-primary' : 'btn-outline-secondary' ?>">Penyedia Jasa (<?= $count_penyedia ?>)</a>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=admin" class="btn btn-sm <?= $role_filter === 'admin' ? 'btn-primary' : 'btn-outline-secondary' ?>">Admin (<?= $count_admin ?>)</a>
+<!-- Filter Role & Status Verifikasi -->
+<div class="mb-3">
+    <!-- Filter Role Tabs -->
+    <div class="d-flex justify-content-between align-items-center mb-2.5 flex-wrap gap-2">
+        <div class="btn-group shadow-xs">
+            <a href="<?= BASE_URL ?>/admin/users.php<?= !empty($verif_filter) ? '?verif=' . urlencode($verif_filter) : '' ?>" class="btn btn-sm <?= empty($role_filter) ? 'btn-primary fw-semibold' : 'btn-outline-secondary bg-white' ?>">Semua (<?= $count_all ?>)</a>
+            <a href="<?= BASE_URL ?>/admin/users.php?role=pengguna<?= !empty($verif_filter) ? '&verif=' . urlencode($verif_filter) : '' ?>" class="btn btn-sm <?= $role_filter === 'pengguna' ? 'btn-primary fw-semibold' : 'btn-outline-secondary bg-white' ?>">Masyarakat (<?= $count_pengguna ?>)</a>
+            <a href="<?= BASE_URL ?>/admin/users.php?role=penyedia<?= !empty($verif_filter) ? '&verif=' . urlencode($verif_filter) : '' ?>" class="btn btn-sm <?= $role_filter === 'penyedia' ? 'btn-primary fw-semibold' : 'btn-outline-secondary bg-white' ?>">Penyedia Jasa (<?= $count_penyedia ?>)</a>
+            <a href="<?= BASE_URL ?>/admin/users.php?role=admin<?= !empty($verif_filter) ? '&verif=' . urlencode($verif_filter) : '' ?>" class="btn btn-sm <?= $role_filter === 'admin' ? 'btn-primary fw-semibold' : 'btn-outline-secondary bg-white' ?>">Admin (<?= $count_admin ?>)</a>
+        </div>
+        <?php if ($count_unverified > 0): ?>
+            <a href="<?= BASE_URL ?>/admin/users.php?role=unverified" class="btn btn-sm <?= $role_filter === 'unverified' ? 'btn-warning text-dark fw-bold' : 'btn-outline-warning text-dark bg-white' ?> shadow-xs">
+                <i class="fa-solid fa-clock me-1"></i> Belum Selesai OTP (<?= $count_unverified ?>)
+            </a>
+        <?php endif; ?>
     </div>
-    <?php if ($count_unverified > 0): ?>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=unverified" class="btn btn-sm <?= $role_filter === 'unverified' ? 'btn-warning text-dark' : 'btn-outline-warning text-dark' ?>">
-            <i class="fa-solid fa-clock me-1"></i> Belum Selesai OTP (<?= $count_unverified ?>)
-        </a>
-    <?php endif; ?>
+
+    <!-- Filter Status Verifikasi & Blokir (Penyaring Khusus) -->
+    <div class="card border-0 shadow-xs bg-light rounded-3 p-2.5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                <span class="text-muted small fw-semibold me-1"><i class="fa-solid fa-filter text-teal me-1"></i> Status Verifikasi:</span>
+                <a href="<?= BASE_URL ?>/admin/users.php<?= !empty($role_filter) ? '?role=' . urlencode($role_filter) : '' ?>" 
+                   class="btn btn-sm py-1 px-2.5 rounded-pill <?= empty($verif_filter) ? 'btn-dark text-white fw-semibold' : 'btn-white bg-white border text-secondary' ?>" style="font-size: 0.78rem;">
+                    Semua
+                </a>
+                <a href="<?= BASE_URL ?>/admin/users.php?<?= http_build_query(array_filter(array_merge($_GET, ['verif' => 'verified']))) ?>" 
+                   class="btn btn-sm py-1 px-2.5 rounded-pill <?= $verif_filter === 'verified' ? 'btn-success text-white fw-semibold shadow-xs' : 'btn-white bg-white border text-success' ?>" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP (<?= $count_verif_approved ?>)
+                </a>
+                <a href="<?= BASE_URL ?>/admin/users.php?<?= http_build_query(array_filter(array_merge($_GET, ['verif' => 'pending']))) ?>" 
+                   class="btn btn-sm py-1 px-2.5 rounded-pill <?= $verif_filter === 'pending' ? 'btn-warning text-dark fw-bold shadow-xs' : 'btn-white bg-white border text-warning-emphasis' ?>" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-clock me-1"></i> Menunggu Review (<?= $count_verif_pending ?>)
+                </a>
+                <a href="<?= BASE_URL ?>/admin/users.php?<?= http_build_query(array_filter(array_merge($_GET, ['verif' => 'unuploaded']))) ?>" 
+                   class="btn btn-sm py-1 px-2.5 rounded-pill <?= $verif_filter === 'unuploaded' ? 'btn-secondary text-white fw-semibold shadow-xs' : 'btn-white bg-white border text-muted' ?>" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-id-card-clip me-1"></i> Belum Unggah KTP (<?= $count_verif_unuploaded ?>)
+                </a>
+                <a href="<?= BASE_URL ?>/admin/users.php?<?= http_build_query(array_filter(array_merge($_GET, ['verif' => 'blocked']))) ?>" 
+                   class="btn btn-sm py-1 px-2.5 rounded-pill <?= $verif_filter === 'blocked' ? 'btn-danger text-white fw-semibold shadow-xs' : 'btn-white bg-white border text-danger' ?>" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-ban me-1"></i> Diblokir (<?= $count_blocked ?>)
+                </a>
+            </div>
+            <?php if (!empty($verif_filter) || !empty($role_filter)): ?>
+                <a href="<?= BASE_URL ?>/admin/users.php" class="btn btn-sm btn-link text-decoration-none text-muted py-0 small">
+                    <i class="fa-solid fa-rotate-left me-1"></i> Reset Filter
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
 
 <?php if ($role_filter === 'unverified'): ?>
@@ -430,7 +495,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<div class="card border shadow-sm">
+<div class="card border shadow-sm rounded-4 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 small" id="usersTable">
             <thead class="table-light">
@@ -438,14 +503,14 @@ require_once __DIR__ . '/includes/header.php';
                     <th style="width: 42px;" class="text-center">
                         <input type="checkbox" class="form-check-input" id="checkAllUsers" title="Pilih Semua di Halaman Ini" onchange="toggleSelectAll(this)">
                     </th>
-                    <th style="width: 55px;" class="text-center">No.</th>
-                    <th>Nama & Email</th>
-                    <th>Peran</th>
+                    <th style="width: 45px;" class="text-center">No.</th>
+                    <th>Nama & Profil Usaha</th>
+                    <th style="width: 105px;">Peran</th>
                     <th>Nomor WhatsApp / HP</th>
                     <th>Kecamatan</th>
                     <th>Terdaftar</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-end">Aksi</th>
+                    <th class="text-center" style="width: 125px;">Status</th>
+                    <th class="text-end" style="width: 135px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -552,63 +617,93 @@ require_once __DIR__ . '/includes/header.php';
                                     <i class="fa-solid fa-clock me-1"></i> Menunggu OTP
                                 </span>
                             <?php elseif ($u['is_active']): ?>
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <i class="fa-solid fa-circle-check me-0.5"></i> Aktif
+                                </span>
                             <?php else: ?>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Nonaktif</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle d-inline-flex align-items-center gap-1">
+                                    <i class="fa-solid fa-ban"></i> Diblokir
+                                </span>
+                                <?php if (!empty($u['block_reason'])): ?>
+                                    <div class="text-danger small mt-1 text-center fw-medium" title="Alasan: <?= e($u['block_reason']) ?>" style="font-size: 0.68rem; line-height: 1.25;">
+                                        <i class="fa-solid fa-circle-exclamation me-0.5"></i> <?= e(mb_strimwidth($u['block_reason'], 0, 24, '...')) ?>
+                                    </div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </td>
-                        <td class="text-end">
+                        <td class="text-end text-nowrap">
+                            <div class="d-inline-flex align-items-center justify-content-end gap-1">
                                 <?php if (empty($u['email_verified_at'])): ?>
                                     <!-- Tombol Verifikasi Akun Manual oleh Admin -->
                                     <form method="POST" action="<?= BASE_URL ?>/admin/users.php" class="d-inline" onsubmit="return confirm('Verifikasi akun ini sekarang secara manual?')">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="action" value="manual_verify_user">
                                         <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-                                        <button type="submit" class="btn btn-success py-1 px-2" style="font-size: 0.75rem;" title="Verifikasi Akun Manual (Bypass OTP)">
-                                            <i class="fa-solid fa-check-double me-1"></i> Verifikasi Manual
+                                        <button type="submit" class="btn btn-sm btn-success py-1 px-2" style="font-size: 0.75rem;" title="Verifikasi Akun Manual (Bypass OTP)">
+                                            <i class="fa-solid fa-check-double me-1"></i> Verif OTP
                                         </button>
                                     </form>
                                 <?php endif; ?>
 
                                 <?php if ($u['role_name'] === 'penyedia'): ?>
-                                    <!-- Tombol Verifikasi / Batal Verifikasi KTP Mitra -->
+                                    <!-- Tombol Cepat Verifikasi / Batal Verifikasi KTP Mitra -->
                                     <form method="POST" action="<?= BASE_URL ?>/admin/users.php" class="d-inline">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="action" value="toggle_ktp_verified">
                                         <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                         <input type="hidden" name="new_status" value="<?= empty($u['is_verified']) ? 1 : 0 ?>">
-                                        <button type="submit" class="btn <?= empty($u['is_verified']) ? 'btn-outline-success' : 'btn-outline-secondary' ?> py-1 px-2" style="font-size: 0.75rem;" title="<?= empty($u['is_verified']) ? 'Setujui Verifikasi KTP Mitra' : 'Batalkan Status Verifikasi KTP' ?>">
-                                            <i class="fa-solid <?= empty($u['is_verified']) ? 'fa-id-card' : 'fa-xmark' ?>"></i> <?= empty($u['is_verified']) ? 'Verif KTP' : 'Batal KTP' ?>
+                                        <button type="submit" class="btn btn-sm <?= empty($u['is_verified']) ? 'btn-outline-success' : 'btn-outline-secondary' ?> py-1 px-2" style="font-size: 0.75rem;" title="<?= empty($u['is_verified']) ? 'Setujui Verifikasi KTP Mitra' : 'Batalkan Status Verifikasi KTP' ?>">
+                                            <i class="fa-solid <?= empty($u['is_verified']) ? 'fa-id-card' : 'fa-xmark' ?>"></i> <?= empty($u['is_verified']) ? 'Verif' : 'Batal' ?>
                                         </button>
                                     </form>
                                 <?php endif; ?>
 
                                 <!-- Tombol Edit Akun -->
-                                <button type="button" class="btn btn-outline-primary py-1 px-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $u['id'] ?>" style="font-size: 0.75rem;" title="Edit Data & Nomor HP">
-                                    <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $u['id'] ?>" style="font-size: 0.75rem;" title="Edit Data Akun">
+                                    <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
 
-                                <!-- Tombol Reset Password -->
-                                <button type="button" class="btn btn-outline-warning text-dark py-1 px-2" data-bs-toggle="modal" data-bs-target="#resetPassModal<?= $u['id'] ?>" style="font-size: 0.75rem;" title="Reset Kata Sandi Akun Pengguna">
-                                    <i class="fa-solid fa-key me-0.5 text-warning-emphasis"></i> Sandi
-                                </button>
-
-                                <?php if ($u['id'] !== (int)$_SESSION['user_id']): ?>
-                                    <form method="POST" action="<?= BASE_URL ?>/admin/users.php" class="d-inline">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="action" value="toggle_active">
-                                        <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-                                        <input type="hidden" name="new_status" value="<?= $u['is_active'] ? 0 : 1 ?>">
-                                        <button type="submit" class="btn <?= $u['is_active'] ? 'btn-outline-warning' : 'btn-outline-success' ?> py-1 px-2" style="font-size: 0.75rem;" title="<?= $u['is_active'] ? 'Blokir / Nonaktifkan Sementara' : 'Aktifkan Akun' ?>">
-                                            <?= $u['is_active'] ? 'Blokir' : 'Aktifkan' ?>
-                                        </button>
-                                    </form>
-
-                                    <!-- Tombol Hapus Akun -->
-                                    <button type="button" class="btn btn-outline-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#deleteModal<?= $u['id'] ?>" style="font-size: 0.75rem;" title="Hapus Akun Permanen">
-                                        <i class="fa-solid fa-trash-can"></i> Hapus
+                                <!-- Dropdown Aksi Lanjutan (Titik Tiga) -->
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-sm btn-outline-secondary py-1 px-2 dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Menu Aksi Lainnya">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
                                     </button>
-                                <?php endif; ?>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-1.5" style="font-size: 0.8rem; min-width: 175px;">
+                                        <li>
+                                            <button type="button" class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#resetPassModal<?= $u['id'] ?>">
+                                                <i class="fa-solid fa-key text-warning"></i> Reset Kata Sandi
+                                            </button>
+                                        </li>
+                                        <?php if ($u['id'] !== (int)$_SESSION['user_id']): ?>
+                                            <li><hr class="dropdown-divider my-1"></li>
+                                            <?php if ($u['is_active']): ?>
+                                                <li>
+                                                    <button type="button" class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2 text-warning" data-bs-toggle="modal" data-bs-target="#blockModal<?= $u['id'] ?>">
+                                                        <i class="fa-solid fa-ban"></i> Blokir Akun...
+                                                    </button>
+                                                </li>
+                                            <?php else: ?>
+                                                <li>
+                                                    <form method="POST" action="<?= BASE_URL ?>/admin/users.php" class="m-0">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="action" value="toggle_active">
+                                                        <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                                        <input type="hidden" name="new_status" value="1">
+                                                        <button type="submit" class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2 text-success">
+                                                            <i class="fa-solid fa-circle-check"></i> Buka Blokir
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            <?php endif; ?>
+                                            <li><hr class="dropdown-divider my-1"></li>
+                                            <li>
+                                                <button type="button" class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal<?= $u['id'] ?>">
+                                                    <i class="fa-solid fa-trash-can"></i> Hapus Permanen
+                                                </button>
+                                            </li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
                             </div>
 
                             <!-- Modal Edit Pengguna -->
@@ -796,6 +891,56 @@ require_once __DIR__ . '/includes/header.php';
                                                     </button>
                                                 </form>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Blokir Akun dengan Alasan -->
+                                <div class="modal fade text-start" id="blockModal<?= $u['id'] ?>" tabindex="-1" aria-labelledby="blockModalLabel<?= $u['id'] ?>" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+                                        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                                            <div class="modal-header border-0 pb-0">
+                                                <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2" id="blockModalLabel<?= $u['id'] ?>">
+                                                    <i class="fa-solid fa-ban"></i> Blokir Akun Pengguna
+                                                </h5>
+                                                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                                            </div>
+                                            <form method="POST" action="<?= BASE_URL ?>/admin/users.php">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="action" value="toggle_active">
+                                                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                                <input type="hidden" name="new_status" value="0">
+                                                <div class="modal-body py-3">
+                                                    <p class="mb-2 text-dark small">
+                                                        Anda akan menonaktifkan akun <strong><?= e($u['name']) ?></strong> 
+                                                        <?php if ($u['business_name']): ?>(<strong class="text-teal"><?= e($u['business_name']) ?></strong>)<?php endif; ?>. Pengguna tidak akan dapat masuk ke sistem.
+                                                    </p>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-secondary">Pilih Alasan Cepat (Template):</label>
+                                                        <select class="form-select form-select-sm" onchange="fillBlockReason(<?= $u['id'] ?>, this.value)">
+                                                            <option value="">-- Pilih Template Alasan --</option>
+                                                            <option value="Pelanggaran syarat & ketentuan layanan platform">Pelanggaran syarat & ketentuan layanan platform</option>
+                                                            <option value="Data identitas / KTP tidak valid atau palsu">Data identitas / KTP tidak valid atau palsu</option>
+                                                            <option value="Terdapat laporan penipuan atau keluhan berulang dari pelanggan">Laporan penipuan atau keluhan berulang dari pelanggan</option>
+                                                            <option value="Akun terindikasi spam, penyalahgunaan, atau tidak aktif">Akun terindikasi spam / tidak aktif</option>
+                                                            <option value="Permintaan penonaktifan langsung oleh pemilik akun">Permintaan penonaktifan oleh pemilik akun</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-2">
+                                                        <label class="form-label small fw-semibold text-dark">Alasan Pemblokiran <span class="text-danger">*</span></label>
+                                                        <textarea name="block_reason" id="blockReasonInput_<?= $u['id'] ?>" class="form-control form-control-sm" rows="3" placeholder="Tulis alasan pemblokiran akun ini..." required></textarea>
+                                                        <div class="form-text" style="font-size: 0.72rem;">Alasan ini akan tercatat di sistem dan ditampilkan kepada pengguna saat mencoba login.</div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-0 pt-0">
+                                                    <button type="button" class="btn btn-sm btn-light px-3" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="submit" class="btn btn-sm btn-danger px-3 fw-bold shadow-sm">
+                                                        <i class="fa-solid fa-ban me-1"></i> Ya, Blokir Akun
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -1041,6 +1186,13 @@ function submitVerifyFromModal(userId, newStatus) {
 
     document.body.appendChild(form);
     form.submit();
+}
+
+function fillBlockReason(userId, val) {
+    const el = document.getElementById('blockReasonInput_' + userId);
+    if (el && val) {
+        el.value = val;
+    }
 }
 </script>
 

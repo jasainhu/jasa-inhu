@@ -179,7 +179,7 @@ function login_user(string $login, string $password, ?string $redirect_target = 
 
         // Pencarian cerdas via Email (case-insensitive) atau Nomor HP (multi-format 08/62/strip)
         $stmt = $db->prepare("
-            SELECT u.id, u.role_id, u.name, u.email, u.phone, u.password_hash, u.is_active, u.email_verified_at,
+            SELECT u.id, u.role_id, u.name, u.email, u.phone, u.password_hash, u.is_active, u.block_reason, u.blocked_at, u.email_verified_at,
                    r.name as role_name
             FROM users u
             JOIN roles r ON u.role_id = r.id
@@ -194,7 +194,13 @@ function login_user(string $login, string $password, ?string $redirect_target = 
         }
 
         if ((int)$user['is_active'] !== 1) {
-            return ['success' => false, 'message' => 'Akun Anda sedang dinonaktifkan. Hubungi pengelola platform.'];
+            $reasonMsg = !empty($user['block_reason']) 
+                ? ' Alasan: "' . htmlspecialchars($user['block_reason'], ENT_QUOTES, 'UTF-8') . '".' 
+                : '';
+            return [
+                'success' => false, 
+                'message' => 'Akun Anda sedang dinonaktifkan oleh Administrator.' . $reasonMsg . ' Silakan hubungi tim pengelola platform JASA INHU.'
+            ];
         }
 
         if (!password_verify($password, $user['password_hash'])) {

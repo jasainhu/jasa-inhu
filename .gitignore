@@ -5,3 +5,4 @@ tests/
 .agents/
 .gemini/
 .env
+uploads/temp_mitra/
