@@ -16,6 +16,23 @@ require_once __DIR__ . '/includes/auth.php';
 $filter_q = trim($_GET['q'] ?? '');
 $filter_cat = (int)($_GET['kategori'] ?? 0);
 $filter_dist = (int)($_GET['kecamatan'] ?? 0);
+$page = max(1, (int)($_GET['page'] ?? 1));
+$per_page = 16;
+$total_providers = 0;
+$total_pages = 1;
+$offset = 0;
+
+if (!function_exists('get_home_page_url')) {
+    function get_home_page_url(int $p, int $filter_dist = 0, string $filter_q = '', int $filter_cat = 0): string {
+        $params = [];
+        if ($filter_dist > 0) $params['kecamatan'] = $filter_dist;
+        if (!empty($filter_q)) $params['q'] = $filter_q;
+        if ($filter_cat > 0) $params['kategori'] = $filter_cat;
+        if ($p > 1) $params['page'] = $p;
+        $qs = http_build_query($params);
+        return BASE_URL . '/' . ($qs ? '?' . $qs : '') . '#penyedia';
+    }
+}
 
 $categories = [];
 $districts = [];
@@ -56,6 +73,23 @@ try {
         $prov_params[] = $filter_dist;
     }
 
+    // Hitung Total Mitra Sesuai Filter
+    $countSql = "
+        SELECT COUNT(*)
+        FROM service_providers sp
+        JOIN users u ON sp.user_id = u.id
+        JOIN service_categories sc ON sp.primary_category_id = sc.id
+        LEFT JOIN districts d ON sp.district_id = d.id
+        WHERE " . implode(' AND ', $prov_where);
+    $stmtCount = $db->prepare($countSql);
+    $stmtCount->execute($prov_params);
+    $total_providers = (int)$stmtCount->fetchColumn();
+    $total_pages = max(1, (int)ceil($total_providers / $per_page));
+    if ($page > $total_pages) {
+        $page = $total_pages;
+    }
+    $offset = ($page - 1) * $per_page;
+
     $sqlProv = "
         SELECT sp.id, sp.user_id, sp.primary_category_id, sp.business_name, sp.image_url, sp.headline,
                sp.description, sp.experience_years, sp.hourly_rate_min, sp.hourly_rate_max,
@@ -72,7 +106,7 @@ try {
         LEFT JOIN villages v ON sp.village_id = v.id
         WHERE " . implode(' AND ', $prov_where) . "
         ORDER BY sp.is_verified DESC, sp.rating_avg DESC, sp.completed_jobs DESC, sp.id DESC
-        LIMIT 60
+        LIMIT {$per_page} OFFSET {$offset}
     ";
     $stmtProv = $db->prepare($sqlProv);
     $stmtProv->execute($prov_params);
@@ -426,12 +460,16 @@ require_once __DIR__ . '/includes/header.php';
         <!-- Header Section (Ramping 1-Baris di HP, Lengkap di Desktop) -->
         <div class="d-flex align-items-center justify-content-between mb-2 mb-md-3">
             <div>
-                <span class="text-uppercase fw-bold small text-teal d-none d-md-block" style="letter-spacing: 0.5px;">Mitra Terpilih & Terdekat</span>
-                <h3 class="fw-bold mb-0 text-dark fs-6 fs-md-4 d-flex align-items-center gap-1.5">
+                <h3 class="fw-bold mb-0 text-dark fs-6 fs-md-4 d-flex align-items-center gap-1.5 flex-wrap">
                     <span>Penyedia Jasa di Indragiri Hulu</span>
-                    <span class="badge bg-light text-teal border rounded-pill d-md-none" style="font-size: 0.65rem; font-weight: 600;">
-                        <?= count($featured_providers) ?> Mitra
+                    <span class="badge bg-light text-teal border rounded-pill" style="font-size: 0.68rem; font-weight: 600;">
+                        <?= $total_providers ?> Mitra
                     </span>
+                    <?php if ($total_pages > 1): ?>
+                        <span class="badge bg-teal-subtle text-teal border border-teal-subtle rounded-pill" style="font-size: 0.65rem; font-weight: 600;">
+                            Hal. <?= $page ?>/<?= $total_pages ?>
+                        </span>
+                    <?php endif; ?>
                 </h3>
                 <p class="text-muted small mb-0 d-none d-md-block">Mitra beridentitas jelas, nomor terverifikasi, dan siap melayani panggilan Anda</p>
             </div>
@@ -473,7 +511,7 @@ require_once __DIR__ . '/includes/header.php';
                     <?php if ($filter_dist > 0): ?>
                         &bull; Kecamatan: <strong><?= e($districts[array_search($filter_dist, array_column($districts, 'id'))]['name'] ?? 'Inhu') ?></strong>
                     <?php endif; ?>
-                    (Ditemukan <strong><?= count($featured_providers) ?></strong> mitra)
+                    (Ditemukan <strong><?= $total_providers ?></strong> mitra)
                 </div>
                 <a href="<?= BASE_URL ?>/index.php#penyedia" class="text-danger fw-semibold text-decoration-none">
                     <i class="fa-solid fa-xmark me-1"></i> Reset Filter
@@ -668,6 +706,68 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             <?php endif; ?>
         </div>
+
+        <!-- Pagination Navigasi Halaman Modern -->
+        <?php if ($total_pages > 1): ?>
+            <div class="mt-4 pt-3 border-top d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3">
+                <div class="small text-muted text-center text-sm-start">
+                    Menampilkan <strong><?= $offset + 1 ?>-<?= min($offset + count($featured_providers), $total_providers) ?></strong> dari <strong><?= $total_providers ?></strong> Mitra Jasa
+                </div>
+                <nav aria-label="Navigasi Halaman Mitra">
+                    <ul class="pagination pagination-sm m-0 gap-1 justify-content-center">
+                        <!-- Tombol Sebelumnya -->
+                        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                            <a class="page-link rounded-3 px-2.5 py-1.5 <?= ($page <= 1) ? 'text-muted bg-light border-0' : 'text-teal fw-semibold border' ?>" 
+                               href="<?= ($page > 1) ? get_home_page_url($page - 1, $filter_dist, $filter_q, $filter_cat) : '#' ?>" 
+                               tabindex="<?= ($page <= 1) ? '-1' : '0' ?>" aria-label="Halaman Sebelumnya">
+                                <i class="fa-solid fa-chevron-left me-1"></i> Prev
+                            </a>
+                        </li>
+
+                        <!-- Nomor Halaman -->
+                        <?php 
+                            $start_page = max(1, $page - 2);
+                            $end_page = min($total_pages, $page + 2);
+                            if ($start_page > 1): 
+                        ?>
+                            <li class="page-item">
+                                <a class="page-link rounded-3 px-2.5 py-1.5 fw-semibold text-dark border" href="<?= get_home_page_url(1, $filter_dist, $filter_q, $filter_cat) ?>">1</a>
+                            </li>
+                            <?php if ($start_page > 2): ?>
+                                <li class="page-item disabled"><span class="page-link rounded-3 px-2 py-1.5 border-0 bg-transparent text-muted">...</span></li>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
+                        <?php for ($p = $start_page; $p <= $end_page; $p++): ?>
+                            <li class="page-item <?= ($p === $page) ? 'active' : '' ?>">
+                                <a class="page-link rounded-3 px-3 py-1.5 fw-bold <?= ($p === $page) ? 'bg-teal border-teal text-white shadow-xs' : 'text-dark border' ?>" 
+                                   href="<?= get_home_page_url($p, $filter_dist, $filter_q, $filter_cat) ?>">
+                                    <?= $p ?>
+                                </a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <?php if ($end_page < $total_pages): ?>
+                            <?php if ($end_page < $total_pages - 1): ?>
+                                <li class="page-item disabled"><span class="page-link rounded-3 px-2 py-1.5 border-0 bg-transparent text-muted">...</span></li>
+                            <?php endif; ?>
+                            <li class="page-item">
+                                <a class="page-link rounded-3 px-2.5 py-1.5 fw-semibold text-dark border" href="<?= get_home_page_url($total_pages, $filter_dist, $filter_q, $filter_cat) ?>"><?= $total_pages ?></a>
+                            </li>
+                        <?php endif; ?>
+
+                        <!-- Tombol Selanjutnya -->
+                        <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                            <a class="page-link rounded-3 px-2.5 py-1.5 <?= ($page >= $total_pages) ? 'text-muted bg-light border-0' : 'text-teal fw-semibold border' ?>" 
+                               href="<?= ($page < $total_pages) ? get_home_page_url($page + 1, $filter_dist, $filter_q, $filter_cat) : '#' ?>" 
+                               tabindex="<?= ($page >= $total_pages) ? '-1' : '0' ?>" aria-label="Halaman Selanjutnya">
+                                Next <i class="fa-solid fa-chevron-right ms-1"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 
