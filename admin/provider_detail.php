@@ -83,7 +83,7 @@ $stmt = $db->prepare("
            d.name as district_name, v.name as village_name,
            u.id as user_id, u.name as owner_name, u.email as owner_email, u.phone as owner_phone,
            u.is_active as user_active, u.block_reason, u.blocked_at, u.email_verified_at, u.created_at as registered_at,
-           p.avatar_url, p.gender, p.birth_date, p.address as profile_address
+           p.avatar as owner_avatar, p.gender, p.birth_date, p.address as profile_address
     FROM service_providers sp
     JOIN users u ON sp.user_id = u.id
     LEFT JOIN service_categories sc ON sp.primary_category_id = sc.id
@@ -324,8 +324,11 @@ require_once __DIR__ . '/includes/header.php';
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">
                 <div class="position-relative">
-                    <?php if (!empty($p['avatar_url'])): ?>
-                        <img src="<?= BASE_URL ?>/<?= ltrim($p['avatar_url'], '/') ?>" alt="Avatar" class="rounded-circle border border-3 border-white shadow-sm object-fit-cover" style="width: 75px; height: 75px;">
+                    <?php 
+                    $prov_avatar_url = get_provider_cover_url($p);
+                    if (!empty($prov_avatar_url)): 
+                    ?>
+                        <img src="<?= $prov_avatar_url ?>" alt="Avatar" class="rounded-circle border border-3 border-white shadow-sm object-fit-cover" style="width: 75px; height: 75px;">
                     <?php else: ?>
                         <div class="rounded-circle bg-white text-teal d-flex align-items-center justify-content-center fw-bold fs-3 shadow-sm" style="width: 75px; height: 75px;">
                             <?= strtoupper(mb_substr($p['business_name'] ?: $p['owner_name'], 0, 1)) ?>
