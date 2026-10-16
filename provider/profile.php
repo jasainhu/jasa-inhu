@@ -300,9 +300,9 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 text-white" style="background: linear-gradient(135deg, #0d9488 0%, #064e3b 100%);">
         <div class="card-body p-3.5 p-md-4">
             <div class="d-flex align-items-center gap-3">
-                <!-- Foto Profil / Usaha -->
-                <div class="position-relative flex-shrink-0">
-                    <div class="rounded-circle overflow-hidden border border-2 border-white shadow-xs" style="width: 72px; height: 72px; background: #e2e8f0;">
+                <!-- Foto Profil / Usaha (Bisa Diklik Langsung untuk Ganti Foto) -->
+                <div class="position-relative flex-shrink-0 cursor-pointer" role="button" data-bs-toggle="modal" data-bs-target="#modalEditJasa" title="Ketuk untuk upload foto toko">
+                    <div class="rounded-circle overflow-hidden border border-2 border-white shadow-xs position-relative" style="width: 72px; height: 72px; background: #e2e8f0;">
                         <?php if (has_media($provider['image_url'] ?? '')): ?>
                             <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
                         <?php else: ?>
@@ -311,6 +311,9 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                         <?php endif; ?>
                     </div>
+                    <span class="position-absolute bottom-0 end-0 bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs border border-white" style="width: 24px; height: 24px; font-size: 0.7rem;" title="Ganti Foto">
+                        <i class="fa-solid fa-camera"></i>
+                    </span>
                 </div>
 
                 <!-- Informasi Nama & Lencana Usaha -->
