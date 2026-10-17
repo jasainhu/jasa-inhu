@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->commit();
 
                 set_flash('success', "Pesanan jasa Anda berhasil dikirim langsung ke '{$provider['business_name']}'! Silakan hubungi via WhatsApp untuk konfirmasi cepat.");
-                redirect('/user/requests.php?id=' . $request_id);
+                redirect('/user/requests.php?id=' . $request_id . '&new=1');
             } catch (Exception $e) {
                 $db->rollBack();
                 $error = 'Gagal mengirim pesanan: ' . $e->getMessage();

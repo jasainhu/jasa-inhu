@@ -93,13 +93,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Ambil semua permintaan milik user (baik lelang terbuka maupun pesanan langsung)
 $stmtAll = $db->prepare("
-    SELECT sr.*, sc.name as category_name, sc.icon as category_icon, d.name as district_name,
+    SELECT sr.*, sc.name as category_name, sc.icon as category_icon, 
+           d.name as district_name, v.name as village_name,
            target_sp.business_name as target_business_name, target_u.phone as target_provider_phone,
            target_sp.user_id as target_provider_user_id,
            (SELECT COUNT(*) FROM service_request_responses srr WHERE srr.request_id = sr.id) as total_offers
     FROM service_requests sr
     JOIN service_categories sc ON sr.category_id = sc.id
     JOIN districts d ON sr.district_id = d.id
+    LEFT JOIN villages v ON sr.village_id = v.id
     LEFT JOIN service_providers target_sp ON sr.provider_id = target_sp.id
     LEFT JOIN users target_u ON target_sp.user_id = target_u.id
     WHERE sr.user_id = ?
@@ -133,6 +135,9 @@ if ($selected_id === 0 && !empty($filtered_requests)) {
 // Ambil detail request yang dipilih beserta tawaran masuk
 $current_req = null;
 $offers = [];
+$active_provider_phone = '';
+$active_provider_name = '';
+$wa_cust_url = '';
 
 if ($selected_id > 0) {
     foreach ($requests as $r) {
@@ -161,16 +166,36 @@ if ($selected_id > 0) {
         $stmtRev->execute([$selected_id]);
         $existing_review = $stmtRev->fetch();
 
-        // Tentukan nama mitra penyedia jasa
+        // Tentukan nama & kontak mitra penyedia jasa
         $resolved_provider_name = $current_req['target_business_name'] ?? '';
+        $active_provider_phone = $current_req['target_provider_phone'] ?? '';
+        $active_provider_id = (int)($current_req['provider_id'] ?? 0);
+
         if (empty($resolved_provider_name) && !empty($offers)) {
             foreach ($offers as $off) {
                 if ($off['status'] === 'accepted') {
                     $resolved_provider_name = $off['business_name'];
+                    $active_provider_phone = $off['provider_phone'] ?? '';
+                    $active_provider_id = (int)$off['provider_id'];
                     break;
                 }
             }
         }
+
+        // Siapkan tautan pesan WhatsApp instan (Jembatan WhatsApp)
+        $wa_partner_number = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $active_provider_phone));
+        $wa_cust_text = "Halo *" . ($resolved_provider_name ?: 'Mitra JASA INHU') . "*,\n\n" .
+            "Saya *" . ($user['name'] ?? 'Pelanggan') . "* telah membuat pesanan jasa di portal resmi JASA INHU:\n" .
+            "📋 *No. Pesanan*: #ORD-" . str_pad($current_req['id'], 5, '0', STR_PAD_LEFT) . "\n" .
+            "🛠️ *Layanan*: " . $current_req['title'] . "\n" .
+            "📍 *Wilayah*: " . (!empty($current_req['village_name']) ? 'Desa/Kel. ' . $current_req['village_name'] . ', ' : '') . "Kec. " . $current_req['district_name'] . ", Inhu\n" .
+            (!empty($current_req['address_detail']) ? "🏠 *Alamat*: " . $current_req['address_detail'] . "\n" : "") .
+            "💰 *Estimasi Anggaran*: " . ($current_req['budget'] > 0 ? format_rupiah($current_req['budget']) : 'Sesuai Kesepakatan') . "\n" .
+            (!empty($current_req['description']) ? "📝 *Catatan*:\n\"" . mb_strimwidth($current_req['description'], 0, 150, '...') . "\"\n\n" : "\n") .
+            "Mohon konfirmasi ketersediaan & jadwal kunjungan Anda. Terima kasih!\n" .
+            BASE_URL . "/provider/index.php";
+
+        $wa_cust_url = !empty($wa_partner_number) ? "https://wa.me/{$wa_partner_number}?text=" . urlencode($wa_cust_text) : "";
 
         // Ambil riwayat timeline kejadian pesanan (Order Tracker)
         $timeline_events = get_order_timeline($selected_id);
@@ -296,9 +321,8 @@ require_once __DIR__ . '/../includes/header.php';
             <?php if ($current_req): ?>
 
                 <?php
-                $current_step_num = 1;
-                $step_key = $current_req['progress_step'] ?? 'created';
                 $status_val = $current_req['status'];
+                $step_key = $current_req['progress_step'] ?? 'created';
 
                 if ($status_val === 'cancelled') {
                     $current_step_num = -1;
@@ -308,20 +332,72 @@ require_once __DIR__ . '/../includes/header.php';
                     $current_step_num = 4;
                 } elseif ($step_key === 'on_the_way') {
                     $current_step_num = 3;
-                } elseif ($step_key === 'accepted' || $status_val === 'in_progress' || !empty($current_req['provider_id'])) {
-                    $current_step_num = ($status_val === 'in_progress') ? 3 : 2;
+                } elseif ($step_key === 'accepted' || $status_val === 'in_progress') {
+                    $current_step_num = 2;
+                } else {
+                    $current_step_num = 1;
                 }
                 ?>
+
+                <?php if (!empty($wa_cust_url) && $current_req['status'] !== 'cancelled'): ?>
+                    <!-- Jembatan WhatsApp Cepat Warga -> Mitra -->
+                    <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden text-white" style="background: linear-gradient(135deg, #059669 0%, #0d9488 100%);">
+                        <div class="card-body p-3 p-md-3.5 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-white text-success d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 46px; height: 46px; font-size: 1.4rem;">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold mb-0.5 text-white" style="font-size: 0.95rem;">
+                                        Hubungi Mitra Langsung via WhatsApp
+                                    </div>
+                                    <div class="text-white-50 small" style="font-size: 0.76rem;">
+                                        <?= $current_req['status'] === 'open' 
+                                            ? 'Kirim rincian pesanan sekarang agar <strong>' . e($resolved_provider_name) . '</strong> langsung merespon & menuju lokasi!' 
+                                            : 'Koordinasi waktu kedatangan atau tanya perkembangan pengerjaan langsung ke <strong>' . e($resolved_provider_name) . '</strong>.' ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="<?= $wa_cust_url ?>" target="_blank" class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center justify-content-center gap-2 flex-shrink-0">
+                                <i class="fa-brands fa-whatsapp fs-5 text-success"></i>
+                                <span>Chat WA Mitra (<?= e(mb_strimwidth($resolved_provider_name ?: 'Mitra', 0, 16, '...')) ?>)</span>
+                            </a>
+                        </div>
+                    </div>
+                <?php elseif (empty($current_req['provider_id']) && $current_req['status'] === 'open'): ?>
+                    <?php
+                    $share_tender_text = "Halo warga Inhu, saya sedang mencari penyedia jasa / teknisi di portal resmi JASA INHU:\n\n" .
+                        "📌 *Kebutuhan*: " . $current_req['title'] . "\n" .
+                        "📍 *Wilayah*: Kec. " . $current_req['district_name'] . ", Inhu\n" .
+                        "💰 *Anggaran*: " . ($current_req['budget'] > 0 ? format_rupiah($current_req['budget']) : 'Sesuai Kesepakatan') . "\n\n" .
+                        "Bagi teknisi/tukang yang berminat, silakan berikan penawaran harga Anda di portal resmi Jasa Inhu:\n" .
+                        BASE_URL . "/provider/leads.php";
+                    $share_tender_wa = "https://api.whatsapp.com/send?text=" . urlencode($share_tender_text);
+                    ?>
+                    <!-- Kartu Siaran Terbuka untuk Tender -->
+                    <div class="card border-0 shadow-sm rounded-4 mb-3 p-3 bg-light border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2.5">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <i class="fa-solid fa-bullhorn text-teal fs-4"></i>
+                            <div>
+                                <strong class="text-dark small d-block">Siaran Terbuka ke Komunitas Teknisi</strong>
+                                <span class="text-muted" style="font-size: 0.74rem;">Bagikan link ini ke grup WhatsApp warga atau RT/RW agar tukang terdekat segera melamar.</span>
+                            </div>
+                        </div>
+                        <a href="<?= $share_tender_wa ?>" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-1.5 flex-shrink-0">
+                            <i class="fa-brands fa-whatsapp"></i> Bagikan ke Grup WA
+                        </a>
+                    </div>
+                <?php endif; ?>
 
                 <!-- 1. Interactive Visual Order Stepper (5-Tahap Live Tracker) -->
                 <div class="card border shadow-sm mb-3 rounded-4 p-3 bg-white">
                     <div class="d-flex align-items-center justify-content-between position-relative stepper-bar px-1 px-sm-2">
                         <!-- Step 1: Pesanan Terkirim -->
-                        <div class="stepper-step text-center <?= $current_step_num >= 1 ? 'active' : '' ?> <?= $current_step_num > 1 ? 'completed' : '' ?>">
+                        <div class="stepper-step text-center <?= $current_step_num >= 1 ? 'active' : '' ?> <?= $current_step_num > 1 ? 'completed' : ($current_step_num === 1 ? 'current' : '') ?>">
                             <div class="stepper-icon mx-auto mb-1">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </div>
-                            <div class="stepper-label fw-bold">Dibuat</div>
+                            <div class="stepper-label fw-bold">1. Dibuat</div>
                             <div class="stepper-time text-muted small" style="font-size: 0.65rem;"><?= date('d M, H:i', strtotime($current_req['created_at'])) ?></div>
                         </div>
 
@@ -332,9 +408,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="stepper-icon mx-auto mb-1">
                                 <i class="fa-solid fa-handshake"></i>
                             </div>
-                            <div class="stepper-label fw-bold">Mitra Terhubung</div>
-                            <div class="stepper-time text-muted small text-truncate px-1" style="font-size: 0.65rem; max-width: 100px;">
-                                <?= !empty($resolved_provider_name) ? e($resolved_provider_name) : (count($offers) . ' Tawaran') ?>
+                            <div class="stepper-label fw-bold">2. Dikonfirmasi</div>
+                            <div class="stepper-time text-muted small text-truncate px-1" style="font-size: 0.65rem; max-width: 105px;">
+                                <?= !empty($resolved_provider_name) ? e(mb_strimwidth($resolved_provider_name, 0, 14, '...')) : (count($offers) . ' Tawaran') ?>
                             </div>
                         </div>
 
@@ -345,7 +421,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="stepper-icon mx-auto mb-1">
                                 <i class="fa-solid fa-motorcycle"></i>
                             </div>
-                            <div class="stepper-label fw-bold">Menuju Lokasi</div>
+                            <div class="stepper-label fw-bold">3. OTW Lokasi</div>
                             <div class="stepper-time text-muted small" style="font-size: 0.65rem;">
                                 <?= $current_step_num === 3 ? 'Dalam Perjalanan' : ($current_step_num > 3 ? 'Tiba di Lokasi' : 'Menunggu') ?>
                             </div>
@@ -358,7 +434,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="stepper-icon mx-auto mb-1">
                                 <i class="fa-solid fa-wrench"></i>
                             </div>
-                            <div class="stepper-label fw-bold">Pengerjaan</div>
+                            <div class="stepper-label fw-bold">4. Pengerjaan</div>
                             <div class="stepper-time text-muted small" style="font-size: 0.65rem;">
                                 <?= $current_step_num === 4 ? 'Sedang Servis' : ($current_step_num > 4 ? 'Pekerjaan Beres' : 'Menunggu') ?>
                             </div>
@@ -371,7 +447,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="stepper-icon mx-auto mb-1">
                                 <i class="fa-solid fa-circle-check"></i>
                             </div>
-                            <div class="stepper-label fw-bold">Selesai</div>
+                            <div class="stepper-label fw-bold">5. Selesai</div>
                             <div class="stepper-time text-muted small" style="font-size: 0.65rem;">
                                 <?= !empty($existing_review) ? ('⭐ ' . number_format((float)$existing_review['rating'], 1)) : ($current_step_num === 5 ? 'Kwitansi Siap' : '-') ?>
                             </div>
@@ -1101,5 +1177,49 @@ document.addEventListener('DOMContentLoaded', function() {
     initStarSelector();
 });
 </script>
+
+<?php if (isset($_GET['new']) && $_GET['new'] === '1' && !empty($wa_cust_url)): ?>
+    <!-- Modal Sukses Kirim WA Cepat -->
+    <div class="modal fade" id="newOrderWaModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 420px;">
+            <div class="modal-content border-0 shadow-xl rounded-4 text-center overflow-hidden">
+                <div class="modal-header border-0 bg-success-subtle pb-2 pt-4 px-4 justify-content-center">
+                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 64px; height: 64px; font-size: 2rem;">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                </div>
+                <div class="modal-body p-4 pt-2">
+                    <h5 class="fw-bold text-dark mb-1">Pesanan Berhasil Masuk!</h5>
+                    <p class="text-muted small mb-3">
+                        Pesanan Anda ke <strong><?= e($resolved_provider_name) ?></strong> telah tersimpan di sistem. Kirim rincian pesanan sekarang via WhatsApp agar mitra langsung membalas dalam hitungan menit!
+                    </p>
+                    <div class="p-2.5 bg-light rounded-3 border text-start small mb-3">
+                        <div class="text-muted" style="font-size: 0.72rem;">Rincian yang Dikirimkan:</div>
+                        <div class="fw-bold text-dark text-truncate">#ORD-<?= str_pad($current_req['id'], 5, '0', STR_PAD_LEFT) ?> &bull; <?= e($current_req['title']) ?></div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">Kec. <?= e($current_req['district_name']) ?> &bull; <?= $current_req['budget'] > 0 ? format_rupiah($current_req['budget']) : 'Sesuai Kesepakatan' ?></div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="<?= $wa_cust_url ?>" target="_blank" class="btn btn-success fw-bold py-2.5 rounded-pill shadow-xs d-flex align-items-center justify-content-center gap-2" onclick="bootstrap.Modal.getInstance(document.getElementById('newOrderWaModal')).hide()">
+                            <i class="fa-brands fa-whatsapp fs-5"></i>
+                            <span>Kirim Rincian ke WhatsApp Mitra ↗</span>
+                        </a>
+                        <button type="button" class="btn btn-light border py-2 rounded-pill text-muted small" data-bs-dismiss="modal">
+                            Nanti Saja (Lihat Pesanan Saya)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var newOrderModalEl = document.getElementById('newOrderWaModal');
+        if (newOrderModalEl) {
+            var newOrderModal = new bootstrap.Modal(newOrderModalEl);
+            newOrderModal.show();
+        }
+    });
+    </script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

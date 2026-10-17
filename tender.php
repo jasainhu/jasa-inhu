@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $db->commit();
 
                 set_flash('success', 'Permintaan jasa Anda berhasil disiarkan ke semua teknisi di Indragiri Hulu! Silakan pantau penawaran harga yang masuk.');
-                redirect('/user/requests.php?id=' . $req_id);
+                redirect('/user/requests.php?id=' . $req_id . '&broadcast=1');
             } catch (Exception $e) {
                 if ($db->inTransaction()) {
                     $db->rollBack();
