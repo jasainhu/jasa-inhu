@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                         $feeDeductMsg = ($lead_fee_amount > 0) ? 'Biaya kontak Rp ' . number_format($lead_fee_amount, 0, ',', '.') . ' telah dipotong dari saldo deposit Anda.' : 'Biaya kontak GRATIS (Promo Rp 0)!';
                         set_flash('success', 'Pesanan berhasil diterima! ' . $feeDeductMsg . ' Sisa saldo: Rp ' . number_format($leadResult['balance_after'], 0, ',', '.') . '. Silakan hubungi pelanggan.');
-                        redirect('/provider/index.php');
+                        redirect('/provider/index.php?wa_prompt=accepted&req_id=' . $request_id);
                     }
                 }
             } catch (Exception $e) {
@@ -246,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         }
 
                         set_flash('success', 'Status diperbarui: Anda sedang menuju ke lokasi pelanggan.');
-                        redirect('/provider/index.php');
+                        redirect('/provider/index.php?wa_prompt=otw&req_id=' . $request_id);
                     } elseif ($next_step === 'working') {
                         $stmtUpd = $db->prepare("UPDATE service_requests SET progress_step = 'working' WHERE id = ?");
                         $stmtUpd->execute([$request_id]);
@@ -355,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $db->commit();
 
                     set_flash('success', 'Pekerjaan berhasil ditandai selesai! Kwitansi resmi dan rincian biaya telah diperbarui.');
-                    redirect('/provider/index.php');
+                    redirect('/provider/index.php?wa_prompt=completed&req_id=' . $request_id);
                 }
             } catch (Exception $e) {
                 if ($db->inTransaction()) {
@@ -421,13 +421,15 @@ $total_portfolios = (int)$stmtPort->fetchColumn();
 
 // 2. Pekerjaan Sedang Berjalan (Active In-Progress Jobs)
 $stmtActive = $db->prepare("
-    SELECT sr.*, u.name as customer_name, u.phone as customer_phone, sc.name as category_name, sc.icon as category_icon, d.name as district_name,
+    SELECT sr.*, u.name as customer_name, u.phone as customer_phone, sc.name as category_name, sc.icon as category_icon, 
+           d.name as district_name, v.name as village_name,
            (CASE WHEN sr.provider_id = ? THEN 'direct' ELSE 'bidding' END) as order_origin,
            srr.offer_price as agreed_price
     FROM service_requests sr
     JOIN users u ON sr.user_id = u.id
     JOIN service_categories sc ON sr.category_id = sc.id
     JOIN districts d ON sr.district_id = d.id
+    LEFT JOIN villages v ON sr.village_id = v.id
     LEFT JOIN service_request_responses srr ON (srr.request_id = sr.id AND srr.provider_id = ? AND srr.status = 'accepted')
     WHERE (sr.provider_id = ? OR sr.id IN (SELECT request_id FROM service_request_responses WHERE provider_id = ? AND status = 'accepted'))
       AND sr.status = 'in_progress'
@@ -438,12 +440,14 @@ $active_jobs = $stmtActive->fetchAll();
 
 // 3. Pesanan Masuk Langsung (Direct Orders Khusus untuk Penyedia Ini, status: open)
 $stmtDirect = $db->prepare("
-    SELECT sr.*, u.name as customer_name, u.phone as customer_phone, sc.name as category_name, sc.icon as category_icon, d.name as district_name,
+    SELECT sr.*, u.name as customer_name, u.phone as customer_phone, sc.name as category_name, sc.icon as category_icon, 
+           d.name as district_name, v.name as village_name,
            (SELECT id FROM service_request_responses srr WHERE srr.request_id = sr.id AND srr.provider_id = ?) as my_response_id
     FROM service_requests sr
     JOIN users u ON sr.user_id = u.id
     JOIN service_categories sc ON sr.category_id = sc.id
     JOIN districts d ON sr.district_id = d.id
+    LEFT JOIN villages v ON sr.village_id = v.id
     WHERE sr.provider_id = ? AND sr.status = 'open'
     ORDER BY sr.created_at DESC
 ");
@@ -527,6 +531,70 @@ $stmtCompleted = $db->prepare("
 ");
 $stmtCompleted->execute([$provider['id'] ?? 0, $provider['id'] ?? 0, $provider['id'] ?? 0, $provider['id'] ?? 0]);
 $completed_jobs = $stmtCompleted->fetchAll();
+
+// Cek Permintaan Pop-up WA Cepat Mitra
+$wa_prompt_type = $_GET['wa_prompt'] ?? '';
+$wa_prompt_req_id = (int)($_GET['req_id'] ?? 0);
+$wa_prompt_data = null;
+$wa_prompt_url = '';
+$wa_prompt_title = '';
+$wa_prompt_desc = '';
+$wa_prompt_btn = '';
+$wa_prompt_icon = 'fa-whatsapp';
+$wa_prompt_theme = 'success';
+
+if (!empty($wa_prompt_type) && $wa_prompt_req_id > 0) {
+    $stmtPrompt = $db->prepare("
+        SELECT sr.*, u.name as customer_name, u.phone as customer_phone,
+               d.name as district_name, v.name as village_name
+        FROM service_requests sr
+        JOIN users u ON sr.user_id = u.id
+        LEFT JOIN districts d ON sr.district_id = d.id
+        LEFT JOIN villages v ON sr.village_id = v.id
+        WHERE sr.id = ? AND (sr.provider_id = ? OR sr.id IN (SELECT request_id FROM service_request_responses WHERE provider_id = ? AND status = 'accepted'))
+        LIMIT 1
+    ");
+    $stmtPrompt->execute([$wa_prompt_req_id, $provider['id'] ?? 0, $provider['id'] ?? 0]);
+    $wa_prompt_data = $stmtPrompt->fetch();
+
+    if ($wa_prompt_data && !empty($wa_prompt_data['customer_phone'])) {
+        $pCleanPhone = preg_replace('/[^0-9]/', '', $wa_prompt_data['customer_phone']);
+        if (str_starts_with($pCleanPhone, '0')) {
+            $pCleanPhone = '62' . substr($pCleanPhone, 1);
+        }
+        $pLocation = trim(($wa_prompt_data['address_detail'] ? $wa_prompt_data['address_detail'] . ', ' : '') . ($wa_prompt_data['village_name'] ? 'Desa ' . $wa_prompt_data['village_name'] . ', ' : '') . ($wa_prompt_data['district_name'] ? 'Kec. ' . $wa_prompt_data['district_name'] : 'Inhu'));
+        $pOrderId = '#ORD-' . str_pad($wa_prompt_data['id'], 5, '0', STR_PAD_LEFT);
+        $provBizName = $provider['business_name'] ?? 'Mitra Jasa';
+
+        if ($wa_prompt_type === 'otw') {
+            $wa_prompt_title = 'Status Diperbarui: Sedang OTW!';
+            $wa_prompt_desc = 'Status pesanan di akun pelanggan sudah menjadi <strong>OTW Lokasi</strong>. Kirim WhatsApp sekarang agar pelanggan bersiap di rumah?';
+            $waMsgText = "Halo Bapak/Ibu " . $wa_prompt_data['customer_name'] . ", saya " . $provBizName . " dari Jasa Inhu.\n\nSaat ini saya sudah *OTW / dalam perjalanan* menuju ke lokasi Anda (" . ($pLocation ?: 'Kab. Inhu') . ") untuk pengerjaan pesanan " . $pOrderId . " (" . $wa_prompt_data['title'] . ").\n\nMohon ditunggu ya, terima kasih! 🙏";
+            $wa_prompt_btn = 'Kabari Pelanggan: Saya Sedang OTW 🛵 ↗';
+            $wa_prompt_icon = 'fa-motorcycle';
+            $wa_prompt_theme = 'primary';
+        } elseif ($wa_prompt_type === 'accepted') {
+            $wa_prompt_title = 'Pesanan Berhasil Diterima!';
+            $wa_prompt_desc = 'Pesanan dari <strong>' . e($wa_prompt_data['customer_name']) . '</strong> telah masuk ke antrean aktif Anda. Mau kirim salam dan konfirmasi jam kedatangan ke pelanggan?';
+            $waMsgText = "Halo Bapak/Ibu " . $wa_prompt_data['customer_name'] . ", saya " . $provBizName . " dari Jasa Inhu.\n\nPesanan Anda " . $pOrderId . " (" . $wa_prompt_data['title'] . ") sudah kami terima dan siap dikerjakan. Boleh kami konfirmasi patokan lokasi di " . ($pLocation ?: 'Inhu') . " dan waktu yang tepat? Terima kasih!";
+            $wa_prompt_btn = 'Konfirmasi Pelanggan via WhatsApp ↗';
+            $wa_prompt_icon = 'fa-handshake';
+            $wa_prompt_theme = 'teal';
+        } elseif ($wa_prompt_type === 'completed') {
+            $wa_prompt_title = 'Pekerjaan Beres & Kwitansi Terbit!';
+            $wa_prompt_desc = 'Pekerjaan telah ditandai selesai. Mau kirim link kwitansi resmi dan minta bintang ulasan ke pelanggan lewat WhatsApp?';
+            $kwitansiUrl = BASE_URL . '/kwitansi.php?id=' . $wa_prompt_data['id'];
+            $waMsgText = "Halo Bapak/Ibu " . $wa_prompt_data['customer_name'] . ", pengerjaan untuk pesanan " . $pOrderId . " (" . $wa_prompt_data['title'] . ") telah selesai kami kerjakan.\n\n📄 Kwitansi resmi dapat diunduh di: " . $kwitansiUrl . "\n\nMohon bantuannya untuk memberikan bintang dan ulasan di Aplikasi Jasa Inhu ya. Terima kasih banyak atas kepercayaan Anda! ⭐";
+            $wa_prompt_btn = 'Kirim Kwitansi & Minta Rating via WA ⭐ ↗';
+            $wa_prompt_icon = 'fa-circle-check';
+            $wa_prompt_theme = 'success';
+        }
+
+        if (!empty($waMsgText)) {
+            $wa_prompt_url = 'https://wa.me/' . $pCleanPhone . '?text=' . urlencode($waMsgText);
+        }
+    }
+}
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -940,9 +1008,12 @@ require_once __DIR__ . '/../includes/header.php';
                                     <p class="text-secondary small mb-2 bg-light p-3 rounded-3 border">
                                         <?= nl2br(e($order['description'])) ?>
                                     </p>
-                                    <?php if (!empty($order['address'])): ?>
+                                    <?php 
+                                    $order_full_address = trim(($order['address_detail'] ?? '') . (!empty($order['village_name']) ? ', Desa ' . $order['village_name'] : '') . (!empty($order['district_name']) ? ', Kec. ' . $order['district_name'] : ''));
+                                    if (!empty($order_full_address)): 
+                                    ?>
                                         <div class="small text-muted mb-2">
-                                            <i class="fa-solid fa-location-dot text-danger me-1"></i> <strong>Alamat Pelanggan:</strong> <?= e($order['address']) ?>
+                                            <i class="fa-solid fa-location-dot text-danger me-1"></i> <strong>Alamat Pelanggan:</strong> <?= e($order_full_address) ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -1020,7 +1091,23 @@ require_once __DIR__ . '/../includes/header.php';
                         if (str_starts_with($custPhoneClean, '0')) {
                             $custPhoneClean = '62' . substr($custPhoneClean, 1);
                         }
-                        $waTextActive = urlencode("Halo Bapak/Ibu " . ($job['customer_name'] ?? 'Pelanggan') . ", saya " . ($provider['business_name'] ?? 'Mitra Jasa') . " dari Aplikasi Jasa Inhu yang sedang mengerjakan pesanan: \"" . $job['title'] . "\".");
+                        $job_order_code = '#ORD-' . str_pad($job['id'], 5, '0', STR_PAD_LEFT);
+                        $job_full_address = trim(($job['address_detail'] ?? '') . (!empty($job['village_name']) ? ', Desa ' . $job['village_name'] : '') . (!empty($job['district_name']) ? ', Kec. ' . $job['district_name'] : ''));
+
+                        // Dynamic context-aware WA reply based on active step
+                        if ($step === 'on_the_way') {
+                            $waTextActive = urlencode("Halo Bapak/Ibu " . ($job['customer_name'] ?? 'Pelanggan') . ", saya " . ($provider['business_name'] ?? 'Mitra Jasa') . " dari Jasa Inhu.\n\nSaat ini saya sedang dalam perjalanan (*OTW*) menuju lokasi Anda" . ($job_full_address ? ' di ' . $job_full_address : '') . " untuk pengerjaan: \"" . $job['title'] . "\". Mohon ditunggu ya 🙏");
+                            $waBtnClass = "btn btn-success text-white fw-bold shadow-xs";
+                            $waBtnText = "Kabari OTW 🛵";
+                        } elseif ($step === 'working') {
+                            $waTextActive = urlencode("Halo Bapak/Ibu " . ($job['customer_name'] ?? 'Pelanggan') . ", saya " . ($provider['business_name'] ?? 'Mitra Jasa') . " dari Jasa Inhu. Saya sudah berada di lokasi dan mulai melakukan pengerjaan: \"" . $job['title'] . "\". Terima kasih!");
+                            $waBtnClass = "btn btn-outline-success fw-bold";
+                            $waBtnText = "WA Pelanggan";
+                        } else {
+                            $waTextActive = urlencode("Halo Bapak/Ibu " . ($job['customer_name'] ?? 'Pelanggan') . ", saya " . ($provider['business_name'] ?? 'Mitra Jasa') . " dari Jasa Inhu terkait pesanan " . $job_order_code . " (\"" . $job['title'] . "\"). Pesanan sudah saya terima dan siap dikerjakan. Boleh konfirmasi patokan alamat dan waktunya?");
+                            $waBtnClass = "btn btn-wa-call";
+                            $waBtnText = "Konfirmasi WA";
+                        }
                         $finalEstimate = (int)($job['agreed_price'] ?: $job['budget'] ?: 0);
                     ?>
                         <div class="col-12">
@@ -1114,10 +1201,10 @@ require_once __DIR__ . '/../includes/header.php';
                                     <div class="text-secondary small" style="font-size: 0.78rem; line-height: 1.45; white-space: pre-line;">
                                         <?= e($job['description']) ?>
                                     </div>
-                                    <?php if (!empty($job['address'])): ?>
+                                    <?php if (!empty($job_full_address)): ?>
                                         <div class="mt-2 pt-2 border-top small text-muted d-flex align-items-start gap-1.5" style="font-size: 0.75rem;">
                                             <i class="fa-solid fa-map-pin text-danger mt-0.5 flex-shrink-0"></i>
-                                            <div><strong>Alamat Lokasi:</strong> <?= e($job['address']) ?></div>
+                                            <div><strong>Alamat Lokasi:</strong> <?= e($job_full_address) ?></div>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -1127,9 +1214,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     <!-- Direct Chat Contacts -->
                                     <div class="d-flex gap-2">
                                         <?php if (!empty($custPhoneClean)): ?>
-                                            <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextActive ?>" target="_blank" class="btn btn-wa-call btn-sm px-3 py-2 rounded-3 shadow-xs d-flex align-items-center justify-content-center gap-1.5 flex-fill flex-sm-grow-0" title="Chat WhatsApp Pelanggan">
+                                            <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextActive ?>" target="_blank" class="<?= $waBtnClass ?> btn-sm px-3 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1.5 flex-fill flex-sm-grow-0" title="Chat WhatsApp Pelanggan">
                                                 <i class="fa-brands fa-whatsapp fs-6"></i>
-                                                <span>Hubungi WA</span>
+                                                <span><?= $waBtnText ?></span>
                                             </a>
                                         <?php endif; ?>
                                         <a href="<?= BASE_URL ?>/chat.php?user_id=<?= $job['user_id'] ?>" class="btn btn-outline-teal btn-sm px-3 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1.5 flex-fill flex-sm-grow-0" title="Obrolan Pesan di Aplikasi">
@@ -1461,6 +1548,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+
+<?php if (!empty($wa_prompt_data) && !empty($wa_prompt_url)): ?>
+    <!-- Modal Pop-Up Quick WA Reply Mitra -->
+    <div class="modal fade" id="mitraWaPromptModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 430px;">
+            <div class="modal-content border-0 shadow-xl rounded-4 text-center overflow-hidden">
+                <div class="modal-header border-0 bg-<?= $wa_prompt_theme ?>-subtle pb-2 pt-4 px-4 justify-content-center">
+                    <div class="rounded-circle bg-<?= $wa_prompt_theme ?> text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 64px; height: 64px; font-size: 1.8rem;">
+                        <i class="fa-solid <?= $wa_prompt_icon ?>"></i>
+                    </div>
+                </div>
+                <div class="modal-body p-4 pt-2">
+                    <h5 class="fw-bold text-dark mb-1"><?= $wa_prompt_title ?></h5>
+                    <p class="text-muted small mb-3">
+                        <?= $wa_prompt_desc ?>
+                    </p>
+                    <div class="p-2.5 bg-light rounded-3 border text-start small mb-3">
+                        <div class="text-muted" style="font-size: 0.72rem;">Target Pelanggan:</div>
+                        <div class="fw-bold text-dark text-truncate"><?= e($wa_prompt_data['customer_name']) ?> &bull; <?= e($wa_prompt_data['customer_phone']) ?></div>
+                        <div class="text-secondary" style="font-size: 0.72rem;"><?= e($wa_prompt_data['title']) ?> &bull; <?= e($wa_prompt_data['district_name']) ?></div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="<?= $wa_prompt_url ?>" target="_blank" class="btn btn-success fw-bold py-2.5 rounded-pill shadow-xs d-flex align-items-center justify-content-center gap-2" onclick="bootstrap.Modal.getInstance(document.getElementById('mitraWaPromptModal')).hide()">
+                            <i class="fa-brands fa-whatsapp fs-5"></i>
+                            <span><?= $wa_prompt_btn ?></span>
+                        </a>
+                        <button type="button" class="btn btn-light border py-2 rounded-pill text-muted small" data-bs-dismiss="modal">
+                            Nanti / Sudah Dikabari
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalEl = document.getElementById('mitraWaPromptModal');
+        if (modalEl) {
+            var myModal = new bootstrap.Modal(modalEl);
+            myModal.show();
+        }
+    });
+    </script>
+<?php endif; ?>
 
 <?php 
 require_once __DIR__ . '/../includes/business_card_modal.php';
