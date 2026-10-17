@@ -583,7 +583,7 @@ if (!empty($wa_prompt_type) && $wa_prompt_req_id > 0) {
         } elseif ($wa_prompt_type === 'completed') {
             $wa_prompt_title = 'Pekerjaan Beres & Kwitansi Terbit!';
             $wa_prompt_desc = 'Pekerjaan telah ditandai selesai. Mau kirim link kwitansi resmi dan minta bintang ulasan ke pelanggan lewat WhatsApp?';
-            $kwitansiUrl = BASE_URL . '/kwitansi.php?id=' . $wa_prompt_data['id'];
+            $kwitansiUrl = BASE_URL . '/invoice.php?id=' . $wa_prompt_data['id'];
             $waMsgText = "Halo Bapak/Ibu " . $wa_prompt_data['customer_name'] . ", pengerjaan untuk pesanan " . $pOrderId . " (" . $wa_prompt_data['title'] . ") telah selesai kami kerjakan.\n\n📄 Kwitansi resmi dapat diunduh di: " . $kwitansiUrl . "\n\nMohon bantuannya untuk memberikan bintang dan ulasan di Aplikasi Jasa Inhu ya. Terima kasih banyak atas kepercayaan Anda! ⭐";
             $wa_prompt_btn = 'Kirim Kwitansi & Minta Rating via WA ⭐ ↗';
             $wa_prompt_icon = 'fa-circle-check';
