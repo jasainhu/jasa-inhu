@@ -3,5 +3,9 @@
 .gemini
 scratch/
 tests/
+backups/
+uploads/temp_mitra/
 *.bat
 *.log
+banner.txt
+
