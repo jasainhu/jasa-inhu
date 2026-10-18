@@ -73,9 +73,11 @@ $page_title = $page_title ?? 'Admin Dashboard';
 
                 <?php
                 $open_orders_count = 0;
+                $pending_reports_count = 0;
                 try {
                     $db_hdr = get_db();
                     $open_orders_count = (int)$db_hdr->query("SELECT COUNT(*) FROM service_requests WHERE status IN ('open', 'in_progress')")->fetchColumn();
+                    $pending_reports_count = (int)$db_hdr->query("SELECT COUNT(*) FROM reports WHERE status = 'pending'")->fetchColumn();
                 } catch (Exception $e) {}
                 ?>
                 <ul class="nav flex-column">
@@ -106,6 +108,15 @@ $page_title = $page_title ?? 'Admin Dashboard';
                     <li class="nav-item">
                         <a class="sidebar-link <?= ($admin_active ?? '') === 'users' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/users.php">
                             <i class="fa-solid fa-users"></i> Kelola Pengguna
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="sidebar-link <?= ($admin_active ?? '') === 'reports' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/reports.php">
+                            <i class="fa-solid fa-triangle-exclamation text-danger"></i> 
+                            <span>Laporan Masalah</span>
+                            <?php if ($pending_reports_count > 0): ?>
+                                <span class="badge rounded-pill bg-danger ms-auto" style="font-size: 0.7rem;"><?= $pending_reports_count ?></span>
+                            <?php endif; ?>
                         </a>
                     </li>
                     <li class="nav-item">

@@ -400,6 +400,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $error = 'Gagal menyimpan tanggapan: ' . $e->getMessage();
                 }
             }
+        } elseif ($action === 'report_customer') {
+            $request_id = (int)($_POST['request_id'] ?? 0);
+            $reported_user_id = (int)($_POST['reported_user_id'] ?? 0);
+            $reason = trim($_POST['reason'] ?? '');
+            $details = trim($_POST['details'] ?? '');
+
+            if (empty($reason) || empty($details) || $reported_user_id <= 0) {
+                $error = 'Alasan dan rincian kronologi laporan wajib diisi.';
+            } else {
+                try {
+                    $stmtRep = $db->prepare("
+                        INSERT INTO reports (reporter_user_id, reported_user_id, request_id, reason, details, status, created_at)
+                        VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+                    ");
+                    $stmtRep->execute([$user['id'], $reported_user_id, $request_id ?: null, $reason, $details]);
+
+                    // Kirim notifikasi ke Admin
+                    try {
+                        $adminUsers = $db->query("SELECT u.id FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name = 'admin'")->fetchAll();
+                        $notifTitle = "🚨 Laporan Mitra: Pelanggan Bermasalah!";
+                        $notifMsg = "Mitra " . ($provider['business_name'] ?? $user['name']) . " melaporkan pelanggan karena: " . $reason;
+                        foreach ($adminUsers as $adm) {
+                            $stmtAdmNotif = $db->prepare("INSERT INTO notifications (user_id, title, message, link, created_at) VALUES (?, ?, ?, '/admin/reports.php', NOW())");
+                            $stmtAdmNotif->execute([$adm['id'], $notifTitle, $notifMsg]);
+                        }
+                    } catch (Exception $eNotif) {}
+
+                    set_flash('success', 'Laporan Anda berhasil dikirim ke Tim Keamanan JASA INHU! Admin kami akan segera meninjau dan menindaklanjuti akun tersebut.');
+                    redirect('/provider/index.php');
+                } catch (Exception $e) {
+                    $error = 'Gagal mengirim laporan: ' . $e->getMessage();
+                }
+            }
         }
     }
 }
@@ -859,13 +892,19 @@ require_once __DIR__ . '/../includes/header.php';
                         </button>
                     </div>
                     <!-- Sound & Notification Controller Bar -->
-                    <div class="pt-2 border-top border-white border-opacity-20 d-flex gap-2">
+                    <div class="pt-2 border-top border-white border-opacity-20 d-flex gap-2 mb-2">
                         <button type="button" class="btn btn-sm btn-light text-teal fw-bold flex-fill rounded-3 sound-toggle-btn shadow-2xs" onclick="ProviderNotification.toggleSound()" style="font-size: 0.72rem;">
                             <i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-light fw-bold rounded-3" onclick="ProviderNotification.testSound()" style="font-size: 0.72rem;" title="Uji Coba Bunyi Nada Dering HP">
                             <i class="fa-solid fa-play me-1"></i> Tes Dering
                         </button>
+                    </div>
+                    <!-- Pusat Keamanan Mitra Link -->
+                    <div class="text-center">
+                        <a href="<?= BASE_URL ?>/provider/safety.php" class="btn btn-sm btn-outline-warning text-white fw-bold w-100 rounded-3 py-1.5 d-flex align-items-center justify-content-center gap-1.5 shadow-2xs" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.5);">
+                            <i class="fa-solid fa-shield-halved text-warning"></i> Pusat Keamanan & SOP Anti Penipuan ↗
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1020,8 +1059,8 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <!-- Quick Chat & Actions Bar -->
                                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pt-2">
-                                    <!-- Direct Chat Contacts -->
-                                    <div class="d-flex gap-2">
+                                    <!-- Direct Chat Contacts & Report -->
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
                                         <?php if (!empty($custPhoneClean)): ?>
                                             <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextNew ?>" target="_blank" class="btn btn-wa-call btn-sm px-3 py-2 rounded-3" title="Chat WhatsApp Pelanggan">
                                                 <i class="fa-brands fa-whatsapp fs-6 me-1"></i> Hubungi WA
@@ -1030,6 +1069,9 @@ require_once __DIR__ . '/../includes/header.php';
                                         <a href="<?= BASE_URL ?>/chat.php?user_id=<?= $order['user_id'] ?>" class="btn btn-outline-teal btn-sm px-3 py-2 rounded-3" title="Obrolan Pesan di Aplikasi">
                                             <i class="fa-solid fa-comments me-1"></i> Chat Aplikasi
                                         </a>
+                                        <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-2 rounded-3" onclick="openReportModal(<?= $order['id'] ?>, <?= $order['user_id'] ?>, '<?= addslashes(e($order['customer_name'])) ?>')" title="Laporkan Jika Pesanan Fiktif / Palsu">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        </button>
                                     </div>
 
                                     <!-- Main Accept / Reject Buttons -->
@@ -1211,8 +1253,8 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <!-- Tombol Aksi Cepat Mitra -->
                                 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-2 pt-1">
-                                    <!-- Direct Chat Contacts -->
-                                    <div class="d-flex gap-2">
+                                    <!-- Direct Chat Contacts & Report -->
+                                    <div class="d-flex gap-2 flex-wrap">
                                         <?php if (!empty($custPhoneClean)): ?>
                                             <a href="https://wa.me/<?= $custPhoneClean ?>?text=<?= $waTextActive ?>" target="_blank" class="<?= $waBtnClass ?> btn-sm px-3 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1.5 flex-fill flex-sm-grow-0" title="Chat WhatsApp Pelanggan">
                                                 <i class="fa-brands fa-whatsapp fs-6"></i>
@@ -1223,6 +1265,9 @@ require_once __DIR__ . '/../includes/header.php';
                                             <i class="fa-solid fa-comments"></i>
                                             <span>Chat</span>
                                         </a>
+                                        <button type="button" class="btn btn-outline-danger btn-sm px-2.5 py-2 rounded-3" onclick="openReportModal(<?= $job['id'] ?>, <?= $job['user_id'] ?>, '<?= addslashes(e($job['customer_name'])) ?>')" title="Laporkan Pelanggan Nakal / Penipuan">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        </button>
                                     </div>
 
                                     <!-- Next Step Button Based on Step -->
@@ -1513,8 +1558,70 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- Modal Laporkan Pelanggan Bermasalah -->
+<div class="modal fade" id="modalReportCustomer" tabindex="-1" aria-labelledby="modalReportCustomerLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-danger-subtle text-danger p-2 rounded-circle">
+                        <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark" id="modalReportCustomerLabel">Laporkan Pelanggan Bermasalah</h5>
+                        <p class="text-muted small mb-0">Lindungi diri Anda dan mitra JASA INHU lainnya</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="<?= BASE_URL ?>/provider/index.php">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="report_customer">
+                <input type="hidden" name="request_id" id="report_request_id" value="0">
+                <input type="hidden" name="reported_user_id" id="report_customer_id" value="0">
+                <div class="modal-body py-3">
+                    <div class="alert alert-warning border-0 small rounded-3 mb-3">
+                        <i class="fa-solid fa-shield-halved me-1"></i> Pelanggan: <strong id="report_customer_name">-</strong><br>
+                        Laporan ini akan ditinjau langsung oleh Admin JASA INHU. Jika terbukti ada itikad buruk/penipuan, akun pelanggan akan diblacklist permanen dari platform.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Jenis Masalah / Pelanggaran <span class="text-danger">*</span></label>
+                        <select name="reason" class="form-select rounded-3" required>
+                            <option value="">-- Pilih Jenis Pelanggaran --</option>
+                            <option value="Order Fiktif / Prank / Alamat Palsu">Order Fiktif / Prank / Alamat Tidak Ditemukan</option>
+                            <option value="Pelanggan Menolak Membayar Jasa">Pelanggan Menolak Membayar Jasa yang Telah Selesai</option>
+                            <option value="Penipuan Bukti Transfer / Struk Palsu">Penipuan Bukti Transfer / Struk M-Banking Palsu</option>
+                            <option value="Nomor WhatsApp Tidak Aktif Saat Mau Berangkat">Nomor WA Tidak Aktif / Tidak Ada Respon Saat Mau OTW</option>
+                            <option value="Pelecehan / Kata Kasar / Ancaman Keamanan">Pelecehan / Kata-kata Kasar / Ancaman Keamanan Fisik</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Rincian Kronologi Kejadian <span class="text-danger">*</span></label>
+                        <textarea name="details" class="form-control rounded-3" rows="4" placeholder="Jelaskan secara singkat apa yang terjadi (contoh: sudah sampai ke alamat jalan sepi tapi nomor WA diblokir / struk transfer diedit padahal saldo belum masuk)..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger fw-bold rounded-pill px-4 shadow-xs">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Kirim Laporan ke Admin
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="<?= BASE_URL ?>/assets/js/provider_sound.js"></script>
 <script>
+function openReportModal(requestId, customerId, customerName) {
+    document.getElementById('report_request_id').value = requestId || 0;
+    document.getElementById('report_customer_id').value = customerId || 0;
+    document.getElementById('report_customer_name').textContent = customerName || 'Pelanggan';
+    const modalEl = document.getElementById('modalReportCustomer');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+}
 function openCompleteOrderModal(requestId, title, customerName, defaultPrice) {
     document.getElementById('completeRequestId').value = requestId;
     document.getElementById('completeJobTitle').textContent = title;
