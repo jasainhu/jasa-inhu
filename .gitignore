@@ -2,7 +2,12 @@ scratch/
 tests/
 *.log
 *.bat
+!JALANKAN_WEBSITE.bat
+!JALANKAN_BROADCAST_PAGI_JAM_8.bat
+!UPLOAD_KE_GITHUB.bat
+!BACKUP_DATABASE_MINGGUAN.bat
 .agents/
 .gemini/
 .env
 uploads/temp_mitra/
+backups/*.sql

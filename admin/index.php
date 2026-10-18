@@ -275,9 +275,13 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
 
-                    <p class="text-muted mb-0 small px-1" style="font-size: 0.73rem; line-height: 1.4;">
+                    <p class="text-muted mb-2.5 small px-1" style="font-size: 0.73rem; line-height: 1.4;">
                         <i class="fa-solid fa-circle-check text-success me-1"></i> <strong>Bebas Tagihan Bulanan:</strong> Tidak ada biaya sewa server bulanan. Sistem berjalan otomatis di cloud global.
                     </p>
+
+                    <a href="<?= BASE_URL ?>/admin/backup.php" class="btn btn-sm btn-outline-success fw-bold w-100 shadow-xs" style="font-size: 0.76rem;">
+                        <i class="fa-solid fa-cloud-arrow-down me-1"></i> Cadangkan Database (.sql)
+                    </a>
                 </div>
             </div>
         </div>

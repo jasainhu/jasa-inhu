@@ -135,6 +135,11 @@ $page_title = $page_title ?? 'Admin Dashboard';
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="sidebar-link <?= ($admin_active ?? '') === 'backup' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/backup.php">
+                            <i class="fa-solid fa-database text-teal"></i> Cadangan Database
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="sidebar-link <?= ($admin_active ?? '') === 'profile' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/profile.php">
                             <i class="fa-solid fa-user-gear"></i> Edit Akun Admin
                         </a>
