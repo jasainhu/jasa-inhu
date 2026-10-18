@@ -42,6 +42,7 @@ if (!$provider) {
 }
 
 $is_culinary = is_culinary_category($provider['category_name'] ?? '');
+$is_owner = (is_logged_in() && (current_user()['id'] == $provider['user_id'] || (current_user()['role'] ?? '') === 'admin'));
 $has_provider_photo = has_media($provider['image_url'] ?? '') || has_media($provider['owner_avatar'] ?? '');
 $provider_photo = $has_provider_photo ? get_provider_cover_url($provider) : '';
 
@@ -387,7 +388,7 @@ require_once __DIR__ . '/includes/header.php';
             <!-- 3. Portofolio Hasil Kerja / Katalog Menu (Jika Ada) -->
             <?php if (!empty($portfolios)): ?>
                 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" id="section-portofolio">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                         <div>
                             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                                 <i class="fa-solid <?= $is_culinary ? 'fa-utensils' : 'fa-images' ?> text-teal"></i>
@@ -399,6 +400,12 @@ require_once __DIR__ . '/includes/header.php';
                                     : 'Klik pada gambar untuk melihat ukuran penuh / brosur lengkap' ?>
                             </span>
                         </div>
+                        <?php if ($is_owner): ?>
+                            <a href="<?= BASE_URL ?>/provider/portfolio.php" class="btn btn-sm btn-outline-teal fw-bold rounded-pill px-3 py-1 shadow-2xs">
+                                <i class="fa-solid <?= $is_culinary ? 'fa-plus' : 'fa-gear' ?> me-1"></i>
+                                <?= $is_culinary ? 'Kelola / Tambah Menu' : 'Kelola Portofolio' ?>
+                            </a>
+                        <?php endif; ?>
                     </div>
 
                     <div class="row g-3">
@@ -494,17 +501,36 @@ require_once __DIR__ . '/includes/header.php';
                                         <?php endif; ?>
 
                                         <div class="d-flex align-items-center justify-content-between text-muted small pt-2 border-top mt-2" style="font-size: 0.74rem;">
-                                            <?php if ($is_culinary): ?>
-                                                <?php 
-                                                    $orderMsg = urlencode("Halo " . $provider['business_name'] . ", saya melihat menu \"" . $port['title'] . "\"" . (!empty($portPrice) ? " (" . $portPrice . ")" : "") . " di JASA INHU dan ingin memesan. Apakah menu ini tersedia hari ini?");
-                                                    $orderWaUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $provider['phone'] ?? '') . "?text=" . $orderMsg;
-                                                ?>
-                                                <a href="<?= $orderWaUrl ?>" target="_blank" rel="noopener" class="btn btn-sm btn-success py-1 px-2.5 rounded-pill fw-bold text-decoration-none d-inline-flex align-items-center gap-1 shadow-xs" style="font-size: 0.74rem;">
-                                                    <i class="fa-brands fa-whatsapp"></i> Pesan Menu
-                                                </a>
-                                            <?php else: ?>
-                                                <span><i class="fa-regular fa-calendar me-1"></i> Selesai: <?= $portDateFormatted ?></span>
-                                            <?php endif; ?>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <?php if ($is_culinary): ?>
+                                                    <?php 
+                                                        $orderMsg = urlencode("Halo " . $provider['business_name'] . ", saya melihat menu \"" . $port['title'] . "\"" . (!empty($portPrice) ? " (" . $portPrice . ")" : "") . " di JASA INHU dan ingin memesan. Apakah menu ini tersedia hari ini?");
+                                                        $orderWaUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $provider['phone'] ?? '') . "?text=" . $orderMsg;
+                                                    ?>
+                                                    <a href="<?= $orderWaUrl ?>" target="_blank" rel="noopener" class="btn btn-sm btn-success py-1 px-2.5 rounded-pill fw-bold text-decoration-none d-inline-flex align-items-center gap-1 shadow-xs" style="font-size: 0.74rem;">
+                                                        <i class="fa-brands fa-whatsapp"></i> Pesan Menu
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span><i class="fa-regular fa-calendar me-1"></i> Selesai: <?= $portDateFormatted ?></span>
+                                                <?php endif; ?>
+
+                                                <?php if ($is_owner): ?>
+                                                    <form method="POST" action="<?= BASE_URL ?>/provider/portfolio.php" class="d-inline"
+                                                          data-confirm="<?= $is_culinary ? 'Hapus menu ini dari daftar?' : 'Hapus foto ini dari portofolio?' ?>"
+                                                          data-confirm-title="<?= $is_culinary ? 'Hapus Menu Makanan?' : 'Hapus Foto Portofolio?' ?>"
+                                                          data-confirm-btn="Ya, Hapus"
+                                                          data-confirm-cancel="Batal"
+                                                          data-confirm-type="danger">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="action" value="delete_portfolio">
+                                                        <input type="hidden" name="portfolio_id" value="<?= $port['id'] ?>">
+                                                        <input type="hidden" name="return_to" value="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0.5 px-2 rounded-pill fw-semibold shadow-2xs" style="font-size: 0.72rem;">
+                                                            <i class="fa-solid fa-trash me-1"></i> Hapus
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
 
                                             <?php if ($hasAfter || $hasBefore): ?>
                                                 <button type="button" class="btn btn-link btn-sm p-0 text-teal text-decoration-none fw-semibold d-inline-flex align-items-center gap-1" 

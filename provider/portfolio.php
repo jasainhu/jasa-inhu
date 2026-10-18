@@ -109,7 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmtDel->execute([$portfolio_id, $provider['id']]);
 
             set_flash('success', $is_culinary ? 'Menu makanan berhasil dihapus.' : 'Foto portofolio berhasil dihapus.');
-            redirect('/provider/portfolio.php');
+            $redirect_to = !empty($_POST['return_to']) ? $_POST['return_to'] : '/provider/portfolio.php';
+            redirect($redirect_to);
         } else {
             $error = 'Data portofolio tidak ditemukan atau Anda tidak memiliki akses.';
         }
