@@ -36,7 +36,7 @@ if (!is_dir($backupDir)) {
 // 2. Ekspor seluruh database
 echo "Mengambil struktur dan seluruh isi data TiDB Cloud...\n";
 $start = microtime(true);
-$sql = generate_database_sql_dump();
+$sql = generate_database_sql_dump(true);
 $duration = round(microtime(true) - $start, 2);
 
 $filename = 'backup_jasa_inhu_' . date('Y-m-d_His') . '.sql';

@@ -197,65 +197,63 @@ require_once __DIR__ . '/includes/header.php';
     </div>
     <div class="card-body p-4">
         <div class="row g-4">
-            <!-- Metode 1: Unduh Langsung -->
+            <!-- Metode 1: Unduh Langsung Web -->
             <div class="col-lg-4 col-md-6">
-                <div class="card border rounded-3 p-3 h-100 bg-light bg-opacity-50 text-center d-flex flex-column justify-content-between">
+                <div class="card border rounded-3 p-3.5 h-100 bg-light bg-opacity-50 text-center d-flex flex-column justify-content-between" style="border-top: 4px solid #0d9488 !important;">
                     <div>
-                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-teal text-white mb-3 shadow-xs" style="width: 50px; height: 50px;">
-                            <i class="fa-solid fa-file-arrow-down fs-4"></i>
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-teal text-white mb-3 shadow-xs" style="width: 52px; height: 52px; background: #0d9488;">
+                            <i class="fa-solid fa-cloud-arrow-down fs-4"></i>
                         </div>
-                        <h6 class="fw-bold text-dark mb-1">Unduh Langsung (.sql)</h6>
-                        <p class="text-muted small mb-3">
-                            Unduh seluruh database saat ini ke memori laptop/HP Anda sebagai file berekstensi <code>.sql</code> dalam sekali klik.
+                        <h6 class="fw-bold text-dark mb-1">Cadangan Data & Akun (Web)</h6>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mb-2 px-2.5 py-0.5" style="font-size: 0.7rem;">Ringan & Cepat (~1 MB)</span>
+                        <p class="text-muted small mb-3" style="font-size: 0.78rem; line-height: 1.45;">
+                            Mencadangkan seluruh 27 tabel: akun pengguna, profil mitra, pesanan, rating, log WhatsApp, desa se-Inhu, dan setting sistem. Ramah memori browser tanpa error limit serverless.
                         </p>
                     </div>
-                    <a href="<?= BASE_URL ?>/admin/backup.php?action=download&csrf=<?= csrf_token() ?>" class="btn btn-teal fw-bold w-100 shadow-xs">
-                        <i class="fa-solid fa-download me-1"></i> Unduh File SQL Sekarang
+                    <a href="<?= BASE_URL ?>/admin/backup.php?action=download&csrf=<?= csrf_token() ?>" class="btn btn-teal fw-bold w-100 shadow-xs" style="font-size: 0.82rem;">
+                        <i class="fa-solid fa-download me-1"></i> Unduh SQL Web (~1 MB)
                     </a>
                 </div>
             </div>
 
-            <!-- Metode 2: Simpan di Folder Server -->
+            <!-- Metode 2: Cadangan Penuh (+ Foto Portofolio) -->
             <div class="col-lg-4 col-md-6">
-                <div class="card border rounded-3 p-3 h-100 bg-light bg-opacity-50 text-center d-flex flex-column justify-content-between">
+                <div class="card border rounded-3 p-3.5 h-100 bg-light bg-opacity-50 text-center d-flex flex-column justify-content-between" style="border-top: 4px solid #0284c7 !important;">
                     <div>
-                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mb-3 shadow-xs" style="width: 50px; height: 50px;">
-                            <i class="fa-solid fa-folder-plus fs-4"></i>
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mb-3 shadow-xs" style="width: 52px; height: 52px; background: #0284c7;">
+                            <i class="fa-brands fa-windows fs-4"></i>
                         </div>
-                        <h6 class="fw-bold text-dark mb-1">Simpan di Folder Server</h6>
-                        <p class="text-muted small mb-3">
-                            Buat salinan arsip dan simpan ke dalam folder internal <code>backups/</code> pada sistem web.
+                        <h6 class="fw-bold text-dark mb-1">Cadangan Penuh (+ Foto 47 MB)</h6>
+                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill mb-2 px-2.5 py-0.5" style="font-size: 0.7rem;">Offline Batch Windows</span>
+                        <p class="text-muted small mb-3" style="font-size: 0.78rem; line-height: 1.45;">
+                            Mencadangkan 100% data lengkap termasuk seluruh foto portofolio asli. Dijalankan langsung melalui file batch di laptop tanpa batasan payload web.
                         </p>
                     </div>
-                    <form action="<?= BASE_URL ?>/admin/backup.php" method="POST">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="action" value="create_local_backup">
-                        <button type="submit" class="btn btn-primary-custom fw-bold w-100 shadow-xs">
-                            <i class="fa-solid fa-hard-drive me-1"></i> Buat Arsip di Server
-                        </button>
-                    </form>
+                    <div class="p-2 rounded-2 bg-white border small text-muted font-monospace" style="font-size: 0.72rem;">
+                        <i class="fa-solid fa-bolt text-warning me-1"></i> Klik 2x file <strong>BACKUP_DATABASE_MINGGUAN.bat</strong> di folder laptop Anda
+                    </div>
                 </div>
             </div>
 
             <!-- Metode 3: Kirim ke Email Admin -->
             <div class="col-lg-4 col-md-12">
-                <div class="card border rounded-3 p-3 h-100 bg-light bg-opacity-50 text-center d-flex flex-column justify-content-between">
+                <div class="card border rounded-3 p-3.5 h-100 bg-light bg-opacity-50 text-center d-flex flex-column justify-content-between" style="border-top: 4px solid #f59e0b !important;">
                     <div>
-                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-dark mb-3 shadow-xs" style="width: 50px; height: 50px;">
-                            <i class="fa-solid fa-envelope-circle-check fs-4"></i>
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-dark mb-3 shadow-xs" style="width: 52px; height: 52px; background: #f59e0b;">
+                            <i class="fa-solid fa-envelope-circle-check fs-4 text-white"></i>
                         </div>
-                        <h6 class="fw-bold text-dark mb-1">Kirim ke Email Admin</h6>
-                        <p class="text-muted small mb-3">
-                            Kirimkan file cadangan <code>.sql</code> sebagai lampiran aman ke email resmi <strong><?= e($admin_email) ?></strong>.
+                        <h6 class="fw-bold text-dark mb-1">Kirim Tautan ke Email</h6>
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill mb-2 px-2.5 py-0.5" style="font-size: 0.7rem;">Notifikasi Resmi</span>
+                        <p class="text-muted small mb-3" style="font-size: 0.78rem; line-height: 1.45;">
+                            Kirimkan notifikasi ringkasan cadangan database resmi ke email <strong><?= e($admin_email) ?></strong> untuk arsip berkala pengelola.
                         </p>
                     </div>
                     <form action="<?= BASE_URL ?>/admin/backup.php" method="POST">
                         <?= csrf_field() ?>
                         <input type="hidden" name="action" value="email_backup">
-                        <button type="submit" class="btn btn-warning text-dark fw-bold w-100 shadow-xs">
+                        <button type="submit" class="btn btn-warning text-dark fw-bold w-100 shadow-xs" style="font-size: 0.82rem;">
                             <i class="fa-solid fa-paper-plane me-1"></i> Kirim ke <?= e($admin_email) ?>
                         </button>
-                    </form>
                 </div>
             </div>
         </div>

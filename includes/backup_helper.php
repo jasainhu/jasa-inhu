@@ -6,13 +6,16 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-function generate_database_sql_dump(): string {
+function generate_database_sql_dump(bool $include_media = false): string {
     $db = get_db();
     $db_name = getenv('DB_NAME') ?: 'jasa_inhu';
     
+    $modeText = $include_media ? "Penuh (Termasuk Foto Base64)" : "Ringan / Cepat Web (Data Teks, Akun, Order & Relasi)";
+
     $output = "-- ========================================================\n";
     $output .= "-- JASA INHU - CADANGAN DATABASE RESMI (SQL DUMP)\n";
     $output .= "-- Tanggal Ekspor : " . date('Y-m-d H:i:s') . " WIB\n";
+    $output .= "-- Mode Cadangan  : " . $modeText . "\n";
     $output .= "-- Database Target: " . $db_name . "\n";
     $output .= "-- Sistem Cloud   : TiDB Cloud Serverless / MySQL Compatible\n";
     $output .= "-- ========================================================\n\n";
@@ -40,8 +43,6 @@ function generate_database_sql_dump(): string {
 
         // Export data
         $stmtData = $db->query("SELECT * FROM `$table`");
-        $rowCount = $stmtData->rowCount();
-        
         $rows = $stmtData->fetchAll(PDO::FETCH_ASSOC);
         if (!empty($rows)) {
             $output .= "-- Data Tabel: `$table` (" . count($rows) . " baris)\n";
@@ -53,8 +54,11 @@ function generate_database_sql_dump(): string {
                 $valStrings = [];
                 foreach ($chunk as $r) {
                     $rowVals = [];
-                    foreach ($r as $val) {
+                    foreach ($r as $colName => $val) {
                         if ($val === null) {
+                            $rowVals[] = 'NULL';
+                        } elseif (!$include_media && is_string($val) && (str_starts_with($val, 'data:image/') || strlen($val) > 20000)) {
+                            // Untuk unduhan web: lewati data gambar base64 berukuran raksasa agar tidak melebihi limit payload 4.5 MB Vercel Serverless
                             $rowVals[] = 'NULL';
                         } elseif (is_numeric($val) && !str_starts_with((string)$val, '0')) {
                             $rowVals[] = $val;
