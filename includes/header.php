@@ -932,7 +932,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
             <?php if ($header_dist): ?>
                 <input type="hidden" name="kecamatan" value="<?= $header_dist ?>">
             <?php endif; ?>
-            <button type="submit" class="gojek-search-btn" title="Filter & Cari Jasa">
+            <button type="button" class="gojek-search-btn" data-bs-toggle="modal" data-bs-target="#smartSearchFilterModal" title="Buka Filter Pencarian Lengkap">
                 <i class="fa-solid fa-sliders"></i>
                 <span>Filter</span>
             </button>
@@ -1014,6 +1014,225 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
         </div>
     </div>
 </div>
+
+<!-- Modal / Bottom Sheet Smart Filter Jasa Inhu -->
+<div class="modal fade bottom-sheet-modal" id="smartSearchFilterModal" tabindex="-1" aria-labelledby="smartSearchFilterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px 24px 16px 16px;">
+            
+            <!-- Header Modal -->
+            <div class="modal-header border-bottom py-3 px-4 bg-light align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold text-dark mb-0" id="smartSearchFilterModalLabel">Filter Pencarian Mitra</h6>
+                        <small class="text-muted" style="font-size: 0.72rem;">Saring mitra sesuai lokasi, rating, dan tipe layanan</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+
+            <form action="<?= BASE_URL ?>/search.php" method="GET" id="smartFilterForm">
+                <div class="modal-body p-3 p-md-4" style="max-height: 70vh;">
+                    
+                    <!-- 1. Kata Kunci / Jasa -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small mb-1">
+                            <i class="fa-solid fa-magnifying-glass text-teal me-1"></i> Kata Kunci / Nama Jasa
+                        </label>
+                        <input type="text" name="q" class="form-control rounded-pill px-3 py-2" placeholder="Contoh: Servis AC, Las, Kue, Montir..." value="<?= e($header_q) ?>">
+                    </div>
+
+                    <!-- 2. Kategori Layanan -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small mb-1">
+                            <i class="fa-solid fa-layer-group text-teal me-1"></i> Kategori Jasa
+                        </label>
+                        <select name="kategori" class="form-select rounded-pill px-3 py-2" style="font-size: 0.85rem;">
+                            <option value="">Semua Kategori (<?= count($header_categories) ?> Layanan)</option>
+                            <?php foreach ($header_categories as $hcat): ?>
+                                <option value="<?= $hcat['id'] ?>"><?= e($hcat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- 3. Wilayah: Kecamatan & Desa (Interaktif Otomatis) -->
+                    <div class="mb-3 p-3 rounded-4 bg-light border">
+                        <label class="form-label fw-bold text-dark small mb-1.5 d-flex align-items-center justify-content-between">
+                            <span><i class="fa-solid fa-location-dot text-teal me-1"></i> Wilayah Pelayanan di Inhu</span>
+                            <span class="badge bg-white text-muted border rounded-pill" style="font-size: 0.65rem;">14 Kecamatan</span>
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-12 col-sm-6">
+                                <label class="small text-muted mb-1" style="font-size: 0.75rem;">Pilih Kecamatan:</label>
+                                <select name="kecamatan" id="filterModalDistrict" class="form-select rounded-3 py-1.5 px-2.5" style="font-size: 0.82rem;" onchange="loadFilterVillages(this.value)">
+                                    <option value="">Seluruh Kab. Inhu</option>
+                                    <?php foreach ($header_districts as $hd): ?>
+                                        <option value="<?= $hd['id'] ?>" <?= $header_dist === (int)$hd['id'] ? 'selected' : '' ?>>
+                                            Kec. <?= e($hd['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label class="small text-muted mb-1" style="font-size: 0.75rem;">Desa / Kelurahan (Opsional):</label>
+                                <select name="desa" id="filterModalVillage" class="form-select rounded-3 py-1.5 px-2.5" style="font-size: 0.82rem;">
+                                    <option value="">Semua Desa/Kelurahan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Tipe Layanan (Feature 1) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small mb-1.5">
+                            <i class="fa-solid fa-motorcycle text-teal me-1"></i> Tipe Layanan Tempat & Kerja
+                        </label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <input type="radio" class="btn-check" name="service_type" id="st_all" value="" checked>
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5" for="st_all" style="font-size: 0.78rem;">
+                                Semua Tipe
+                            </label>
+
+                            <input type="radio" class="btn-check" name="service_type" id="st_home" value="home_visit">
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5" for="st_home" style="font-size: 0.78rem;">
+                                🛵 Siap ke Rumah / Panggilan
+                            </label>
+
+                            <input type="radio" class="btn-check" name="service_type" id="st_store" value="store">
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5" for="st_store" style="font-size: 0.78rem;">
+                                🏪 Punya Toko / Tempat Fisik
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 5. Rating & Penilaian -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small mb-1.5">
+                            <i class="fa-solid fa-star text-warning me-1"></i> Rating & Penilaian Pelanggan
+                        </label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <input type="radio" class="btn-check" name="min_rating" id="rating_all" value="" checked>
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" for="rating_all" style="font-size: 0.78rem;">
+                                Semua Rating
+                            </label>
+
+                            <input type="radio" class="btn-check" name="min_rating" id="rating_45" value="4.5">
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" for="rating_45" style="font-size: 0.78rem;">
+                                ⭐ 4.5 ke atas (Sangat Puas)
+                            </label>
+
+                            <input type="radio" class="btn-check" name="min_rating" id="rating_40" value="4.0">
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" for="rating_40" style="font-size: 0.78rem;">
+                                ⭐ 4.0 ke atas
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 6. Status Kredibilitas / Verifikasi -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small mb-1.5">
+                            <i class="fa-solid fa-shield-halved text-success me-1"></i> Kredibilitas & Layanan Khusus
+                        </label>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="filter" value="verified" id="chk_verified">
+                                <label class="form-check-label small text-dark fw-semibold" for="chk_verified" style="font-size: 0.82rem;">
+                                    <i class="fa-solid fa-circle-check text-success me-1"></i> Hanya Mitra Terverifikasi KTP Resmi
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="filter" value="siaga" id="chk_siaga">
+                                <label class="form-check-label small text-dark fw-semibold" for="chk_siaga" style="font-size: 0.82rem;">
+                                    <i class="fa-solid fa-bolt text-warning me-1"></i> Layanan Siaga 24 Jam / Cepat Tanggap
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Urutkan Berdasarkan (Sorting) -->
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-dark small mb-1.5">
+                            <i class="fa-solid fa-arrow-down-short-wide text-teal me-1"></i> Urutkan Hasil
+                        </label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <input type="radio" class="btn-check" name="sort" id="sort_match" value="" checked>
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" for="sort_match" style="font-size: 0.78rem;">
+                                🔥 Paling Sesuai
+                            </label>
+
+                            <input type="radio" class="btn-check" name="sort" id="sort_rating" value="rating">
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" for="sort_rating" style="font-size: 0.78rem;">
+                                ⭐ Rating Tertinggi
+                            </label>
+
+                            <input type="radio" class="btn-check" name="sort" id="sort_jobs" value="jobs">
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" for="sort_jobs" style="font-size: 0.78rem;">
+                                💼 Pekerjaan Selesai
+                            </label>
+
+                            <input type="radio" class="btn-check" name="sort" id="sort_latest" value="latest">
+                            <label class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" for="sort_latest" style="font-size: 0.78rem;">
+                                🕒 Terbaru Bergabung
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer Sticky Aksi Modal -->
+                <div class="modal-footer d-flex align-items-center justify-content-between p-3 bg-light border-top">
+                    <button type="reset" class="btn btn-link text-muted fw-semibold text-decoration-none small" onclick="resetSmartFilter(event)" style="font-size: 0.82rem;">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Reset
+                    </button>
+                    <button type="submit" class="btn btn-teal text-white rounded-pill px-4 py-2 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Terapkan Filter</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function loadFilterVillages(districtId) {
+    const vSelect = document.getElementById('filterModalVillage');
+    if (!vSelect) return;
+    vSelect.innerHTML = '<option value="">Memuat desa...</option>';
+    if (!districtId) {
+        vSelect.innerHTML = '<option value="">Semua Desa/Kelurahan</option>';
+        return;
+    }
+    fetch(window.APP_BASE_URL + '/api/villages.php?district_id=' + encodeURIComponent(districtId))
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === 'success' && res.data) {
+                let html = '<option value="">Semua Desa/Kelurahan</option>';
+                res.data.forEach(v => {
+                    html += `<option value="${v.id}">${v.name}</option>`;
+                });
+                vSelect.innerHTML = html;
+            } else {
+                vSelect.innerHTML = '<option value="">Semua Desa/Kelurahan</option>';
+            }
+        })
+        .catch(() => {
+            vSelect.innerHTML = '<option value="">Semua Desa/Kelurahan</option>';
+        });
+}
+
+function resetSmartFilter(e) {
+    const form = document.getElementById('smartFilterForm');
+    if (!form) return;
+    setTimeout(() => {
+        loadFilterVillages('');
+    }, 50);
+}
+</script>
 
 <!-- Global Flash Messages -->
 <div class="container mt-3">

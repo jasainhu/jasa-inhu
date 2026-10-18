@@ -4066,3 +4066,35 @@ div.swal2-popup {
     flex-shrink: 0 !important;
 }
 
+/* Bottom Sheet Modal Styling */
+@media (max-width: 767.98px) {
+    .bottom-sheet-modal .modal-dialog {
+        margin: 0;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: 100%;
+        transform: translate3d(0, 100%, 0);
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .bottom-sheet-modal.show .modal-dialog {
+        transform: translate3d(0, 0, 0);
+    }
+    .bottom-sheet-modal .modal-content {
+        border-radius: 24px 24px 0 0 !important;
+        border: none !important;
+        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2) !important;
+    }
+}
+
+.bottom-sheet-modal .btn-check:checked + .btn-outline-secondary {
+    background-color: #0d9488 !important;
+    border-color: #0d9488 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
+}
+
+

@@ -5,8 +5,11 @@ require_once __DIR__ . '/includes/functions.php';
 $q = trim($_GET['q'] ?? '');
 $kategori_id = (int)($_GET['kategori'] ?? 0);
 $kecamatan_id = (int)($_GET['kecamatan'] ?? 0);
+$desa_id = (int)($_GET['desa'] ?? 0);
 $filter_mode = trim($_GET['filter'] ?? '');
 $sort_mode = trim($_GET['sort'] ?? '');
+$min_rating = (float)($_GET['min_rating'] ?? 0);
+$service_type = trim($_GET['service_type'] ?? '');
 
 $providers = [];
 $categories = [];
@@ -63,6 +66,24 @@ try {
         $where[] = "(sp.district_id = ? OR EXISTS (SELECT 1 FROM service_areas sa WHERE sa.provider_id = sp.id AND sa.district_id = ?))";
         $params[] = $kecamatan_id;
         $params[] = $kecamatan_id;
+    }
+
+    if ($desa_id > 0) {
+        $where[] = "sp.village_id = ?";
+        $params[] = $desa_id;
+    }
+
+    if ($min_rating > 0) {
+        $where[] = "sp.rating_avg >= ?";
+        $params[] = $min_rating;
+    }
+
+    if ($service_type === 'home_visit') {
+        $where[] = "sp.serves_home_visit = 1";
+    } elseif ($service_type === 'store') {
+        $where[] = "sp.has_physical_store = 1";
+    } elseif ($service_type === 'both') {
+        $where[] = "sp.serves_home_visit = 1 AND sp.has_physical_store = 1";
     }
 
     if ($filter_mode === 'verified') {
