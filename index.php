@@ -547,35 +547,26 @@ require_once __DIR__ . '/includes/header.php';
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Floating Badges on Photo -->
-                                <div class="position-absolute top-0 start-0 m-1.5 m-md-3 d-flex flex-wrap gap-1">
-                                    <?php if ($prov['is_verified']): ?>
-                                        <?php if (($prov['id_card_type'] ?? '') === 'pelajar'): ?>
-                                            <span class="badge bg-purple-subtle text-purple border border-purple-subtle shadow-xs fw-bold py-1 px-1.5" title="Pelajar Mandiri Inhu Terverifikasi <?= !empty($prov['school_name']) ? '• ' . e($prov['school_name']) : '' ?>" style="font-size: 0.65rem;">
-                                                <i class="fa-solid fa-graduation-cap text-purple me-0.5"></i> <span>Pelajar</span>
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge bg-white shadow-xs border fw-bold py-1 px-1.5 text-success" title="Identitas KTP & Lokasi Usaha Terverifikasi" style="font-size: 0.65rem;">
-                                                <i class="fa-solid fa-circle-check text-success me-0.5"></i> <span>KTP</span>
-                                            </span>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                    <?php if (has_media($prov['certificate_url'] ?? '') || !empty($prov['credential_title'])): ?>
-                                        <span class="badge bg-teal text-white shadow-xs fw-bold py-1 px-1.5" title="Tenaga Medis / Ahli Terverifikasi STR" style="font-size: 0.65rem;">
-                                            <i class="fa-solid <?= stripos($prov['category_name'] ?? '', 'med') !== false ? 'fa-user-doctor' : 'fa-award' ?> me-0.5"></i> <span><?= stripos($prov['category_name'] ?? '', 'med') !== false ? 'STR Medis' : 'Sertifikat' ?></span>
-                                        </span>
-                                    <?php endif; ?>
+                                <!-- Floating Badges on Photo (Modern Clean) -->
+                                <div class="position-absolute top-0 start-0 m-1.5 m-md-2.5">
+                                    <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-1 px-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1" style="font-size: 0.68rem;">
+                                        <i class="fa-solid fa-star text-warning"></i>
+                                        <span class="fw-bold"><?= number_format((float)$prov['rating_avg'], 1) ?></span>
+                                        <span class="opacity-75" style="font-size: 0.62rem;">(<?= (int)($prov['reviews_count'] ?? 0) ?>)</span>
+                                    </span>
                                 </div>
                                 
-                                <div class="position-absolute top-0 end-0 m-1.5 m-md-3">
-                                    <span class="badge bg-white text-success shadow-xs border fw-semibold py-1 px-1.5" style="font-size: 0.65rem;">
-                                        <i class="fa-solid fa-circle text-success" style="font-size: 0.4rem;"></i> <span class="d-none d-sm-inline">Siaga</span>
-                                    </span>
+                                <div class="position-absolute top-0 end-0 m-1.5 m-md-2.5 d-flex gap-1">
+                                    <?php if ($prov['is_verified']): ?>
+                                        <span class="badge bg-white shadow-xs border fw-bold py-1 px-2 text-success rounded-pill" title="Identitas KTP & Lokasi Usaha Terverifikasi Resmi" style="font-size: 0.65rem;">
+                                            <i class="fa-solid fa-circle-check text-success me-0.5"></i> <span>KTP</span>
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
 
                                 <!-- Starting Rate Tag Overlay on Cover Photo -->
                                 <div class="position-absolute bottom-0 start-0 m-1.5 m-md-2.5">
-                                    <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-0.5 px-1.5 py-md-1 px-md-2.5 rounded-pill shadow-xs" style="font-size: 0.68rem;">
+                                    <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-0.5 px-2 py-md-1 px-md-2.5 rounded-pill shadow-xs" style="font-size: 0.68rem;">
                                         <i class="fa-solid fa-tag text-warning me-0.5"></i> <?= (!empty($prov['hourly_rate_min']) && $prov['hourly_rate_min'] > 0) ? 'Mulai Rp ' . number_format((float)$prov['hourly_rate_min'], 0, ',', '.') : 'Tarif Fleksibel' ?>
                                     </span>
                                 </div>
@@ -585,13 +576,13 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="p-2 p-md-3 d-flex flex-column flex-grow-1">
                                 <!-- Header Usaha & Kategori -->
                                 <div class="mb-1 mb-md-2">
-                                    <div class="d-flex align-items-center justify-content-between gap-1 mb-0.5">
-                                        <span class="badge bg-light text-secondary border small text-nowrap flex-shrink-0" style="font-size: 0.62rem; padding: 2px 5px;">
+                                    <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
+                                        <span class="badge bg-light text-secondary border small text-nowrap flex-shrink-0" style="font-size: 0.64rem; padding: 2.5px 6px;">
                                             <?= e($prov['category_name']) ?>
                                         </span>
                                         <?= render_provider_service_type_badge($prov, 'xs') ?>
                                     </div>
-                                    <h5 class="fw-bold mb-0.5 text-dark lh-sm text-truncate-2" style="font-size: 0.85rem;">
+                                    <h5 class="fw-bold mb-1 text-dark lh-sm text-truncate-2" style="font-size: 0.88rem;">
                                         <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="text-decoration-none text-dark hover-teal">
                                             <?= e($prov['business_name']) ?>
                                         </a>
@@ -609,9 +600,9 @@ require_once __DIR__ . '/includes/header.php';
                                     <?= e($prov['headline'] ?: $prov['description']) ?>
                                 </p>
 
-                                <!-- Tombol Portofolio (Tampil di Desktop) -->
+                                <!-- Tombol Portofolio (Tampil di Desktop jika ada) -->
                                 <?php if (!empty($prov['portfolio_count']) && $prov['portfolio_count'] > 0): ?>
-                                    <div class="mb-2.5 d-none d-md-block">
+                                    <div class="mb-2 d-none d-md-block">
                                         <button type="button" class="btn btn-sm btn-outline-teal w-100 py-1 rounded-3 d-flex align-items-center justify-content-center gap-1.5 fw-semibold" onclick="openPortfolioModal(<?= $prov['id'] ?>)">
                                             <i class="fa-solid fa-images"></i>
                                             <span>Lihat Bukti Hasil Kerja (<?= (int)$prov['portfolio_count'] ?> Portofolio)</span>
@@ -619,53 +610,44 @@ require_once __DIR__ . '/includes/header.php';
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Pricing Tag & Rating Row -->
-                                <div class="pt-1.5 pb-1.5 pt-md-2 pb-md-2 border-top border-bottom d-flex align-items-center justify-content-between mb-2 mb-md-3 bg-light px-2 px-md-2.5 rounded-2 rounded-md-3 mt-auto">
+                                <!-- Info Ringkas: Tarif & Pekerjaan Selesai (Sleek Minimalist) -->
+                                <div class="d-flex align-items-center justify-content-between pt-1.5 pb-1.5 pt-md-2 pb-md-2 border-top border-light-subtle mt-auto mb-2 mb-md-2.5">
                                     <div>
-                                        <div class="text-muted d-none d-md-block" style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Estimasi Biaya:</div>
-                                        <div class="fw-bold text-teal" style="font-size: 0.78rem;">
+                                        <div class="text-muted" style="font-size: 0.62rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.2px;">Estimasi Biaya</div>
+                                        <div class="fw-bold text-teal" style="font-size: 0.82rem;">
                                             <?php if (!empty($prov['hourly_rate_min']) && $prov['hourly_rate_min'] > 0): ?>
                                                 Rp <?= number_format((float)$prov['hourly_rate_min'], 0, ',', '.') ?>
                                             <?php else: ?>
-                                                Hubungi Mitra
+                                                Tarif Fleksibel
                                             <?php endif; ?>
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <div class="fw-bold text-dark d-flex align-items-center justify-content-end gap-1" style="font-size: 0.76rem;">
-                                            <i class="fa-solid fa-star text-warning"></i> <?= number_format((float)$prov['rating_avg'], 1) ?>
-                                            <span class="text-muted fw-normal d-none d-sm-inline" style="font-size: 0.68rem;">(<?= (int)($prov['reviews_count'] ?? 0) ?>)</span>
-                                        </div>
-                                        <div class="text-muted" style="font-size: 0.65rem;">
-                                            <?= $prov['completed_jobs'] ?: 0 ?> selesai
+                                        <div class="badge bg-light text-secondary border fw-medium px-2 py-1" style="font-size: 0.66rem;">
+                                            <i class="fa-solid fa-check text-success me-0.5"></i> <?= (int)$prov['completed_jobs'] ?> Selesai
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Action Buttons: Chat, Pesan & Lihat Profil -->
-                                <div class="d-flex flex-column gap-1.5 mt-auto">
-                                    <div class="row g-1 g-md-2">
-                                        <div class="col-6">
-                                            <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $prov['id'] ?>" class="btn btn-outline-teal w-100 py-1.5 py-md-2 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1" style="font-size: 0.75rem;">
-                                                <i class="fa-solid fa-comments"></i> <span>Chat</span>
-                                            </a>
-                                        </div>
-                                        <div class="col-6">
-                                            <button type="button" class="btn btn-teal text-white w-100 py-1.5 py-md-2 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1" style="font-size: 0.75rem;" onclick="openDirectQuickOrderModal(<?= htmlspecialchars(json_encode([
-                                                'id' => (int)$prov['id'],
-                                                'name' => $prov['business_name'],
-                                                'phone' => $prov['phone'],
-                                                'category' => $prov['category_name'],
-                                                'district' => $prov['district_name'] ?: 'Kab. Indragiri Hulu',
-                                                'rate' => (!empty($prov['hourly_rate_min']) && $prov['hourly_rate_min'] > 0) ? 'Mulai Rp ' . number_format((float)$prov['hourly_rate_min'], 0, ',', '.') : 'Sesuai Kesepakatan'
-                                            ]), ENT_QUOTES, 'UTF-8') ?>)">
-                                                <i class="fa-solid fa-bolt text-warning"></i> <span>Pesan</span>
-                                            </button>
-                                        </div>
+                                <!-- Action Buttons: 2 Tombol Sejajar (Chat & Pesan Jasa) -->
+                                <div class="row g-1.5 g-md-2 mt-auto">
+                                    <div class="col-6">
+                                        <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $prov['id'] ?>" class="btn btn-outline-teal w-100 py-1.5 py-md-2 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1.5 rounded-3" style="font-size: 0.78rem;">
+                                            <i class="fa-solid fa-comments"></i> <span>Chat</span>
+                                        </a>
                                     </div>
-                                    <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="btn btn-light btn-sm w-100 py-1 border text-dark fw-semibold d-none d-md-block" style="font-size: 0.78rem;">
-                                        <i class="fa-solid fa-store me-1 text-teal"></i> Lihat Profil Lengkap & Testimoni &rarr;
-                                    </a>
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-teal text-white w-100 py-1.5 py-md-2 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1.5 rounded-3" style="font-size: 0.78rem;" onclick="openDirectQuickOrderModal(<?= htmlspecialchars(json_encode([
+                                            'id' => (int)$prov['id'],
+                                            'name' => $prov['business_name'],
+                                            'phone' => $prov['phone'],
+                                            'category' => $prov['category_name'],
+                                            'district' => $prov['district_name'] ?: 'Kab. Indragiri Hulu',
+                                            'rate' => (!empty($prov['hourly_rate_min']) && $prov['hourly_rate_min'] > 0) ? 'Mulai Rp ' . number_format((float)$prov['hourly_rate_min'], 0, ',', '.') : 'Sesuai Kesepakatan'
+                                        ]), ENT_QUOTES, 'UTF-8') ?>)">
+                                            <i class="fa-solid fa-bolt text-warning"></i> <span>Pesan Jasa</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
