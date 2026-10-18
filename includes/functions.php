@@ -969,6 +969,26 @@ function check_prohibited_service_keywords(string ...$texts): ?string {
     return null;
 }
 
+/**
+ * Render Badge Tipe Layanan Mitra (Panggilan ke Rumah vs Toko Fisik)
+ */
+function render_provider_service_type_badge(array|object $provider, string $size = 'sm'): string {
+    $p = is_array($provider) ? $provider : (array)$provider;
+    $servesHome = !empty($p['serves_home_visit']);
+    $hasStore = !empty($p['has_physical_store']);
+
+    $badgeClass = ($size === 'xs') ? 'px-1.5 py-0.5' : 'px-2.5 py-1';
+    $fontSize = ($size === 'xs') ? 'font-size: 0.65rem;' : 'font-size: 0.74rem;';
+
+    if ($servesHome && $hasStore) {
+        return '<span class="badge bg-teal-subtle text-teal border border-teal-subtle rounded-pill ' . $badgeClass . ' fw-semibold d-inline-flex align-items-center gap-1" style="' . $fontSize . '" title="Tersedia Toko Fisik & Siap Panggilan ke Rumah"><i class="fa-solid fa-motorcycle"></i> Panggilan & <i class="fa-solid fa-store"></i> Toko</span>';
+    } elseif ($hasStore) {
+        return '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill ' . $badgeClass . ' fw-semibold d-inline-flex align-items-center gap-1" style="' . $fontSize . '" title="Memiliki Toko / Bengkel Fisik"><i class="fa-solid fa-store"></i> Ada Toko Fisik</span>';
+    } else {
+        return '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill ' . $badgeClass . ' fw-semibold d-inline-flex align-items-center gap-1" style="' . $fontSize . '" title="Melayani Panggilan Datang ke Rumah Warga"><i class="fa-solid fa-motorcycle"></i> Siap ke Rumah</span>';
+    }
+}
+
 
 
 

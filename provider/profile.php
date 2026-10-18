@@ -92,6 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $phone = trim($_POST['phone'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $image_url = $provider['image_url'] ?? '';
+            $serves_home_visit = isset($_POST['serves_home_visit']) ? 1 : 0;
+            $has_physical_store = isset($_POST['has_physical_store']) ? 1 : 0;
+            if (!$serves_home_visit && !$has_physical_store) {
+                $serves_home_visit = 1; // Minimal default salah satu aktif
+            }
 
             if (empty($business_name)) {
                 $error = 'Nama Usaha / Merek Layanan Jasa wajib diisi.';
@@ -128,10 +133,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             UPDATE service_providers 
                             SET business_name = ?, headline = ?, primary_category_id = ?,
                                 experience_years = ?, hourly_rate_min = ?, hourly_rate_max = ?,
-                                description = ?, image_url = ?, updated_at = NOW()
+                                description = ?, image_url = ?,
+                                serves_home_visit = ?, has_physical_store = ?,
+                                updated_at = NOW()
                             WHERE id = ?
                         ");
-                        $stmtP->execute([$business_name, $headline, $category_id, $experience, $rate_min, $rate_max, $description, $image_url, $provider['id']]);
+                        $stmtP->execute([$business_name, $headline, $category_id, $experience, $rate_min, $rate_max, $description, $image_url, $serves_home_visit, $has_physical_store, $provider['id']]);
 
                         if (!empty($image_url)) {
                             $stmtSyncP = $db->prepare("UPDATE profiles SET avatar = ?, updated_at = NOW() WHERE user_id = ?");
@@ -400,9 +407,12 @@ require_once __DIR__ . '/../includes/header.php';
                 <i class="fa-solid fa-briefcase shopee-list-icon text-teal"></i>
                 <div>
                     <span class="d-block fw-bold text-dark">Informasi Jasa & Tarif</span>
-                    <span class="text-muted small" style="font-size: 0.72rem;">
-                        <?= e($provider['category_name'] ?? 'Penyedia Jasa') ?> &bull; Tarif Rp <?= number_format($provider['hourly_rate_min'], 0, ',', '.') ?> - <?= number_format($provider['hourly_rate_max'], 0, ',', '.') ?>
-                    </span>
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap mt-0.5">
+                        <?= render_provider_service_type_badge($provider, 'xs') ?>
+                        <span class="text-muted small" style="font-size: 0.72rem;">
+                            <?= e($provider['category_name'] ?? 'Penyedia Jasa') ?> &bull; Tarif Rp <?= number_format($provider['hourly_rate_min'], 0, ',', '.') ?> - <?= number_format($provider['hourly_rate_max'], 0, ',', '.') ?>
+                        </span>
+                    </div>
                 </div>
             </div>
             <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
@@ -645,6 +655,35 @@ require_once __DIR__ . '/../includes/header.php';
                             <input type="number" name="experience_years" class="form-control rounded-3 py-2 px-2" value="<?= (int)($provider['experience_years'] ?? 1) ?>" min="0">
                             <span class="input-group-text small" style="font-size: 0.72rem;">Thn</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Pilihan Tipe Layanan: Panggilan vs Toko Fisik -->
+                <div class="p-3 mb-3 rounded-3 border bg-light">
+                    <label class="form-label fw-bold text-dark mb-1 small d-flex align-items-center gap-1.5">
+                        <i class="fa-solid fa-handshake text-teal"></i>
+                        <span>Tipe Layanan yang Anda Sediakan:</span>
+                    </label>
+                    <div class="text-muted small mb-2.5" style="font-size: 0.72rem;">
+                        Centang salah satu atau keduanya sesuai dengan operasional usaha Anda:
+                    </div>
+
+                    <div class="d-flex flex-column gap-2">
+                        <label class="form-check p-2.5 bg-white rounded-3 border d-flex align-items-start gap-2.5 mb-0" style="cursor: pointer;">
+                            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="serves_home_visit" value="1" id="chkServesHome" <?= (!empty($provider['serves_home_visit']) || !isset($provider['serves_home_visit'])) ? 'checked' : '' ?>>
+                            <div>
+                                <strong class="d-block text-dark small"><i class="fa-solid fa-motorcycle text-primary me-1"></i> Melayani Panggilan ke Lokasi Pelanggan</strong>
+                                <span class="text-muted" style="font-size: 0.70rem;">Siap datang ke rumah, kebun, kantor, atau lokasi warga (Cocok untuk tukang, montir, servis AC, urut, dll).</span>
+                            </div>
+                        </label>
+
+                        <label class="form-check p-2.5 bg-white rounded-3 border d-flex align-items-start gap-2.5 mb-0" style="cursor: pointer;">
+                            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="has_physical_store" value="1" id="chkHasStore" <?= !empty($provider['has_physical_store']) ? 'checked' : '' ?>>
+                            <div>
+                                <strong class="d-block text-dark small"><i class="fa-solid fa-store text-warning me-1"></i> Memiliki Toko / Bengkel Fisik Menetap</strong>
+                                <span class="text-muted" style="font-size: 0.70rem;">Pelanggan bisa datang langsung ke alamat toko/bengkel Anda (Sablon, percetakan, bengkel motor, salon, dll).</span>
+                            </div>
+                        </label>
                     </div>
                 </div>
 

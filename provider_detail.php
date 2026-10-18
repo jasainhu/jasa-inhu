@@ -247,6 +247,8 @@ require_once __DIR__ . '/includes/header.php';
                                     <i class="fa-solid <?= e($provider['category_icon'] ?: 'fa-wrench') ?> me-1"></i> <?= e($provider['category_name']) ?>
                                 </span>
                                 <span>&bull;</span>
+                                <?= render_provider_service_type_badge($provider, 'sm') ?>
+                                <span>&bull;</span>
                                 <span><i class="fa-solid fa-location-dot text-danger me-1"></i> <?= !empty($provider['village_name']) ? '<strong class="text-dark">' . e($provider['village_name']) . '</strong>, ' : '' ?>Kec. <?= e($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?></span>
                                 <span>&bull;</span>
                                 <span><i class="fa-solid fa-briefcase text-muted me-1"></i> <?= (int)$provider['completed_jobs'] ?> Pesanan Sukses</span>
@@ -356,10 +358,19 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="d-flex align-items-start gap-2 small text-dark" style="max-width: 78%;">
                                 <i class="fa-solid fa-location-dot text-danger mt-1 flex-shrink-0"></i>
                                 <div>
-                                    <span class="text-muted" style="font-size: 0.72rem; display: block;">Alamat Workshop / Basis Operasional:</span>
+                                    <span class="text-muted" style="font-size: 0.72rem; display: block;">
+                                        <?= !empty($provider['has_physical_store']) ? '<i class="fa-solid fa-store text-warning-emphasis me-1"></i> Alamat Toko / Bengkel Fisik (Bisa Datang Langsung):' : '<i class="fa-solid fa-house text-primary me-1"></i> Basis Operasional Layanan:' ?>
+                                    </span>
                                     <span class="fw-semibold"><?= e($provider['address'] ?: 'Kecamatan ' . ($provider['district_name'] ?: 'Indragiri Hulu')) ?></span>
                                     <?php if (!empty($provider['village_name'])): ?>
                                         <span class="text-secondary">(Desa/Kel. <?= e($provider['village_name']) ?>)</span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($provider['serves_home_visit']) && !empty($provider['has_physical_store'])): ?>
+                                        <div class="mt-1 small text-teal fw-medium" style="font-size: 0.74rem;"><i class="fa-solid fa-circle-check"></i> Mitra melayani dua opsi: Datang langsung ke toko atau teknisi dipanggil ke rumah Anda.</div>
+                                    <?php elseif (!empty($provider['serves_home_visit'])): ?>
+                                        <div class="mt-1 small text-primary fw-medium" style="font-size: 0.74rem;"><i class="fa-solid fa-motorcycle"></i> Mitra bergerak melayani panggilan langsung ke rumah / lokasi pelanggan.</div>
+                                    <?php elseif (!empty($provider['has_physical_store'])): ?>
+                                        <div class="mt-1 small text-secondary fw-medium" style="font-size: 0.74rem;"><i class="fa-solid fa-store"></i> Pelayanan dilakukan langsung di alamat workshop / toko fisik di atas.</div>
                                     <?php endif; ?>
                                 </div>
                             </div>

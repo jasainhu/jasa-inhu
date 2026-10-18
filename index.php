@@ -95,6 +95,7 @@ try {
                sp.description, sp.experience_years, sp.hourly_rate_min, sp.hourly_rate_max,
                sp.is_verified, sp.id_card_type, sp.school_name, sp.credential_title, sp.certificate_url,
                sp.rating_avg, sp.reviews_count, sp.completed_jobs, sp.district_id, sp.village_id,
+               sp.serves_home_visit, sp.has_physical_store,
                u.name as owner_name, u.phone, p.avatar as owner_avatar, sc.name as category_name, sc.icon as category_icon,
                d.name as district_name, v.name as village_name,
                (SELECT COUNT(*) FROM provider_portfolios pp WHERE pp.provider_id = sp.id) as portfolio_count
@@ -588,6 +589,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <span class="badge bg-light text-secondary border small text-nowrap flex-shrink-0" style="font-size: 0.62rem; padding: 2px 5px;">
                                             <?= e($prov['category_name']) ?>
                                         </span>
+                                        <?= render_provider_service_type_badge($prov, 'xs') ?>
                                     </div>
                                     <h5 class="fw-bold mb-0.5 text-dark lh-sm text-truncate-2" style="font-size: 0.85rem;">
                                         <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="text-decoration-none text-dark hover-teal">
