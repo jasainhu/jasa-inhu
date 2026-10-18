@@ -465,24 +465,20 @@ require_once __DIR__ . '/includes/header.php';
 <!-- 4. Penyedia Jasa Terdekat & Terpercaya (With District Pill Bar) -->
 <section id="penyedia" class="py-4 bg-white">
     <div class="container">
-        <!-- Header Section (Ramping 1-Baris di HP, Lengkap di Desktop) -->
+        <!-- Header Section (Modern Clean Layout) -->
         <div class="d-flex align-items-center justify-content-between mb-2 mb-md-3">
             <div>
-                <h3 class="fw-bold mb-0 text-dark fs-6 fs-md-4 d-flex align-items-center gap-1.5 flex-wrap">
+                <h3 class="fw-bold mb-0 text-dark fs-6 fs-md-4 d-flex align-items-center gap-2 flex-wrap">
                     <span>Penyedia Jasa di Indragiri Hulu</span>
-                    <span class="badge bg-light text-teal border rounded-pill" style="font-size: 0.68rem; font-weight: 600;">
-                        <?= $total_providers ?> Mitra
+                    <span class="badge-mitra-siaga">
+                        <span class="live-dot-pulse"></span>
+                        <?= $total_providers ?> Mitra Siaga
                     </span>
-                    <?php if ($total_pages > 1): ?>
-                        <span class="badge bg-teal-subtle text-teal border border-teal-subtle rounded-pill" style="font-size: 0.65rem; font-weight: 600;">
-                            Hal. <?= $page ?>/<?= $total_pages ?>
-                        </span>
-                    <?php endif; ?>
                 </h3>
                 <p class="text-muted small mb-0 d-none d-md-block">Mitra beridentitas jelas, nomor terverifikasi, dan siap melayani panggilan Anda</p>
             </div>
             <div class="d-flex align-items-center gap-1.5 gap-md-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2.5 rounded-pill d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#allCategoriesModal" style="font-size: 0.75rem;">
+                <button type="button" class="btn-category-chip" data-bs-toggle="modal" data-bs-target="#allCategoriesModal">
                     <i class="fa-solid fa-layer-group text-teal"></i>
                     <span>Kategori (<?= count($categories) ?>)</span>
                 </button>
@@ -493,7 +489,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <!-- Filter Pil Kecamatan Cepat (One-Tap District Bar) -->
-        <div class="mb-2 mb-md-4">
+        <div class="mb-2 mb-md-3">
             <div class="district-pill-bar">
                 <?php foreach ($popular_districts as $pd): ?>
                     <?php 
@@ -503,6 +499,9 @@ require_once __DIR__ . '/includes/header.php';
                             : BASE_URL . '/index.php?kecamatan=' . $pd['id'] . (!empty($filter_q) ? '&q=' . urlencode($filter_q) : '') . '#penyedia';
                     ?>
                     <a href="<?= $pill_url ?>" class="district-pill <?= $is_active ? 'active' : '' ?>">
+                        <?php if ($pd['id'] === 0): ?>
+                            <i class="fa-solid fa-compass me-1 opacity-75"></i>
+                        <?php endif; ?>
                         <?= e($pd['name']) ?>
                     </a>
                 <?php endforeach; ?>
