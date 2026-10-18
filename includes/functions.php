@@ -990,6 +990,164 @@ function render_provider_service_type_badge(array|object $provider, string $size
     }
 }
 
+/**
+ * Mengambil Status & Masa Berlaku Akun / Perangkat WhatsApp Gateway (Fonnte API)
+ * Dilengkapi sistem cache agar cepat dan tidak membebani server/API.
+ */
+function get_fonnte_account_info(bool $force_refresh = false): array {
+    $token = trim((string)(get_setting('fonnte_token') ?: (getenv('FONNTE_TOKEN') ?: '')));
+    $default = [
+        'success' => false,
+        'has_token' => !empty($token),
+        'device' => '',
+        'name' => 'Belum Diatur',
+        'device_status' => 'disconnected',
+        'is_connected' => false,
+        'package' => 'Free',
+        'quota' => 0,
+        'messages_sent' => 0,
+        'expired_raw' => '-',
+        'days_remaining' => 0,
+        'status_level' => 'secondary',
+        'last_checked' => null,
+        'message' => 'Token Fonnte belum dikonfigurasi'
+    ];
+
+    if (empty($token)) {
+        return $default;
+    }
+
+    $cache_raw = get_setting('fonnte_info_cache');
+    $cache_time = (int)get_setting('fonnte_info_cache_time', 0);
+    $now = time();
+
+    // Cache valid selama 1 jam (3600 detik) jika bukan force refresh
+    if (!$force_refresh && !empty($cache_raw) && ($now - $cache_time < 3600)) {
+        $cached = json_decode($cache_raw, true);
+        if (is_array($cached) && !empty($cached['has_token'])) {
+            return $cached;
+        }
+    }
+
+    // Panggil Fonnte API
+    try {
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.fonnte.com/device',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_HTTPHEADER => ["Authorization: $token"],
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+        ]);
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+        curl_close($curl);
+
+        if ($response) {
+            $data = json_decode($response, true);
+            if (!empty($data['status']) && $data['status'] === true) {
+                $expired_raw = $data['expired'] ?? '-';
+                
+                // Parse tanggal expired
+                $days_remaining = 0;
+                if (!empty($expired_raw) && $expired_raw !== '-') {
+                    $months = [
+                        'Januari' => 'January', 'Februari' => 'February', 'Maret' => 'March',
+                        'April' => 'April', 'Mei' => 'May', 'Juni' => 'June',
+                        'Juli' => 'July', 'Agustus' => 'August', 'September' => 'September',
+                        'Oktober' => 'October', 'November' => 'November', 'Desember' => 'December'
+                    ];
+                    $engDate = strtr($expired_raw, $months);
+                    $ts = strtotime($engDate);
+                    if ($ts) {
+                        $days_remaining = max(0, (int)ceil(($ts - $now) / 86400));
+                    }
+                }
+
+                $isConnected = (isset($data['device_status']) && strtolower($data['device_status']) === 'connect');
+                $quota = (int)($data['quota'] ?? 0);
+
+                // Tentukan level status: success, warning, danger
+                $status_level = 'success';
+                if (!$isConnected || $days_remaining <= 3 || $quota <= 50) {
+                    $status_level = 'danger';
+                } elseif ($days_remaining <= 7 || $quota <= 200) {
+                    $status_level = 'warning';
+                }
+
+                $result = [
+                    'success' => true,
+                    'has_token' => true,
+                    'device' => $data['device'] ?? '',
+                    'name' => $data['name'] ?? 'Admin JASA INHU',
+                    'device_status' => $data['device_status'] ?? 'unknown',
+                    'is_connected' => $isConnected,
+                    'package' => $data['package'] ?? 'Free',
+                    'quota' => $quota,
+                    'messages_sent' => (int)($data['messages'] ?? 0),
+                    'expired_raw' => $expired_raw,
+                    'days_remaining' => $days_remaining,
+                    'status_level' => $status_level,
+                    'last_checked' => date('Y-m-d H:i:s'),
+                    'message' => 'Berhasil terhubung ke Fonnte'
+                ];
+
+                // Simpan cache
+                update_setting('fonnte_info_cache', json_encode($result));
+                update_setting('fonnte_info_cache_time', (string)$now);
+                return $result;
+            }
+        }
+    } catch (Exception $e) {
+        // Fallback jika API down
+    }
+
+    // Jika gagal connect ke API, kembalikan cache lama jika ada
+    if (!empty($cache_raw)) {
+        $cached = json_decode($cache_raw, true);
+        if (is_array($cached)) {
+            return $cached;
+        }
+    }
+
+    return $default;
+}
+
+/**
+ * Mengambil Informasi Masa Aktif Domain Website
+ */
+function get_domain_subscription_info(): array {
+    $domain_name = get_setting('domain_name', 'gafahrandi.my.id');
+    $subdomain = get_setting('domain_subdomain', 'jasainhu.gafahrandi.my.id');
+    $registrar = get_setting('domain_registrar', 'Registrar Domain (.my.id)');
+    $expiry_date = get_setting('domain_expiry_date', '2027-10-18');
+    
+    $now = time();
+    $ts = strtotime($expiry_date);
+    $days_remaining = $ts ? max(0, (int)ceil(($ts - $now) / 86400)) : 365;
+
+    $status_level = 'success';
+    if ($days_remaining <= 7) {
+        $status_level = 'danger';
+    } elseif ($days_remaining <= 30) {
+        $status_level = 'warning';
+    }
+
+    return [
+        'domain_name' => $domain_name,
+        'subdomain' => $subdomain,
+        'registrar' => $registrar,
+        'expiry_date' => $expiry_date,
+        'expiry_formatted' => $ts ? date('d M Y', $ts) : $expiry_date,
+        'days_remaining' => $days_remaining,
+        'status_level' => $status_level,
+        'estimated_price' => 'Rp 15.000 – Rp 25.000 / tahun'
+    ];
+}
+
+
 
 
 

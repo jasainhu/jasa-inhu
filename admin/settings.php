@@ -85,6 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 update_setting('wa_gateway_status', $wa_gateway_status);
 
+                // Simpan Pengingat Sewa Domain
+                $domain_expiry_date = trim($_POST['domain_expiry_date'] ?? '');
+                $domain_registrar = trim($_POST['domain_registrar'] ?? '');
+                if (!empty($domain_expiry_date)) {
+                    update_setting('domain_expiry_date', $domain_expiry_date);
+                }
+                if (!empty($domain_registrar)) {
+                    update_setting('domain_registrar', $domain_registrar);
+                }
+
                 // Simpan SMTP & Webhook
                 update_setting('smtp_user', $smtp_user);
                 update_setting('smtp_pass', $smtp_pass);
@@ -94,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 update_setting('smtp_secure', $smtp_secure);
                 update_setting('gmail_webhook_url', $gmail_webhook_url);
 
-                $success = 'Pengaturan sistem, rekening bank, e-wallet, WhatsApp Gateway, dan email berhasil disimpan!';
+                $success = 'Pengaturan sistem, rekening bank, e-wallet, WhatsApp Gateway, Domain, dan email berhasil disimpan!';
             }
         } elseif ($action === 'test_whatsapp') {
             $test_phone = trim($_POST['test_phone'] ?? '');
@@ -179,6 +189,11 @@ $current_welcome_bonus = (float)get_setting('welcome_bonus_amount', WELCOME_BONU
 // Pengaturan WhatsApp Gateway (Fonnte)
 $current_fonnte_token = get_setting('fonnte_token', getenv('FONNTE_TOKEN') ?: '');
 $current_wa_status = get_setting('wa_gateway_status', 'active');
+
+// Ambil Status Gateway Fonnte & Domain
+$fonnte_info = get_fonnte_account_info(false);
+$domain_info = get_domain_subscription_info();
+
 
 $recent_wa_logs = [];
 try {
@@ -727,6 +742,30 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
 
+                    <?php if (!empty($fonnte_info['has_token'])): ?>
+                        <div class="p-3 mb-4 rounded-3 border bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <div class="fw-bold text-dark small d-flex align-items-center gap-2">
+                                    <span><i class="fa-brands fa-whatsapp text-success me-1"></i> Perangkat Terhubung: <strong><?= e($fonnte_info['device']) ?></strong> (<?= e($fonnte_info['name']) ?>)</span>
+                                    <span class="badge <?= $fonnte_info['is_connected'] ? 'bg-success' : 'bg-danger' ?> rounded-pill" style="font-size: 0.68rem;">
+                                        <?= $fonnte_info['is_connected'] ? 'Online / Connect' : 'Offline' ?>
+                                    </span>
+                                </div>
+                                <div class="text-muted small mt-1" style="font-size: 0.75rem;">
+                                    Masa Aktif: <strong class="text-dark"><?= e($fonnte_info['expired_raw']) ?></strong> &bull; Sisa Kuota: <strong class="text-dark"><?= number_format($fonnte_info['quota']) ?> pesan</strong> &bull; Paket: <strong><?= e($fonnte_info['package']) ?></strong>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge <?= $fonnte_info['days_remaining'] <= 7 ? 'bg-danger' : 'bg-primary' ?> px-2.5 py-1.5 fw-bold shadow-xs">
+                                    <?= $fonnte_info['days_remaining'] ?> Hari Tersisa
+                                </span>
+                                <a href="https://fonnte.com" target="_blank" class="btn btn-sm btn-success fw-bold shadow-xs">
+                                    <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Perpanjang / Top Up
+                                </a>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <div class="row g-3 mb-3">
                         <div class="col-md-7">
                             <label class="form-label small fw-bold text-dark">
@@ -843,6 +882,60 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     <?php endif; ?>
 
+                </div>
+            </div>
+        </div>
+
+        <!-- 5.5. Pengaturan & Pengingat Masa Aktif Domain Website -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4" style="border-left: 5px solid #0284c7 !important;">
+                <div class="card-header bg-white py-3 border-0 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle text-white shadow-xs" style="width: 36px; height: 36px; background: #0284c7;">
+                            <i class="fa-solid fa-globe fs-6"></i>
+                        </span>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <span>Pengingat Masa Aktif Domain (<?= e($domain_info['domain_name']) ?>)</span>
+                            </h5>
+                            <p class="text-muted small mb-0">Catat dan pantau tanggal jatuh tempo perpanjangan tahunan domain website Anda</p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge <?= $domain_info['days_remaining'] <= 30 ? 'bg-warning text-dark' : 'bg-primary text-white' ?> px-3 py-1.5 fw-bold shadow-xs">
+                            <i class="fa-solid fa-calendar-day me-1"></i> <?= $domain_info['days_remaining'] ?> Hari Menuju Jatuh Tempo
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4 pt-1">
+                    <div class="alert alert-info-subtle border border-info-subtle rounded-3 p-3 mb-4 d-flex align-items-start gap-3">
+                        <i class="fa-solid fa-circle-info text-primary fs-4 mt-1"></i>
+                        <div class="small">
+                            <strong>Sewa Domain Tahunan:</strong> Domain <code><?= e($domain_info['domain_name']) ?></code> disewa per 1 tahun melalui registrar domain Anda. Biaya perpanjangannya umumnya sangat terjangkau (sekitar <strong><?= e($domain_info['estimated_price']) ?></strong>). Atur tanggal expired di bawah ini agar Dashboard selalu menampilkan countdown pengingat sebelum domain kadaluarsa.
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Tanggal Jatuh Tempo / Expired Domain:</label>
+                            <input type="date" name="domain_expiry_date" class="form-control fw-bold" value="<?= e($domain_info['expiry_date']) ?>">
+                            <small class="text-muted">Masukkan tanggal sesuai bukti konfirmasi sewa domain di email Anda.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Tempat Beli / Registrar Domain:</label>
+                            <input type="text" name="domain_registrar" class="form-control" value="<?= e($domain_info['registrar']) ?>" placeholder="Contoh: DomaiNesia / Niagahoster / Rumahweb">
+                            <small class="text-muted">Nama penyedia domain tempat Anda melakukan perpanjangan.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-3 border-top gap-2 bg-light p-3 rounded-3">
+                        <span class="text-muted small">
+                            <i class="fa-solid fa-server text-success me-1"></i> Subdomain portal: <code><?= e($domain_info['subdomain']) ?></code> terhubung ke Vercel Serverless (Rp 0).
+                        </span>
+                        <button type="submit" form="settingsForm" class="btn btn-primary-custom btn-sm fw-bold px-3 py-2 shadow-xs">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Pengaturan Domain
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
