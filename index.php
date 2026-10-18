@@ -139,6 +139,12 @@ try {
         $side_bottom_banner = null;
     }
 
+    // 5.b Pop-Up Promo Sambutan Beranda (Pengaturan Dinamis dari Admin)
+    $popup_promo_active = get_setting('popup_promo_active', '1');
+    $popup_promo_image = get_setting('popup_promo_image', 'assets/images/poster-jasa-inhu-melayu.jpg');
+    $popup_promo_link = get_setting('popup_promo_link', '');
+    $popup_promo_img_url = has_media($popup_promo_image) ? get_media_url($popup_promo_image) : (file_exists(__DIR__ . '/' . $popup_promo_image) ? BASE_URL . '/' . $popup_promo_image : BASE_URL . '/assets/images/poster-jasa-inhu-melayu.jpg');
+
     // 6. Galeri Bukti Hasil Kerja Nyata (Before - After Showcase)
     $showcase_portfolios = [];
     try {
@@ -1640,6 +1646,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<?php if ($popup_promo_active === '1'): ?>
 <!-- Modal Pop-Up Promo Poster Ala Shopee (Clean, Compact & Hanya Tombol X) -->
 <div class="modal fade" id="promoWelcomeModal" tabindex="-1" aria-labelledby="promoWelcomeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 330px; margin: 1.75rem auto;">
@@ -1651,10 +1658,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             <!-- Poster Image Ramping & Rapi -->
             <div class="rounded-4 overflow-hidden shadow-2xl" style="background: transparent;">
-                <img src="<?= BASE_URL ?>/assets/images/poster-jasa-inhu-melayu.jpg?v=<?= file_exists(__DIR__ . '/assets/images/poster-jasa-inhu-melayu.jpg') ? filemtime(__DIR__ . '/assets/images/poster-jasa-inhu-melayu.jpg') : time() ?>" 
-                     alt="Promo JASA INHU" 
-                     class="w-100 h-auto d-block" 
-                     style="border-radius: 18px; max-height: 75vh; object-fit: contain;">
+                <?php if (!empty($popup_promo_link)): ?>
+                    <a href="<?= e($popup_promo_link) ?>" class="d-block text-decoration-none" title="Klik untuk informasi selengkapnya">
+                        <img src="<?= e($popup_promo_img_url) ?>" 
+                             alt="Promo JASA INHU" 
+                             class="w-100 h-auto d-block hover-lift" 
+                             style="border-radius: 18px; max-height: 75vh; object-fit: contain;">
+                    </a>
+                <?php else: ?>
+                    <img src="<?= e($popup_promo_img_url) ?>" 
+                         alt="Promo JASA INHU" 
+                         class="w-100 h-auto d-block" 
+                         style="border-radius: 18px; max-height: 75vh; object-fit: contain;">
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -1683,6 +1699,7 @@ function openPromoPosterModal() {
     }
 }
 </script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

@@ -161,8 +161,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             set_flash('success', 'Banner berhasil dihapus.');
             redirect('/admin/banners.php');
         }
+
+        // 5. UPDATE PENGATURAN POP-UP PROMO BERANDA (MODAL SHOPEE)
+        elseif ($action === 'update_popup_promo') {
+            $popup_active = isset($_POST['popup_active']) ? '1' : '0';
+            $popup_link = trim($_POST['popup_link'] ?? '');
+
+            try {
+                // Upload gambar poster baru jika ada
+                if (!empty($_FILES['popup_image']['name'])) {
+                    $new_popup_img = save_uploaded_media($_FILES['popup_image'], 'banners', 'popup_promo', 1200, 90);
+                    update_setting('popup_promo_image', $new_popup_img);
+                }
+                update_setting('popup_promo_active', $popup_active);
+                update_setting('popup_promo_link', $popup_link);
+
+                set_flash('success', 'Pengaturan Pop-up Promo Beranda berhasil disimpan dan langsung aktif di web!');
+                redirect('/admin/banners.php');
+            } catch (Exception $e) {
+                $error = 'Gagal menyimpan pengaturan pop-up promo: ' . $e->getMessage();
+            }
+        }
     }
 }
+
+// Ambil pengaturan pop-up promo sambutan beranda
+$popup_promo_active = get_setting('popup_promo_active', '1');
+$popup_promo_image = get_setting('popup_promo_image', 'assets/images/poster-jasa-inhu-melayu.jpg');
+$popup_promo_link = get_setting('popup_promo_link', '');
+$popup_promo_img_url = has_media($popup_promo_image) ? get_media_url($popup_promo_image) : (file_exists(__DIR__ . '/../' . $popup_promo_image) ? BASE_URL . '/' . $popup_promo_image : BASE_URL . '/assets/images/poster-jasa-inhu-melayu.jpg');
 
 // Ambil semua banner diurutkan berdasarkan sort_order & ID
 $banners = $db->query("SELECT * FROM banners ORDER BY sort_order ASC, id DESC")->fetchAll();
@@ -238,6 +265,79 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ⚡ PENGATURAN POP-UP PROMO SAMBUTAN BERANDA (MODAL ALA SHOPEE) -->
+<div class="card border shadow-sm mb-4 rounded-3 overflow-hidden border-start border-4 border-warning">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h6 class="fw-bold mb-0 text-dark">
+                <i class="fa-solid fa-window-restore text-warning me-2"></i> Banner Pop-Up Promo Sambutan Beranda (Modal Shopee Style)
+            </h6>
+            <span class="small text-muted">Poster yang otomatis muncul di tengah layar saat pengunjung membuka website JASA INHU.</span>
+        </div>
+        <span class="badge <?= $popup_promo_active === '1' ? 'bg-success' : 'bg-secondary' ?> px-3 py-1.5 rounded-pill shadow-xs">
+            <?= $popup_promo_active === '1' ? '● Sedang Aktif Tayang di Web' : '○ Non-Aktif' ?>
+        </span>
+    </div>
+    <div class="card-body p-4 bg-white">
+        <form method="POST" action="" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="update_popup_promo">
+            
+            <div class="row g-4 align-items-center">
+                <!-- Preview Gambar Saat Ini -->
+                <div class="col-md-3 text-center">
+                    <div class="p-2 border rounded-4 bg-light d-inline-block shadow-xs position-relative" style="max-width: 180px;">
+                        <img src="<?= e($popup_promo_img_url) ?>?v=<?= time() ?>" 
+                             alt="Poster Aktif" 
+                             class="rounded-3 w-100 h-auto shadow-2xs d-block" 
+                             style="max-height: 240px; object-fit: contain;">
+                        <span class="badge bg-dark bg-opacity-75 text-white position-absolute bottom-0 start-50 translate-middle-x mb-3 small" style="font-size: 0.65rem;">
+                            Poster Sedang Aktif
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Form Ganti & Pengaturan -->
+                <div class="col-md-9">
+                    <div class="mb-3">
+                        <div class="form-check form-switch fs-6">
+                            <input class="form-check-input" type="checkbox" role="switch" id="popupActiveSwitch" name="popup_active" value="1" <?= $popup_promo_active === '1' ? 'checked' : '' ?>>
+                            <label class="form-check-label fw-bold text-dark" for="popupActiveSwitch">
+                                Aktifkan Pop-Up Promo di Beranda
+                            </label>
+                        </div>
+                        <div class="text-muted small">Jika dinonaktifkan (OFF), poster tidak akan muncul saat pengunjung membuka beranda.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark mb-1">
+                            Ganti / Unggah Gambar Poster Baru (Format: JPG / PNG, Rekomendasi Rasio 9:16):
+                        </label>
+                        <input type="file" name="popup_image" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp">
+                        <div class="text-muted small mt-1" style="font-size: 0.72rem;">
+                            Biarkan kosong jika hanya ingin mengubah status aktif atau link tanpa mengganti file gambar.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark mb-1">
+                            Tautan URL Saat Poster Diklik Pengunjung (Opsional):
+                        </label>
+                        <input type="url" name="popup_link" class="form-control form-control-sm" placeholder="Contoh: https://wa.me/6285126241679 atau /register.php" value="<?= e($popup_promo_link) ?>">
+                        <div class="text-muted small" style="font-size: 0.72rem;">
+                            Jika diisi, pengunjung yang mengklik poster di web akan langsung diarahkan ke halaman ini.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-teal btn-sm fw-bold px-4 py-2 rounded-pill shadow-xs">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Pengaturan Pop-Up Promo
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
