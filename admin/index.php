@@ -118,11 +118,23 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="small text-muted">Anda dapat memeriksa atau langsung memverifikasinya secara manual.</div>
             </div>
         </div>
-        <a href="<?= BASE_URL ?>/admin/users.php?role=unverified" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1.5 rounded-pill shadow-xs">
-            Lihat & Verifikasi Manual &rarr;
-        </a>
+<?php endif; ?>
+
+<?php if ($total_providers >= 70): ?>
+    <div class="alert alert-info border-0 shadow-xs mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #e0f2fe; border-left: 5px solid #0284c7 !important;">
+        <div class="d-flex align-items-center gap-2.5">
+            <span class="fs-4">🎉</span>
+            <div>
+                <strong class="text-dark">Pencapaian Hebat! Mitra JASA INHU sudah mencapai <?= $total_providers ?> orang!</strong>
+                <div class="small text-dark text-opacity-75">Sesuai rencana roadmap, ini adalah waktu yang pas untuk memasang <strong>Cloud Media Storage (Cloudflare R2 Gratis)</strong> agar foto portofolio mitra tetap super cepat dan hemat ruang. Buka Antigravity AI dan katakan: <em>"Ayo pasang Cloud Storage foto sekarang"</em>.</div>
+            </div>
+        </div>
+        <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-bold shadow-xs">
+            Milestone 70+ Mitra Tercapai
+        </span>
     </div>
 <?php endif; ?>
+
 
 
 <!-- PUSAT PENGINGAT LANGGANAN & MASA AKTIF LAYANAN (WHATSAPP, DOMAIN, SERVER) -->
@@ -275,9 +287,23 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
 
-                    <p class="text-muted mb-2.5 small px-1" style="font-size: 0.73rem; line-height: 1.4;">
-                        <i class="fa-solid fa-circle-check text-success me-1"></i> <strong>Bebas Tagihan Bulanan:</strong> Tidak ada biaya sewa server bulanan. Sistem berjalan otomatis di cloud global.
-                    </p>
+                    <div class="mb-2.5 p-2 rounded-2 bg-white border small shadow-2xs">
+                        <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.72rem;">
+                            <span class="text-muted"><i class="fa-solid fa-users-gear text-teal me-1"></i> Target Mitra Fase 1:</span>
+                            <strong class="<?= $total_providers >= 70 ? 'text-warning' : 'text-dark' ?>"><?= $total_providers ?> / 70 Mitra</strong>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar <?= $total_providers >= 70 ? 'bg-warning' : 'bg-teal' ?>" style="width: <?= min(100, round(($total_providers / 70) * 100)) ?>%;"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted mt-1.5" style="font-size: 0.68rem;">
+                            <span>Status Media Foto:</span>
+                            <?php if ($total_providers >= 70): ?>
+                                <span class="text-warning fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Waktunya Pasang Cloud Storage</span>
+                            <?php else: ?>
+                                <span class="text-success fw-bold"><i class="fa-solid fa-circle-check"></i> Sangat Aman</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
 
                     <a href="<?= BASE_URL ?>/admin/backup.php" class="btn btn-sm btn-outline-success fw-bold w-100 shadow-xs" style="font-size: 0.76rem;">
                         <i class="fa-solid fa-cloud-arrow-down me-1"></i> Cadangkan Database (.sql)
