@@ -2,7 +2,7 @@
 /**
  * Global Frontend Footer: JASA INHU
  */
-?>
+if (empty($hide_footer)): ?>
 <!-- Footer -->
 <footer class="footer-custom">
     <div class="container">
@@ -86,6 +86,7 @@
         </div>
     </div>
 </footer>
+<?php endif; ?>
 
 <?php if (empty($hide_floating_wa) && !str_contains($_SERVER['REQUEST_URI'] ?? '', 'provider_detail.php')): ?>
 <!-- Floating WhatsApp Support Button -->

@@ -1,6 +1,6 @@
 <?php
 /**
- * Halaman Menu Obrolan Langsung (In-App Live Chat Ultra Modern)
+ * Halaman Ruang Obrolan & Pesan Langsung (Ultra Modern Live Chat)
  * JASA INHU - Marketplace Jasa Lokal Kab. Indragiri Hulu
  */
 
@@ -21,8 +21,15 @@ $db = get_db();
 
 $active_conv_id = !empty($_GET['c']) ? (int)$_GET['c'] : 0;
 $target_provider_id = !empty($_GET['provider_id']) ? (int)$_GET['provider_id'] : 0;
-$target_user_id = !empty($_GET['to_user']) ? (int)$_GET['to_user'] : 0;
-$is_explicit_chat = !empty($_GET['c']) || !empty($_GET['provider_id']) || !empty($_GET['to_user']);
+$target_user_id = !empty($_GET['to_user']) ? (int)$_GET['to_user'] : (!empty($_GET['user_id']) ? (int)$_GET['user_id'] : 0);
+$is_explicit_chat = !empty($_GET['c']) || !empty($_GET['provider_id']) || !empty($_GET['to_user']) || !empty($_GET['user_id']);
+
+// Konfigurasi tampilan mobile saat membuka ruang chat aktif
+if ($is_explicit_chat) {
+    $hide_footer = true;
+    $hide_mobile_bottom_nav = true;
+    $hide_floating_wa = true;
+}
 
 // 1. Jika ada parameter provider_id, temukan user_id pemilik toko
 if ($target_provider_id > 0) {
@@ -75,7 +82,7 @@ $stmtAllConv = $db->prepare("
 $stmtAllConv->execute([$current_user['id'], $current_user['id'], $current_user['id']]);
 $conversations = $stmtAllConv->fetchAll();
 
-// Jika belum ada active_conv_id yang terpilih, pilih percakapan pertama secara otomatis jika ada
+// Jika belum ada active_conv_id yang terpilih, pilih percakapan pertama secara otomatis (untuk desktop)
 if ($active_conv_id <= 0 && !empty($conversations)) {
     $active_conv_id = (int)$conversations[0]['id'];
 }
@@ -86,6 +93,7 @@ $active_messages = [];
 $active_conversation = null;
 $recent_order = null;
 $partnerWaClean = '';
+$partnerWaUrl = '';
 
 // Ambil provider_id diri sendiri jika user saat ini adalah mitra
 $stmtMyProv = $db->prepare("SELECT id FROM service_providers WHERE user_id = ? LIMIT 1");
@@ -130,6 +138,12 @@ if ($active_conv_id > 0) {
             $partnerWaClean = preg_replace('/[^0-9]/', '', $partnerPhone);
             if (str_starts_with($partnerWaClean, '0')) {
                 $partnerWaClean = '62' . substr($partnerWaClean, 1);
+            } elseif (str_starts_with($partnerWaClean, '8')) {
+                $partnerWaClean = '62' . $partnerWaClean;
+            }
+            if (!empty($partnerWaClean)) {
+                $waMsg = urlencode("Halo " . ($provPartner ? $provPartner['business_name'] : $pName) . ", saya menghubungi dari aplikasi JASA INHU.");
+                $partnerWaUrl = "https://wa.me/{$partnerWaClean}?text={$waMsg}";
             }
         }
 
@@ -139,6 +153,7 @@ if ($active_conv_id > 0) {
             'real_name' => $pName,
             'phone' => $partnerPhone,
             'wa_clean' => $partnerWaClean,
+            'wa_url' => $partnerWaUrl,
             'is_provider' => !empty($provPartner),
             'provider' => $provPartner ?: null
         ];
@@ -184,26 +199,42 @@ if ($active_conv_id > 0) {
     }
 }
 
+// Hitung total kontak unread
+$total_unread_conversations = 0;
+foreach ($conversations as $cRow) {
+    if ((int)$cRow['unread_count'] > 0) {
+        $total_unread_conversations++;
+    }
+}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
 <style>
-/* Modern Chat Ultra-Premium CSS */
+/* =================================================== */
+/* ULTRA MODERN LIVE CHAT STYLING (WHATSAPP/TELEGRAM) */
+/* =================================================== */
+
+:root {
+    --chat-teal-primary: #0d9488;
+    --chat-teal-dark: #0f766e;
+    --chat-teal-deep: #064e43;
+    --chat-bubble-me: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    --chat-bg-pattern: #f0f2f5;
+}
+
 .chat-app-wrapper {
-    height: calc(100vh - 170px);
-    min-height: 580px;
-    max-height: 780px;
-    border-radius: 20px;
     background: #ffffff;
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    box-shadow: 0 16px 40px -12px rgba(15, 118, 110, 0.08);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Sidebar Contacts */
 .chat-sidebar {
     background: #ffffff;
-    border-right: 1px solid #f1f5f9;
+    border-right: 1px solid #e2e8f0;
+    transition: all 0.25s ease;
 }
 .chat-sidebar-header {
     background: #ffffff;
@@ -211,33 +242,57 @@ require_once __DIR__ . '/includes/header.php';
 }
 .chat-search-pill {
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 7px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 7px 14px;
     transition: all 0.2s ease;
 }
 .chat-search-pill:focus-within {
     background: #ffffff;
-    border-color: #0d9488;
+    border-color: var(--chat-teal-primary);
     box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
 }
+
+/* Tab filter pills on sidebar */
+.chat-filter-tab {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.chat-filter-tab:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+.chat-filter-tab.active {
+    background: var(--chat-teal-primary);
+    color: #ffffff;
+    border-color: var(--chat-teal-primary);
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+}
+
 .conversation-item {
     margin: 4px 8px;
-    border-radius: 12px;
-    padding: 10px 12px;
-    transition: all 0.2s ease;
+    border-radius: 14px;
+    padding: 11px 13px;
+    transition: all 0.15s ease;
     cursor: pointer;
-    border-left: 3px solid transparent;
+    border-left: 3.5px solid transparent;
 }
 .conversation-item:hover {
     background: #f8fafc;
 }
 .conversation-item.active {
     background: #f0fdfa;
-    border-left: 3px solid #0d9488;
+    border-left-color: var(--chat-teal-primary);
 }
 
-/* Avatar & Indicators */
+/* Avatar with Online Glow Ring */
 .chat-avatar {
     width: 44px;
     height: 44px;
@@ -247,81 +302,103 @@ require_once __DIR__ . '/includes/header.php';
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.05rem;
     position: relative;
     user-select: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
-.online-pulse {
+.online-pulse-ring {
     position: absolute;
-    bottom: 1px;
-    right: 1px;
-    width: 12px;
-    height: 12px;
+    bottom: 0;
+    right: 0;
+    width: 13px;
+    height: 13px;
     background: #10b981;
     border: 2px solid #ffffff;
     border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3);
 }
 
-/* Chat Main Area Wallpaper */
+/* Room Header */
+.chat-room-header {
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 11px 16px;
+    z-index: 10;
+}
+
+/* WhatsApp-Level Sleek Background Pattern */
 .chat-messages-viewport {
-    background: 
-        radial-gradient(#e2e8f0 1.2px, transparent 1.2px) 0 0 / 22px 22px,
-        #f8fafc;
+    background-color: var(--chat-bg-pattern);
+    background-image: 
+        radial-gradient(circle at 50% 50%, rgba(13, 148, 136, 0.03) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2364748b' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
     overflow-y: auto;
     scroll-behavior: smooth;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 10px;
 }
 
-/* Chat Bubbles */
+/* Bubbles */
+.msg-bubble-wrap {
+    animation: chatBubblePop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes chatBubblePop {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .bubble-me {
-    background: linear-gradient(135deg, #0d9488 0%, #115e59 100%);
+    background: var(--chat-bubble-me);
     color: #ffffff;
     border-radius: 18px 18px 4px 18px;
-    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.16);
-    padding: 10px 14px;
-    max-width: 78%;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+    padding: 9px 14px;
+    max-width: 82%;
     min-width: 90px;
     word-break: break-word;
+    position: relative;
 }
 .bubble-partner {
     background: #ffffff;
     color: #0f172a;
-    border: 1px solid rgba(226, 232, 240, 0.9);
+    border: 1px solid rgba(226, 232, 240, 0.95);
     border-radius: 18px 18px 18px 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    padding: 10px 14px;
-    max-width: 78%;
+    padding: 9px 14px;
+    max-width: 82%;
     min-width: 90px;
     word-break: break-word;
+    position: relative;
 }
 .bubble-meta {
-    font-size: 0.68rem;
+    font-size: 0.67rem;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 4px;
-    margin-top: 4px;
+    margin-top: 3px;
+    user-select: none;
 }
 
-/* Pinned Order Context Banner */
-.order-pinned-banner {
-    background: #f0fdfa;
-    border-bottom: 1px solid #ccfbf1;
-    padding: 8px 16px;
-    transition: all 0.2s ease;
-}
-.order-pinned-banner:hover {
-    background: #e6fffa;
-}
-
-/* Smart Quick Reply Chips */
+/* Quick Action Chips */
 .quick-chips-bar {
     background: #ffffff;
     border-top: 1px solid #f1f5f9;
-    padding: 8px 16px 4px;
+    padding: 8px 14px;
     display: flex;
-    gap: 6px;
+    gap: 7px;
     overflow-x: auto;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
 }
 .quick-chips-bar::-webkit-scrollbar {
     display: none;
@@ -329,40 +406,56 @@ require_once __DIR__ . '/includes/header.php';
 .quick-chip-btn {
     border: 1px solid #e2e8f0;
     background: #f8fafc;
-    color: #475569;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 4px 12px;
+    color: #334155;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 5px 13px;
     border-radius: 20px;
     white-space: nowrap;
     transition: all 0.2s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 .quick-chip-btn:hover {
-    background: #0d9488;
+    background: var(--chat-teal-primary);
     color: #ffffff;
-    border-color: #0d9488;
+    border-color: var(--chat-teal-primary);
     transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.25);
+}
+.quick-chip-btn.highlight {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+.quick-chip-btn.highlight:hover {
+    background: #059669;
+    color: #ffffff;
+    border-color: #059669;
 }
 
-/* Floating Input Bar */
+/* Chat Input Bar */
 .chat-input-bar {
     background: #ffffff;
     border-top: 1px solid #f1f5f9;
-    padding: 12px 16px;
+    padding: 10px 14px;
+    z-index: 5;
 }
 .chat-input-pill {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 25px;
-    padding: 4px 6px 4px 16px;
+    background: #f1f5f9;
+    border: 1.5px solid transparent;
+    border-radius: 26px;
+    padding: 5px 14px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     transition: all 0.2s ease;
 }
 .chat-input-pill:focus-within {
     background: #ffffff;
-    border-color: #0d9488;
+    border-color: var(--chat-teal-primary);
     box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
 }
 .chat-input-field {
@@ -371,37 +464,102 @@ require_once __DIR__ . '/includes/header.php';
     background: transparent;
     width: 100%;
     font-size: 0.9rem;
-    color: #1e293b;
-    padding: 6px 0;
+    color: #0f172a;
+    padding: 5px 0;
+}
+.chat-input-field::placeholder {
+    color: #94a3b8;
 }
 .btn-send-gradient {
     width: 42px;
     height: 42px;
     min-width: 42px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #0d9488 0%, #115e59 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: #ffffff;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.28);
+    cursor: pointer;
 }
 .btn-send-gradient:hover:not(:disabled) {
-    transform: scale(1.06);
-    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.35);
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.38);
 }
 .btn-send-gradient:active {
-    transform: scale(0.96);
+    transform: scale(0.92);
 }
-.floating-wa-btn {
-    display: none !important;
+.btn-send-gradient:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* =================================================== */
+/* RESPONSIVE LAYOUT & MOBILE FULLSCREEN EXPERIENCE   */
+/* =================================================== */
+
+@media (min-width: 768px) {
+    .chat-app-wrapper {
+        height: calc(100vh - 150px);
+        min-height: 600px;
+        max-height: 820px;
+        border-radius: 20px;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        box-shadow: 0 16px 40px -12px rgba(15, 118, 110, 0.08);
+    }
+}
+
+@media (max-width: 767.98px) {
+    <?php if ($is_explicit_chat): ?>
+    /* Ruang Chat Fullscreen Native Mobile */
+    body {
+        overflow: hidden !important;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+    .chat-breadcrumb-nav {
+        display: none !important;
+    }
+    .chat-main-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    .chat-app-wrapper {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .chat-room-header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: 9px 12px;
+    }
+    .chat-input-bar {
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    }
+    <?php else: ?>
+    /* Tampilan Kotak Masuk Mobile (Inbox) */
+    .chat-app-wrapper {
+        height: calc(100dvh - 130px);
+        min-height: 480px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+    }
+    <?php endif; ?>
 }
 </style>
 
-<!-- Breadcrumb Nav -->
-<div class="bg-light py-2 border-bottom">
+<!-- Breadcrumb Nav (Khusus Desktop) -->
+<div class="bg-light py-2 border-bottom chat-breadcrumb-nav d-none d-md-block">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 small">
@@ -412,7 +570,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<div class="container py-3 mb-4">
+<div class="container py-md-3 mb-md-4 chat-main-container">
     <div class="chat-app-wrapper">
         <div class="row g-0 h-100">
             
@@ -424,10 +582,13 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="p-3 chat-sidebar-header">
                     <div class="d-flex justify-content-between align-items-center mb-2.5">
                         <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle bg-teal text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center shadow-xs" style="width: 34px; height: 34px; background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
                                 <i class="fa-solid fa-comments fs-6"></i>
                             </div>
-                            <h5 class="fw-bold text-dark mb-0 fs-6">Kotak Obrolan</h5>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-0 fs-6">Kotak Obrolan</h5>
+                                <small class="text-muted" style="font-size: 0.68rem;">Pesan langsung mitra & pelanggan</small>
+                            </div>
                         </div>
                         <span class="badge bg-teal-subtle text-teal rounded-pill px-2.5 py-1 small fw-bold">
                             <?= count($conversations) ?> Kontak
@@ -435,9 +596,19 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
 
                     <!-- Search Box -->
-                    <div class="chat-search-pill d-flex align-items-center gap-2">
+                    <div class="chat-search-pill d-flex align-items-center gap-2 mb-2">
                         <i class="fa-solid fa-magnifying-glass text-muted small"></i>
-                        <input type="text" id="searchChatInput" class="border-0 bg-transparent w-100 small text-dark outline-none" placeholder="Cari nama mitra atau pelanggan..." onkeyup="filterConversations()" style="outline: none;">
+                        <input type="text" id="searchChatInput" class="border-0 bg-transparent w-100 small text-dark outline-none" placeholder="Cari nama mitra atau jasa..." onkeyup="filterConversations()" style="outline: none;">
+                        <button type="button" class="btn btn-link text-muted p-0 border-0 d-none" id="btnClearSearchChat" onclick="clearSearchChat()">
+                            <i class="fa-solid fa-xmark small"></i>
+                        </button>
+                    </div>
+
+                    <!-- Quick Filter Tabs -->
+                    <div class="d-flex gap-1.5 overflow-x-auto pb-0.5">
+                        <button type="button" class="chat-filter-tab active" onclick="setChatFilter('all', this)">Semua (<?= count($conversations) ?>)</button>
+                        <button type="button" class="chat-filter-tab" onclick="setChatFilter('unread', this)">Belum Dibaca <?= $total_unread_conversations > 0 ? "($total_unread_conversations)" : '' ?></button>
+                        <button type="button" class="chat-filter-tab" onclick="setChatFilter('provider', this)">Mitra Jasa</button>
                     </div>
                 </div>
 
@@ -453,10 +624,14 @@ require_once __DIR__ . '/includes/header.php';
                             $isActive = ((int)$conv['id'] === $active_conv_id);
                             $unread = (int)$conv['unread_count'];
                             ?>
-                            <a href="<?= BASE_URL ?>/chat.php?c=<?= $conv['id'] ?>" class="d-flex align-items-center gap-2.5 text-decoration-none text-dark conversation-item <?= $isActive ? 'active' : '' ?>" data-name="<?= strtolower(e($partnerDisplayName)) ?>">
+                            <a href="<?= BASE_URL ?>/chat.php?c=<?= $conv['id'] ?>" 
+                               class="d-flex align-items-center gap-2.5 text-decoration-none text-dark conversation-item <?= $isActive ? 'active' : '' ?>" 
+                               data-name="<?= strtolower(e($partnerDisplayName)) ?>"
+                               data-is-unread="<?= $unread > 0 ? '1' : '0' ?>"
+                               data-is-provider="<?= $isPartnerMitra ? '1' : '0' ?>">
                                 <div class="chat-avatar <?= $isPartnerMitra ? 'bg-teal text-white' : 'bg-secondary text-white' ?>">
                                     <?= strtoupper(substr($partnerDisplayName, 0, 1)) ?>
-                                    <span class="online-pulse"></span>
+                                    <span class="online-pulse-ring"></span>
                                 </div>
 
                                 <div class="flex-grow-1 overflow-hidden">
@@ -464,7 +639,7 @@ require_once __DIR__ . '/includes/header.php';
                                         <div class="fw-bold small text-truncate d-flex align-items-center gap-1" style="max-width: 170px;">
                                             <span class="text-truncate"><?= e($partnerDisplayName) ?></span>
                                             <?php if ($isPartnerMitra): ?>
-                                                <i class="fa-solid fa-circle-check text-teal" style="font-size: 0.7rem;" title="Mitra Resmi Terverifikasi"></i>
+                                                <i class="fa-solid fa-circle-check text-teal" style="font-size: 0.72rem;" title="Mitra Resmi Terverifikasi"></i>
                                             <?php endif; ?>
                                         </div>
                                         <span class="text-muted small" style="font-size: 0.68rem;">
@@ -477,7 +652,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <?= e($conv['last_message'] ?: 'Mulai obrolan baru...') ?>
                                         </div>
                                         <?php if ($unread > 0): ?>
-                                            <span class="badge bg-danger rounded-pill px-2 py-0.5 small" style="font-size: 0.68rem;">
+                                            <span class="badge bg-danger rounded-pill px-2 py-0.5 small shadow-2xs" style="font-size: 0.68rem;">
                                                 <?= $unread ?>
                                             </span>
                                         <?php endif; ?>
@@ -487,12 +662,12 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <div class="text-center py-5 px-3 text-muted">
-                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center p-3 mb-2">
-                                <i class="fa-regular fa-comment-dots fs-3 text-muted opacity-50"></i>
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center p-3 mb-2 shadow-xs">
+                                <i class="fa-regular fa-comment-dots fs-3 text-teal opacity-75"></i>
                             </div>
                             <h6 class="fw-bold text-dark small mb-1">Belum Ada Obrolan</h6>
                             <p class="small text-muted mb-3" style="font-size: 0.78rem;">Mulai obrolan dengan mitra penyedia jasa langsung dari etalase profil mereka.</p>
-                            <a href="<?= BASE_URL ?>/" class="btn btn-teal text-white btn-sm fw-semibold rounded-pill px-3">
+                            <a href="<?= BASE_URL ?>/" class="btn btn-teal text-white btn-sm fw-semibold rounded-pill px-3 shadow-xs">
                                 <i class="fa-solid fa-magnifying-glass me-1"></i> Cari Jasa di Inhu
                             </a>
                         </div>
@@ -507,50 +682,62 @@ require_once __DIR__ . '/includes/header.php';
                 <?php if ($active_conversation && $active_partner): ?>
                     
                     <!-- 1. Header Chat Room -->
-                    <div class="p-3 bg-white border-bottom d-flex align-items-center justify-content-between shadow-xs">
-                        <div class="d-flex align-items-center gap-2.5">
+                    <div class="chat-room-header d-flex align-items-center justify-content-between shadow-2xs">
+                        <div class="d-flex align-items-center gap-2">
                             <!-- Tombol Kembali Khusus Mobile -->
-                            <a href="<?= BASE_URL ?>/chat.php" class="btn btn-sm btn-light border d-md-none me-1 px-2.5 rounded-3">
-                                <i class="fa-solid fa-arrow-left"></i>
+                            <a href="<?= BASE_URL ?>/chat.php" class="btn btn-sm btn-light border d-md-none px-2 rounded-circle shadow-2xs" style="width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;" title="Kembali ke Daftar Obrolan">
+                                <i class="fa-solid fa-chevron-left"></i>
                             </a>
 
-                            <div class="chat-avatar <?= $active_partner['is_provider'] ? 'bg-teal text-white' : 'bg-secondary text-white' ?>">
+                            <div class="chat-avatar <?= $active_partner['is_provider'] ? 'bg-teal text-white' : 'bg-secondary text-white' ?>" style="width: 40px; height: 40px; min-width: 40px; font-size: 0.95rem;">
                                 <?= strtoupper(substr($active_partner['name'], 0, 1)) ?>
-                                <span class="online-pulse"></span>
+                                <span class="online-pulse-ring"></span>
                             </div>
 
-                            <div>
-                                <div class="fw-bold text-dark d-flex align-items-center gap-1.5 fs-6 lh-sm">
-                                    <span><?= e($active_partner['name']) ?></span>
+                            <div class="overflow-hidden">
+                                <div class="fw-bold text-dark d-flex align-items-center gap-1.5 fs-6 lh-sm text-truncate">
+                                    <span class="text-truncate"><?= e($active_partner['name']) ?></span>
                                     <?php if ($active_partner['is_provider']): ?>
-                                        <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2 rounded-pill small" style="font-size: 0.65rem;">
-                                            <i class="fa-solid fa-shield-halved me-1"></i> Mitra Terverifikasi
+                                        <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2 rounded-pill small d-none d-sm-inline-flex align-items-center gap-1" style="font-size: 0.65rem;">
+                                            <i class="fa-solid fa-shield-halved"></i> Mitra Resmi
                                         </span>
                                     <?php else: ?>
-                                        <span class="badge bg-light text-muted border py-0.5 px-2 rounded-pill small" style="font-size: 0.65rem;">
+                                        <span class="badge bg-light text-muted border py-0.5 px-2 rounded-pill small d-none d-sm-inline-flex" style="font-size: 0.65rem;">
                                             Pelanggan
                                         </span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="small text-muted" style="font-size: 0.72rem;">
+                                <div class="small text-muted text-truncate" style="font-size: 0.72rem;">
                                     <?php if ($active_partner['is_provider'] && !empty($active_partner['provider'])): ?>
                                         <span><i class="fa-solid <?= e($active_partner['provider']['category_icon'] ?? 'fa-wrench') ?> text-warning me-1"></i> <?= e($active_partner['provider']['category_name']) ?> &bull; Kec. <?= e($active_partner['provider']['district_name'] ?: 'Inhu') ?></span>
                                     <?php else: ?>
-                                        <span class="text-success"><i class="fa-solid fa-circle text-success me-1" style="font-size: 0.5rem;"></i> Online di Platform Jasa Inhu</span>
+                                        <span class="text-success fw-medium"><i class="fa-solid fa-circle text-success me-1" style="font-size: 0.5rem;"></i> Aktif di Platform Jasa Inhu</span>
                                     <?php endif; ?>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Header Right Quick Actions -->
-                        <div class="d-flex align-items-center gap-2">
-                            <!-- Provider Profile & Order Actions -->
+                        <div class="d-flex align-items-center gap-1.5">
+                            <!-- Direct Order / Deal Button -->
                             <?php if ($active_partner['is_provider'] && !empty($active_partner['provider'])): ?>
-                                <button type="button" class="btn btn-primary-custom btn-sm fw-bold d-inline-flex align-items-center gap-1.5 shadow-xs px-3 py-1.5 rounded-pill" style="font-size: 0.75rem;" title="Buat Pesanan Resmi & Deal Harga Sesuai Obrolan" onclick="openOrderModalFromChat()">
+                                <button type="button" class="btn btn-primary-custom btn-sm fw-bold d-inline-flex align-items-center gap-1 shadow-2xs px-2.5 px-sm-3 py-1.5 rounded-pill" style="font-size: 0.75rem;" title="Kunci Kesepakatan & Pesan Resmi" onclick="openOrderModalFromChat()">
                                     <i class="fa-solid fa-handshake text-warning"></i>
-                                    <span>Deal / Pesan Jasa</span>
+                                    <span>Deal Jasa</span>
                                 </button>
-                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" target="_blank" class="btn btn-light border btn-sm fw-semibold d-none d-sm-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill text-dark" style="font-size: 0.75rem;" title="Lihat Profil & Portofolio">
+                            <?php endif; ?>
+
+                            <!-- Direct WhatsApp Button -->
+                            <?php if (!empty($active_partner['wa_url'])): ?>
+                                <a href="<?= $active_partner['wa_url'] ?>" target="_blank" class="btn btn-success btn-sm fw-bold rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-2xs text-white" style="font-size: 0.75rem;" title="Hubungi via WhatsApp Resmi">
+                                    <i class="fa-brands fa-whatsapp fs-6"></i>
+                                    <span class="d-none d-md-inline">WhatsApp</span>
+                                </a>
+                            <?php endif; ?>
+
+                            <!-- Provider Storefront Link -->
+                            <?php if ($active_partner['is_provider'] && !empty($active_partner['provider'])): ?>
+                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" target="_blank" class="btn btn-light border btn-sm fw-semibold d-none d-sm-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill text-dark shadow-2xs" style="font-size: 0.75rem;" title="Lihat Profil & Portofolio Toko">
                                     <i class="fa-solid fa-store text-teal"></i>
                                     <span>Toko ↗</span>
                                 </a>
@@ -560,7 +747,7 @@ require_once __DIR__ . '/includes/header.php';
 
                     <!-- 2. Pinned Order Context Banner (Jika ada order terkait) -->
                     <?php if (!empty($recent_order)): ?>
-                        <div class="order-pinned-banner d-flex align-items-center justify-content-between">
+                        <div class="order-pinned-banner d-flex align-items-center justify-content-between px-3 py-2 bg-teal-subtle border-bottom border-teal-subtle">
                             <div class="d-flex align-items-center gap-2 small text-truncate">
                                 <span class="badge bg-teal text-white rounded-pill px-2 py-0.5" style="font-size: 0.68rem;">
                                     <i class="fa-solid fa-receipt me-1"></i> Order #<?= $recent_order['id'] ?>
@@ -579,15 +766,15 @@ require_once __DIR__ . '/includes/header.php';
                     <?php endif; ?>
 
                     <!-- 3. Pesan Chat Body (Scrollable with Modern Pattern) -->
-                    <div class="flex-grow-1 p-3 chat-messages-viewport d-flex flex-column gap-2.5" id="chatMessagesArea">
+                    <div class="flex-grow-1 chat-messages-viewport" id="chatMessagesArea">
                         <!-- Date & Privacy Pill -->
-                        <div class="text-center my-1 d-flex flex-column align-items-center gap-1">
-                            <span class="badge bg-white text-muted border shadow-xs px-3 py-1 fw-normal rounded-pill" style="font-size: 0.72rem;">
-                                <i class="fa-solid fa-shield-halved text-teal me-1"></i> Percakapan resmi dilindungi sistem JASA INHU
+                        <div class="text-center my-1 d-flex flex-column align-items-center gap-1.5">
+                            <span class="badge bg-white text-muted border shadow-2xs px-3 py-1.5 fw-medium rounded-pill" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-shield-halved text-teal me-1"></i> Percakapan Resmi Dilindungi Sistem JASA INHU
                             </span>
                             <span class="text-muted small px-3 py-1.5 bg-white border border-dashed rounded-3 shadow-2xs" style="font-size: 0.7rem; max-width: 90%;">
                                 <i class="fa-solid fa-lock text-teal me-1"></i>
-                                <span>Notifikasi chat otomatis diteruskan ke HP mitra. Demi keamanan & garansi komplain, pastikan transaksi resmi dibuat melalui tombol <strong>Pesan Jasa</strong> di atas.</span>
+                                <span>Demi keamanan transaksi & komplain bergaransi, pastikan rincian pesanan resmi dikunci melalui tombol <strong>Deal Jasa</strong> di atas.</span>
                             </span>
                         </div>
 
@@ -610,7 +797,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <div class="p-3 text-dark">
                                                 <p class="small text-dark mb-2" style="white-space: pre-line; font-size: 0.82rem; line-height: 1.5;"><?= e($msg['message']) ?></p>
                                                 <div class="pt-2 border-top">
-                                                    <a href="<?= BASE_URL ?>/user/orders.php" class="btn btn-teal btn-sm fw-bold rounded-pill w-100" style="font-size: 0.75rem;">
+                                                    <a href="<?= BASE_URL ?>/user/requests.php" class="btn btn-teal btn-sm fw-bold rounded-pill w-100" style="font-size: 0.75rem;">
                                                         <i class="fa-solid fa-file-lines me-1"></i> Buka Rincian Pesanan
                                                     </a>
                                                 </div>
@@ -626,7 +813,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <div class="bubble-meta <?= $isMe ? 'text-white-50' : 'text-muted' ?>">
                                                 <span><?= date('H:i', strtotime($msg['created_at'])) ?></span>
                                                 <?php if ($isMe): ?>
-                                                    <i class="fa-solid <?= $msg['is_read'] ? 'fa-check-double' : 'fa-check' ?>" style="<?= $msg['is_read'] ? 'color: #fef08a;' : '' ?>" title="<?= $msg['is_read'] ? 'Sudah Dibaca' : 'Terkirim' ?>"></i>
+                                                    <i class="fa-solid <?= $msg['is_read'] ? 'fa-check-double text-warning' : 'fa-check' ?>" title="<?= $msg['is_read'] ? 'Sudah Dibaca' : 'Terkirim' ?>"></i>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -639,7 +826,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <i class="fa-regular fa-comments text-teal fs-3"></i>
                                 </div>
                                 <h6 class="fw-bold text-dark small mb-1">Mulai Obrolan dengan <?= e($active_partner['name']) ?></h6>
-                                <p class="small text-muted mb-0" style="font-size: 0.78rem;">Konsultasikan kendala teknis, perkiraan biaya, atau jadwal survei lokasi Anda.</p>
+                                <p class="small text-muted mb-0" style="font-size: 0.78rem;">Konsultasikan kendala teknis, perkiraan biaya, atau atur waktu kunjungan Anda.</p>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -647,8 +834,8 @@ require_once __DIR__ . '/includes/header.php';
                     <!-- 4. Smart Quick Reply Chips -->
                     <div class="quick-chips-bar">
                         <?php if ($active_partner['is_provider']): ?>
-                            <button type="button" class="quick-chip-btn bg-teal-subtle text-teal border-teal-subtle fw-bold" onclick="openOrderModalFromChat()">
-                                🤝 Buat Pesanan Resmi
+                            <button type="button" class="quick-chip-btn highlight" onclick="openOrderModalFromChat()">
+                                🤝 Deal Pesanan Resmi
                             </button>
                             <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Halo, apakah layanan jasa ini bisa dipanggil hari ini?')">
                                 ⚡ Bisa hari ini?
@@ -659,12 +846,15 @@ require_once __DIR__ . '/includes/header.php';
                             <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Apakah bisa survei atau cek kondisi lokasi terlebih dahulu?')">
                                 🔍 Survei lokasi dulu?
                             </button>
-                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Lokasi saya di daerah: ')">
+                            <button type="button" class="quick-chip-btn" onclick="insertSavedAddressChat()">
                                 📍 Kirim alamat saya
                             </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Kira-kira butuh waktu berapa jam untuk pengerjaannya ya?')">
+                                ⏱️ Estimasi waktu?
+                            </button>
                         <?php else: ?>
-                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Halo kak, bisa jelaskan detail keluhan atau kirim foto kondisinya?')">
-                                🔍 Detail keluhan?
+                            <button type="button" class="quick-chip-btn highlight" onclick="insertQuickChat('Halo kak, bisa jelaskan detail keluhan atau kirim foto kondisinya?')">
+                                🔍 Tanya detail kendala
                             </button>
                             <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Bisa kirimkan alamat lengkap atau patokan lokasi untuk survei?')">
                                 📍 Minta alamat lokasi
@@ -672,8 +862,11 @@ require_once __DIR__ . '/includes/header.php';
                             <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Baik kak, untuk biaya jasa tersebut perkiraannya Rp ')">
                                 💰 Berikan estimasi biaya
                             </button>
-                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Silakan klik tombol [Deal / Pesan Jasa] di atas ya kak agar tercatat resmi.')">
-                                📋 Arahkan pesan resmi
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Tim kami siap meluncur ke lokasi sekarang kak.')">
+                                ⚡ Siap meluncur sekarang
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Silakan klik tombol [Deal Jasa] di atas ya kak agar pesanan tercatat resmi.')">
+                                📋 Arahkan deal resmi
                             </button>
                         <?php endif; ?>
                     </div>
@@ -685,11 +878,11 @@ require_once __DIR__ . '/includes/header.php';
                             <input type="hidden" id="chatReceiverId" value="<?= $active_partner['id'] ?>">
 
                             <div class="flex-grow-1 chat-input-pill">
-                                <i class="fa-regular fa-message text-muted small"></i>
+                                <i class="fa-regular fa-comment-dots text-muted small"></i>
                                 <input type="text" id="chatMessageInput" class="chat-input-field" placeholder="Ketik pesan untuk <?= e($active_partner['name']) ?>..." autocomplete="off" required>
                             </div>
 
-                            <button type="submit" id="btnSendChat" class="btn-send-gradient" title="Kirim Pesan (Tekan Enter)">
+                            <button type="submit" id="btnSendChat" class="btn-send-gradient" title="Kirim Pesan (Enter)">
                                 <i class="fa-solid fa-paper-plane" style="font-size: 0.95rem;"></i>
                             </button>
                         </form>
@@ -842,6 +1035,7 @@ window.CSRF_TOKEN = '<?= csrf_token() ?>';
 window.BASE_URL = '<?= BASE_URL ?>';
 window.CURRENT_USER_ID = <?= (int)$current_user['id'] ?>;
 window.ACTIVE_CONV_ID = <?= (int)$active_conv_id ?>;
+window.USER_SAVED_ADDRESS = <?= json_encode($user_saved_address) ?>;
 
 // Web Audio API Soft Chime (Synthesizer halus saat pesan masuk)
 function playMessageChime() {
@@ -854,8 +1048,8 @@ function playMessageChime() {
         const gain = ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Note D5
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12); // Note A5
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12); // A5
 
         gain.gain.setValueAtTime(0.08, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
@@ -870,10 +1064,14 @@ function playMessageChime() {
     }
 }
 
-function scrollChatToBottom() {
+function scrollChatToBottom(smooth = false) {
     const area = document.getElementById('chatMessagesArea');
     if (area) {
-        area.scrollTop = area.scrollHeight;
+        if (smooth) {
+            area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
+        } else {
+            area.scrollTop = area.scrollHeight;
+        }
     }
 }
 
@@ -893,12 +1091,64 @@ function insertQuickChat(text) {
     input.focus();
 }
 
+function insertSavedAddressChat() {
+    const input = document.getElementById('chatMessageInput');
+    if (!input) return;
+    if (window.USER_SAVED_ADDRESS && window.USER_SAVED_ADDRESS.trim().length > 0) {
+        input.value = 'Lokasi saya di: ' + window.USER_SAVED_ADDRESS;
+    } else {
+        input.value = 'Lokasi saya di daerah: ';
+    }
+    input.focus();
+}
+
+// Filter Kontak Sidebar (Tab & Text Search)
+let currentFilterTab = 'all';
+
+function setChatFilter(tab, el) {
+    currentFilterTab = tab;
+    document.querySelectorAll('.chat-filter-tab').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    applyConversationFilters();
+}
+
 function filterConversations() {
+    const q = document.getElementById('searchChatInput').value.trim();
+    const clearBtn = document.getElementById('btnClearSearchChat');
+    if (clearBtn) {
+        if (q.length > 0) clearBtn.classList.remove('d-none');
+        else clearBtn.classList.add('d-none');
+    }
+    applyConversationFilters();
+}
+
+function clearSearchChat() {
+    const input = document.getElementById('searchChatInput');
+    if (input) {
+        input.value = '';
+        filterConversations();
+        input.focus();
+    }
+}
+
+function applyConversationFilters() {
     const q = document.getElementById('searchChatInput').value.toLowerCase().trim();
     const items = document.querySelectorAll('.conversation-item');
     items.forEach(el => {
         const name = el.getAttribute('data-name') || '';
-        if (name.includes(q)) {
+        const isUnread = el.getAttribute('data-is-unread') === '1';
+        const isProvider = el.getAttribute('data-is-provider') === '1';
+
+        let matchesTab = true;
+        if (currentFilterTab === 'unread') {
+            matchesTab = isUnread;
+        } else if (currentFilterTab === 'provider') {
+            matchesTab = isProvider;
+        }
+
+        const matchesQuery = !q || name.includes(q);
+
+        if (matchesTab && matchesQuery) {
             el.classList.remove('d-none');
         } else {
             el.classList.add('d-none');
@@ -1047,7 +1297,7 @@ function formatBubbleHtml(msgText, isMe, time, isRead) {
                 <div class="p-3 text-dark">
                     <p class="small text-dark mb-2" style="white-space: pre-line; font-size: 0.82rem; line-height: 1.5;">${escapeHtml(msgText)}</p>
                     <div class="pt-2 border-top">
-                        <a href="${window.BASE_URL}/user/orders.php" class="btn btn-teal btn-sm fw-bold rounded-pill w-100" style="font-size: 0.75rem;">
+                        <a href="${window.BASE_URL}/user/requests.php" class="btn btn-teal btn-sm fw-bold rounded-pill w-100" style="font-size: 0.75rem;">
                             <i class="fa-solid fa-file-lines me-1"></i> Buka Rincian Pesanan
                         </a>
                     </div>
@@ -1126,7 +1376,7 @@ function sendChatMessage(e) {
             bubbleWrap.setAttribute('data-id', d.id);
             bubbleWrap.innerHTML = formatBubbleHtml(d.message, true, d.time, false);
             area.appendChild(bubbleWrap);
-            scrollChatToBottom();
+            scrollChatToBottom(true);
         } else {
             alert(data.message || 'Gagal mengirim pesan.');
         }
@@ -1143,6 +1393,28 @@ const existingBubbles = document.querySelectorAll('.msg-bubble-wrap');
 if (existingBubbles.length > 0) {
     const lastEl = existingBubbles[existingBubbles.length - 1];
     lastMessageId = parseInt(lastEl.getAttribute('data-id')) || 0;
+}
+
+// Efek Judul Tab berkedip saat tab tidak aktif
+let origPageTitle = document.title;
+let titleInterval = null;
+
+window.addEventListener('focus', () => {
+    if (titleInterval) {
+        clearInterval(titleInterval);
+        titleInterval = null;
+    }
+    document.title = origPageTitle;
+});
+
+function flashTabTitle() {
+    if (document.hidden && !titleInterval) {
+        let isFlash = false;
+        titleInterval = setInterval(() => {
+            document.title = isFlash ? '(1) 💬 Pesan Baru!' : origPageTitle;
+            isFlash = !isFlash;
+        }, 1200);
+    }
 }
 
 if (window.ACTIVE_CONV_ID > 0) {
@@ -1182,9 +1454,10 @@ if (window.ACTIVE_CONV_ID > 0) {
 
                 if (hasNewIncoming) {
                     playMessageChime();
+                    flashTabTitle();
                 }
 
-                scrollChatToBottom();
+                scrollChatToBottom(true);
             }
         })
         .catch(e => {});
