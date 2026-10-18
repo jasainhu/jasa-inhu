@@ -223,8 +223,8 @@ if (is_logged_in() && !empty($current_user)) {
                         <div class="notif-list-container" style="max-height: 320px; overflow-y: auto;">
                             <?php if (!empty($header_recent_notifs)): ?>
                                 <?php foreach ($header_recent_notifs as $hn): 
-                                    $n_url = '#';
-                                    if (!empty($hn['link'])) {
+                                    $n_url = BASE_URL . '/notifications.php?id=' . (int)$hn['id'];
+                                    if (!empty($hn['link']) && $hn['link'] !== '#' && !str_starts_with($hn['link'], '#')) {
                                         if (str_starts_with($hn['link'], 'http://') || str_starts_with($hn['link'], 'https://')) {
                                             $n_url = $hn['link'];
                                         } elseif (str_starts_with($hn['link'], '/')) {
@@ -273,8 +273,9 @@ if (is_logged_in() && !empty($current_user)) {
                         </div>
 
                         <div class="text-center py-2 bg-light border-top">
-                            <a href="<?= BASE_URL . get_dashboard_url_for_role($current_user['role_name']) ?>" class="small fw-semibold text-teal text-decoration-none" style="font-size: 0.78rem;">
-                                Buka Dashboard & Aktivitas &rarr;
+                            <a href="<?= BASE_URL ?>/notifications.php" class="small fw-semibold text-teal text-decoration-none d-flex align-items-center justify-content-center gap-1.5" style="font-size: 0.8rem;">
+                                <span>Buka Notifikasi</span>
+                                <i class="fa-solid fa-arrow-right small"></i>
                             </a>
                         </div>
                     </div>
@@ -651,8 +652,8 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                         <div class="notif-list-container" style="max-height: 300px; overflow-y: auto;">
                             <?php if (!empty($header_recent_notifs)): ?>
                                 <?php foreach ($header_recent_notifs as $hn): 
-                                    $n_url = '#';
-                                    if (!empty($hn['link'])) {
+                                    $n_url = BASE_URL . '/notifications.php?id=' . (int)$hn['id'];
+                                    if (!empty($hn['link']) && $hn['link'] !== '#' && !str_starts_with($hn['link'], '#')) {
                                         if (str_starts_with($hn['link'], 'http://') || str_starts_with($hn['link'], 'https://')) {
                                             $n_url = $hn['link'];
                                         } elseif (str_starts_with($hn['link'], '/')) {
@@ -701,8 +702,9 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                         </div>
 
                         <div class="text-center py-2 bg-light border-top">
-                            <a href="<?= BASE_URL . get_dashboard_url_for_role($current_user['role_name']) ?>" class="small fw-semibold text-teal text-decoration-none" style="font-size: 0.78rem;">
-                                Buka Dashboard & Aktivitas &rarr;
+                            <a href="<?= BASE_URL ?>/notifications.php" class="small fw-semibold text-teal text-decoration-none d-flex align-items-center justify-content-center gap-1.5" style="font-size: 0.8rem;">
+                                <span>Buka Notifikasi</span>
+                                <i class="fa-solid fa-arrow-right small"></i>
                             </a>
                         </div>
                     </div>
