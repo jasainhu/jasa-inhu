@@ -260,7 +260,9 @@ INSERT INTO service_categories (id, name, slug, icon, description, is_active, so
 (14, 'Teknologi', 'teknologi', 'fa-laptop-code', 'Servis komputer/laptop, servis HP, instal ulang Windows, jaringan WiFi & CCTV', 1, 14),
 (15, 'Pendidikan', 'pendidikan', 'fa-graduation-cap', 'Guru les privat SD/SMP/SMA, belajar mengaji, kursus komputer dan bimbingan belajar', 1, 15),
 (16, 'Jasa Rumah Tangga', 'jasa-rumah-tangga', 'fa-house-chimney-user', 'Jasa setrika, masak catering harian, perbaikan pipa air & bantuan rumah tangga', 1, 16),
-(17, 'Jasa Lainnya', 'jasa-lainnya', 'fa-ellipsis', 'Berbagai kebutuhan jasa lokal spesifik lainnya di wilayah Indragiri Hulu', 1, 17);
+(17, 'Jasa Lainnya', 'jasa-lainnya', 'fa-ellipsis', 'Berbagai kebutuhan jasa lokal spesifik lainnya di wilayah Indragiri Hulu', 1, 17),
+(210020, 'Undangan & Percetakan', 'undangan-percetakan', 'fa-envelope-open-text', 'Cetak undangan pernikahan fisik & digital web/video, banner, spanduk, brosur, stiker dan souvenir acara', 1, 18),
+(210021, 'Desain Grafis', 'desain-grafis', 'fa-palette', 'Jasa desain logo, banner promosi, postingan medsos/Instagram, kartu nama, vektor, ilustrasi dan branding usaha', 1, 19);
 
 -- 6. Demo Users (Password: password123)
 -- Hash: $2y$10$bve1QmPfUJgkw947Ert/U.nqVzzA43uRlUpS.r0B2z12s.otmva96
