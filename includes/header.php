@@ -56,7 +56,7 @@ $meta_og_url = BASE_URL . ($_SERVER['REQUEST_URI'] ?? '/');
     <!-- SweetAlert2 Modern Popups -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?= asset_url('css/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset_url('css/style.css') . '?v=' . filemtime(__DIR__ . '/../assets/css/style.css') ?>">
     <script>
         window.APP_BASE_URL = '<?= BASE_URL ?>';
     </script>
