@@ -592,6 +592,29 @@ require_once __DIR__ . '/includes/header.php';
                                     </span>
                                 </div>
 
+                                <!-- Trust & Credibility Badges (KTP & Sertifikat/STR) -->
+                                <?php 
+                                    $has_verified_ktp = !empty($prov['is_verified']);
+                                    $has_certificate = (!empty($prov['certificate_url']) && strlen($prov['certificate_url']) > 5) || (!empty($prov['credential_title']) && strlen($prov['credential_title']) > 2);
+                                ?>
+                                <?php if ($has_verified_ktp || $has_certificate): ?>
+                                    <div class="d-flex align-items-center gap-1 flex-wrap mb-2">
+                                        <?php if ($has_verified_ktp): ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-0.5 px-1.5 d-inline-flex align-items-center gap-1 fw-bold" style="font-size: 0.62rem;" title="Identitas KTP Resmi Terverifikasi Admin">
+                                                <i class="fa-solid <?= (($prov['id_card_type'] ?? '') === 'pelajar') ? 'fa-id-badge' : 'fa-id-card' ?>"></i>
+                                                <span><?= (($prov['id_card_type'] ?? '') === 'pelajar') ? 'Kartu Pelajar' : 'KTP Terverifikasi' ?></span>
+                                            </span>
+                                        <?php endif; ?>
+
+                                        <?php if ($has_certificate): ?>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill py-0.5 px-1.5 d-inline-flex align-items-center gap-1 fw-bold" style="font-size: 0.62rem;" title="Memiliki Sertifikat Keahlian / STR Resmi">
+                                                <i class="fa-solid fa-award text-warning"></i>
+                                                <span class="text-truncate" style="max-width: 130px;"><?= !empty($prov['credential_title']) ? e($prov['credential_title']) : 'Bersertifikat' ?></span>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+
                                 <!-- Headline / Slogan (Tampil di Desktop & Tablet) -->
                                 <p class="small text-muted mb-2 flex-grow-1 d-none d-md-block" style="line-height: 1.45; font-size: 0.84rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     <?= e($prov['headline'] ?: $prov['description']) ?>
