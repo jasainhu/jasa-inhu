@@ -317,26 +317,21 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
                             <?php endif; ?>
 
                             <!-- Floating Badges on Photo -->
-                                <!-- Floating Badges on Photo (Modern Clean) -->
-                                <div class="position-absolute top-0 start-0 m-1.5 m-md-2.5">
-                                    <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-1 px-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1" style="font-size: 0.68rem;">
+                                <!-- Floating Badges on Photo (Modern Clean & Responsive) -->
+                                <div class="position-absolute top-0 start-0 m-1.5 m-md-2">
+                                    <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-0.5 px-1.5 rounded-pill shadow-xs d-inline-flex align-items-center gap-1" style="font-size: 0.65rem;">
                                         <i class="fa-solid fa-star text-warning"></i>
                                         <span class="fw-bold"><?= number_format((float)$prov['rating_avg'], 1) ?></span>
-                                        <span class="opacity-75" style="font-size: 0.62rem;">(<?= (int)($prov['reviews_count'] ?? 0) ?>)</span>
                                     </span>
                                 </div>
                                 
-                                <div class="position-absolute top-0 end-0 m-1.5 m-md-2.5 d-flex gap-1">
-                                    <?php if ($prov['is_verified']): ?>
-                                        <span class="badge bg-white shadow-xs border fw-bold py-1 px-2 text-success rounded-pill" title="Identitas KTP & Lokasi Usaha Terverifikasi Resmi" style="font-size: 0.65rem;">
-                                            <i class="fa-solid fa-circle-check text-success me-0.5"></i> <span>KTP</span>
-                                        </span>
-                                    <?php endif; ?>
+                                <div class="position-absolute top-0 end-0 m-1.5 m-md-2">
+                                    <?= render_provider_service_type_badge($prov, 'xs') ?>
                                 </div>
 
                                 <!-- Starting Rate Tag Overlay on Cover Photo -->
-                                <div class="position-absolute bottom-0 start-0 m-1.5 m-md-2.5">
-                                    <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-0.5 px-2 py-md-1 px-md-2.5 rounded-pill shadow-xs" style="font-size: 0.68rem;">
+                                <div class="position-absolute bottom-0 start-0 m-1.5 m-md-2">
+                                    <span class="badge bg-dark bg-opacity-75 text-white backdrop-blur py-0.5 px-2 rounded-pill shadow-xs" style="font-size: 0.66rem;">
                                         <i class="fa-solid fa-tag text-warning me-0.5"></i> <?= (!empty($prov['hourly_rate_min']) && $prov['hourly_rate_min'] > 0) ? 'Mulai Rp ' . number_format((float)$prov['hourly_rate_min'], 0, ',', '.') : 'Tarif Fleksibel' ?>
                                     </span>
                                 </div>
@@ -344,25 +339,28 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
 
                             <!-- Card Body -->
                             <div class="p-2 p-md-3 d-flex flex-column flex-grow-1">
-                                <!-- Header Usaha & Kategori -->
-                                <div class="mb-1 mb-md-2">
-                                    <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
-                                        <span class="badge bg-light text-secondary border small text-nowrap flex-shrink-0" style="font-size: 0.64rem; padding: 2.5px 6px;">
-                                            <?= e($prov['category_name']) ?>
-                                        </span>
-                                        <?= render_provider_service_type_badge($prov, 'xs') ?>
-                                    </div>
-                                    <h5 class="fw-bold mb-1 text-dark lh-sm text-truncate-2" style="font-size: 0.88rem;">
-                                        <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="text-decoration-none text-dark hover-teal">
-                                            <?= e($prov['business_name']) ?>
-                                        </a>
-                                    </h5>
-                                    <div class="d-flex align-items-center gap-1 text-muted small text-truncate" style="font-size: 0.72rem;" title="<?= e((!empty($prov['village_name']) ? $prov['village_name'] . ', ' : '') . 'Kec. ' . ($prov['district_name'] ?: 'Inhu')) ?>">
-                                        <i class="fa-solid fa-location-dot text-danger flex-shrink-0" style="font-size: 0.68rem;"></i>
-                                        <span class="text-truncate">
-                                            <?= !empty($prov['village_name']) ? '<span class="fw-medium text-dark">' . e($prov['village_name']) . '</span>, ' : '' ?>Kec. <?= e($prov['district_name'] ?: 'Inhu') ?>
-                                        </span>
-                                    </div>
+                                <!-- Kategori Jasa (Baris Sendiri - Tidak Kepotong) -->
+                                <div class="mb-1">
+                                    <span class="badge bg-light text-secondary border small text-truncate" style="font-size: 0.63rem; padding: 2px 6px; max-width: 100%;">
+                                        <?= e($prov['category_name']) ?>
+                                    </span>
+                                </div>
+
+                                <!-- Nama Toko / Usaha + Centang Verifikasi KTP -->
+                                <h5 class="fw-bold mb-1 text-dark lh-sm text-truncate-2" style="font-size: 0.86rem; min-height: 2.1rem;">
+                                    <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $prov['id'] ?>" class="text-decoration-none text-dark hover-teal">
+                                        <?= e($prov['business_name']) ?>
+                                    </a>
+                                    <?php if ($prov['is_verified']): ?>
+                                        <i class="fa-solid fa-circle-check text-success ms-0.5" style="font-size: 0.75rem;" title="Terverifikasi KTP Resmi"></i>
+                                    <?php endif; ?>
+                                </h5>
+
+                                <div class="d-flex align-items-center gap-1 text-muted small text-truncate mb-2" style="font-size: 0.70rem;" title="<?= e((!empty($prov['village_name']) ? $prov['village_name'] . ', ' : '') . 'Kec. ' . ($prov['district_name'] ?: 'Inhu')) ?>">
+                                    <i class="fa-solid fa-location-dot text-danger flex-shrink-0" style="font-size: 0.65rem;"></i>
+                                    <span class="text-truncate">
+                                        <?= !empty($prov['village_name']) ? '<span class="fw-medium text-dark">' . e($prov['village_name']) . '</span>, ' : '' ?>Kec. <?= e($prov['district_name'] ?: 'Inhu') ?>
+                                    </span>
                                 </div>
 
                                 <!-- Headline / Slogan (Tampil di Desktop & Tablet) -->
@@ -380,11 +378,11 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Info Ringkas: Tarif & Pekerjaan Selesai (Sleek Minimalist) -->
-                                <div class="d-flex align-items-center justify-content-between pt-1.5 pb-1.5 pt-md-2 pb-md-2 border-top border-light-subtle mt-auto mb-2 mb-md-2.5">
+                                <!-- Info Ringkas: Estimasi & Pekerjaan Selesai -->
+                                <div class="d-flex align-items-center justify-content-between pt-1.5 pb-1.5 border-top border-light-subtle mt-auto mb-2">
                                     <div>
-                                        <div class="text-muted" style="font-size: 0.62rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.2px;">Estimasi Biaya</div>
-                                        <div class="fw-bold text-teal" style="font-size: 0.82rem;">
+                                        <div class="text-muted" style="font-size: 0.60rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.2px;">Estimasi</div>
+                                        <div class="fw-bold text-teal" style="font-size: 0.80rem;">
                                             <?php if (!empty($prov['hourly_rate_min']) && $prov['hourly_rate_min'] > 0): ?>
                                                 Rp <?= number_format((float)$prov['hourly_rate_min'], 0, ',', '.') ?>
                                             <?php else: ?>
@@ -393,21 +391,21 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <div class="badge bg-light text-secondary border fw-medium px-2 py-1" style="font-size: 0.66rem;">
+                                        <span class="badge bg-light text-secondary border fw-medium px-1.5 py-0.5" style="font-size: 0.64rem;">
                                             <i class="fa-solid fa-check text-success me-0.5"></i> <?= (int)$prov['completed_jobs'] ?> Selesai
-                                        </div>
+                                        </span>
                                     </div>
                                 </div>
 
-                                <!-- Action Buttons: 2 Tombol Sejajar (Chat & Pesan Jasa) -->
-                                <div class="row g-1.5 g-md-2 mt-auto">
+                                <!-- Action Buttons: 2 Tombol Sejajar (Chat & Pesan - Tanpa Teks Terpotong/Numpuk) -->
+                                <div class="row g-1 g-md-2 mt-auto">
                                     <div class="col-6">
-                                        <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $prov['id'] ?>" class="btn btn-outline-teal w-100 py-1.5 py-md-2 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1.5 rounded-3" style="font-size: 0.78rem;">
+                                        <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $prov['id'] ?>" class="btn btn-outline-teal w-100 py-1.5 py-md-2 px-1 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1 rounded-3 text-nowrap" style="font-size: 0.74rem;">
                                             <i class="fa-solid fa-comments"></i> <span>Chat</span>
                                         </a>
                                     </div>
                                     <div class="col-6">
-                                        <button type="button" class="btn btn-teal text-white w-100 py-1.5 py-md-2 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1.5 rounded-3" style="font-size: 0.78rem;" onclick="openDirectQuickOrderModal(<?= htmlspecialchars(json_encode([
+                                        <button type="button" class="btn btn-teal text-white w-100 py-1.5 py-md-2 px-1 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1 rounded-3 text-nowrap" style="font-size: 0.74rem;" onclick="openDirectQuickOrderModal(<?= htmlspecialchars(json_encode([
                                             'id' => (int)$prov['id'],
                                             'name' => $prov['business_name'],
                                             'phone' => $prov['phone'],
@@ -415,7 +413,7 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
                                             'district' => $prov['district_name'] ?: 'Kab. Indragiri Hulu',
                                             'rate' => (!empty($prov['hourly_rate_min']) && $prov['hourly_rate_min'] > 0) ? 'Mulai Rp ' . number_format((float)$prov['hourly_rate_min'], 0, ',', '.') : 'Sesuai Kesepakatan'
                                         ]), ENT_QUOTES, 'UTF-8') ?>)">
-                                            <i class="fa-solid fa-bolt text-warning"></i> <span>Pesan Jasa</span>
+                                            <i class="fa-solid fa-bolt text-warning"></i> <span>Pesan<span class="d-none d-sm-inline"> Jasa</span></span>
                                         </button>
                                     </div>
                                 </div>

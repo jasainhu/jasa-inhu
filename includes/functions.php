@@ -978,14 +978,15 @@ function render_provider_service_type_badge(array|object $provider, string $size
     $hasStore = !empty($p['has_physical_store']);
 
     $badgeClass = ($size === 'xs') ? 'px-1.5 py-0.5' : 'px-2.5 py-1';
-    $fontSize = ($size === 'xs') ? 'font-size: 0.65rem;' : 'font-size: 0.74rem;';
+    $fontSize = ($size === 'xs') ? 'font-size: 0.63rem;' : 'font-size: 0.74rem;';
 
     if ($servesHome && $hasStore) {
-        return '<span class="badge bg-teal-subtle text-teal border border-teal-subtle rounded-pill ' . $badgeClass . ' fw-semibold d-inline-flex align-items-center gap-1" style="' . $fontSize . '" title="Tersedia Toko Fisik & Siap Panggilan ke Rumah"><i class="fa-solid fa-motorcycle"></i> Panggilan & <i class="fa-solid fa-store"></i> Toko</span>';
+        $label = ($size === 'xs') ? '<i class="fa-solid fa-motorcycle"></i> Panggilan & <i class="fa-solid fa-store"></i> Toko' : '<i class="fa-solid fa-motorcycle"></i> Panggilan & <i class="fa-solid fa-store"></i> Toko';
+        return '<span class="badge bg-white bg-opacity-95 text-teal border border-teal-subtle rounded-pill ' . $badgeClass . ' fw-bold d-inline-flex align-items-center gap-1 shadow-xs" style="' . $fontSize . '; white-space: nowrap;" title="Tersedia Toko Fisik & Siap Panggilan ke Rumah">' . $label . '</span>';
     } elseif ($hasStore) {
-        return '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill ' . $badgeClass . ' fw-semibold d-inline-flex align-items-center gap-1" style="' . $fontSize . '" title="Memiliki Toko / Bengkel Fisik"><i class="fa-solid fa-store"></i> Ada Toko Fisik</span>';
+        return '<span class="badge bg-white bg-opacity-95 text-warning-emphasis border border-warning-subtle rounded-pill ' . $badgeClass . ' fw-bold d-inline-flex align-items-center gap-1 shadow-xs" style="' . $fontSize . '; white-space: nowrap;" title="Memiliki Toko / Bengkel Fisik"><i class="fa-solid fa-store"></i> Ada Toko</span>';
     } else {
-        return '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill ' . $badgeClass . ' fw-semibold d-inline-flex align-items-center gap-1" style="' . $fontSize . '" title="Melayani Panggilan Datang ke Rumah Warga"><i class="fa-solid fa-motorcycle"></i> Siap ke Rumah</span>';
+        return '<span class="badge bg-white bg-opacity-95 text-primary border border-primary-subtle rounded-pill ' . $badgeClass . ' fw-bold d-inline-flex align-items-center gap-1 shadow-xs" style="' . $fontSize . '; white-space: nowrap;" title="Melayani Panggilan Datang ke Rumah Warga"><i class="fa-solid fa-motorcycle"></i> Siap ke Rumah</span>';
     }
 }
 
