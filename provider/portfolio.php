@@ -192,11 +192,17 @@ require_once __DIR__ . '/../includes/header.php';
                         <!-- Card Body -->
                         <div class="card-body p-3 d-flex flex-column">
                             <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="text-muted small" style="font-size: 0.75rem;">
-                                    <i class="fa-regular fa-calendar me-1"></i> <?= date('d M Y', strtotime($p['service_date'] ?: $p['created_at'])) ?>
-                                </span>
-                                <?php if (!empty($p['image_before']) && !$is_culinary): ?>
-                                    <span class="badge bg-primary-subtle text-primary border" style="font-size: 0.68rem;">Sebelum vs Sesudah</span>
+                                <?php if ($is_culinary): ?>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2 rounded-pill" style="font-size: 0.68rem;">
+                                        <i class="fa-solid fa-circle-check me-1"></i> Siap Dipesan
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-muted small" style="font-size: 0.75rem;">
+                                        <i class="fa-regular fa-calendar me-1"></i> <?= date('d M Y', strtotime($p['service_date'] ?: $p['created_at'])) ?>
+                                    </span>
+                                    <?php if (!empty($p['image_before'])): ?>
+                                        <span class="badge bg-primary-subtle text-primary border" style="font-size: 0.68rem;">Sebelum vs Sesudah</span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
 
@@ -337,14 +343,16 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-dark">
-                                <?= $is_culinary ? 'Tanggal Ditambahkan / Rilis Menu' : 'Tanggal Selesai Pengerjaan' ?>
-                            </label>
-                            <input type="date" name="service_date" class="form-control" value="<?= date('Y-m-d') ?>">
+                    <?php if (!$is_culinary): ?>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-dark">Tanggal Selesai Pengerjaan</label>
+                                <input type="date" name="service_date" class="form-control" value="<?= date('Y-m-d') ?>">
+                            </div>
                         </div>
-                    </div>
+                    <?php else: ?>
+                        <input type="hidden" name="service_date" value="<?= date('Y-m-d') ?>">
+                    <?php endif; ?>
 
                     <div class="mb-2">
                         <label class="form-label small fw-semibold text-dark">
