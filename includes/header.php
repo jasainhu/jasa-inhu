@@ -617,11 +617,16 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                 </a>
             <?php endif; ?>
 
+            <!-- Logo Resmi JASA INHU -->
+            <a href="<?= BASE_URL ?>/" class="gojek-header-logo-link d-inline-flex align-items-center flex-shrink-0" title="JASA INHU">
+                <img src="<?= asset_url('images/logo-white.png') ?>" alt="JASA INHU" class="gojek-header-logo-img">
+            </a>
+
             <!-- Chip Lokasi Glassmorphism Gojek Style -->
             <button type="button" class="gojek-location-chip" data-bs-toggle="modal" data-bs-target="#districtSelectModal">
                 <i class="fa-solid fa-location-dot location-dot-icon"></i>
                 <span class="location-name text-truncate">
-                    <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Seluruh Kab. Inhu' ?>
+                    <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Kab. Inhu' ?>
                 </span>
                 <i class="fa-solid fa-chevron-down location-arrow-icon"></i>
             </button>
