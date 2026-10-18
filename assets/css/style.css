@@ -676,24 +676,42 @@ a:hover {
     background: rgba(255, 255, 255, 0.28);
 }
 
-/* Logo Mobile Header */
-.gojek-header-logo-link {
+/* Logo Mobile Header Brand Combo (Icon Asli + Tipografi Tebal Putih Bersih) */
+.gojek-brand-combo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     text-decoration: none;
     line-height: 1;
 }
 
-.gojek-header-logo-img {
-    height: 27px;
-    width: auto;
-    max-width: 110px;
+.gojek-brand-symbol {
+    width: 32px;
+    height: 32px;
     object-fit: contain;
     display: block;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25));
     transition: transform 0.15s ease;
 }
 
-.gojek-header-logo-link:active .gojek-header-logo-img {
-    transform: scale(0.95);
+.gojek-brand-text {
+    font-size: 1.18rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.gojek-brand-combo:active {
+    transform: scale(0.96);
+}
+
+/* Row 2: Chip Lokasi Glassmorphism di Bawah Logo */
+.gojek-header-location-row {
+    display: flex;
+    align-items: center;
 }
 
 /* Chip Lokasi Glassmorphism */
@@ -703,14 +721,13 @@ a:hover {
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.32);
     border-radius: 999px;
-    padding: 4px 10px;
+    padding: 4px 12px;
     color: #ffffff;
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    max-width: 100%;
+    gap: 6px;
     cursor: pointer;
     transition: all 0.15s ease;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
@@ -724,7 +741,7 @@ a:hover {
     font-size: 0.8rem;
 }
 .gojek-location-chip .location-name {
-    max-width: 95px;
+    max-width: 160px;
     letter-spacing: -0.2px;
 }
 .gojek-location-chip .location-arrow-icon {
@@ -733,16 +750,16 @@ a:hover {
 }
 
 @media (max-width: 380px) {
-    .gojek-header-logo-img {
-        height: 23px;
-        max-width: 92px;
+    .gojek-brand-symbol {
+        width: 28px;
+        height: 28px;
+    }
+    .gojek-brand-text {
+        font-size: 1.05rem;
     }
     .gojek-location-chip {
-        padding: 3.5px 8px;
-        font-size: 0.7rem;
-    }
-    .gojek-location-chip .location-name {
-        max-width: 68px;
+        padding: 3.5px 10px;
+        font-size: 0.72rem;
     }
 }
 

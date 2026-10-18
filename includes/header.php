@@ -607,7 +607,7 @@ $current_page_basename = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '') === 'home') || !empty($hide_back_btn);
 ?>
 <header class="gojek-mobile-header d-lg-none sticky-top">
-    <!-- Baris 1: Chip Lokasi Glassmorphism di Kiri + Action Icons di Kanan -->
+    <!-- Baris 1: Logo Resmi JASA INHU di Kiri, Aksi (Lonceng & Akun) di Kanan -->
     <div class="gojek-header-top">
         <div class="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 me-2">
             <?php if (!$is_site_homepage): ?>
@@ -617,19 +617,11 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                 </a>
             <?php endif; ?>
 
-            <!-- Logo Resmi JASA INHU -->
-            <a href="<?= BASE_URL ?>/" class="gojek-header-logo-link d-inline-flex align-items-center flex-shrink-0" title="JASA INHU">
-                <img src="<?= asset_url('images/logo-white.png') ?>" alt="JASA INHU" class="gojek-header-logo-img">
+            <!-- Logo Resmi JASA INHU (Icon Asli + Tipografi Tebal Putih Bersih) -->
+            <a href="<?= BASE_URL ?>/" class="gojek-brand-combo text-decoration-none d-inline-flex align-items-center gap-2" title="JASA INHU">
+                <img src="<?= asset_url('images/favicon.png') ?>" alt="JASA INHU" class="gojek-brand-symbol">
+                <span class="gojek-brand-text">JASA INHU</span>
             </a>
-
-            <!-- Chip Lokasi Glassmorphism Gojek Style -->
-            <button type="button" class="gojek-location-chip" data-bs-toggle="modal" data-bs-target="#districtSelectModal">
-                <i class="fa-solid fa-location-dot location-dot-icon"></i>
-                <span class="location-name text-truncate">
-                    <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Kab. Inhu' ?>
-                </span>
-                <i class="fa-solid fa-chevron-down location-arrow-icon"></i>
-            </button>
         </div>
 
         <!-- Aksi Kanan (Chat, Notifikasi, Akun) -->
@@ -917,7 +909,18 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
         </div>
     </div>
 
-    <!-- Baris 2: Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab (Khusus Pengguna, Sembunyikan di Panel Mitra) -->
+    <!-- Baris 2: Chip Lokasi Glassmorphism (Sesuai Mockup Rencana) -->
+    <div class="gojek-header-location-row mb-2">
+        <button type="button" class="gojek-location-chip" data-bs-toggle="modal" data-bs-target="#districtSelectModal">
+            <i class="fa-solid fa-location-dot location-dot-icon"></i>
+            <span class="location-name text-truncate">
+                <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Seluruh Kab. Inhu' ?>
+            </span>
+            <i class="fa-solid fa-chevron-down location-arrow-icon"></i>
+        </button>
+    </div>
+
+    <!-- Baris 3: Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab (Khusus Pengguna, Sembunyikan di Panel Mitra) -->
     <?php 
     $is_provider_panel = str_contains($_SERVER['REQUEST_URI'] ?? '', '/provider/') || str_contains($_SERVER['REQUEST_URI'] ?? '', '/admin/');
     if (empty($hide_mobile_search) && !$is_provider_panel): 
@@ -925,7 +928,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
     <div class="gojek-header-search-row">
         <form action="<?= BASE_URL ?>/search.php" method="GET" class="gojek-search-capsule">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" name="q" class="search-input" placeholder="Cari jasa: Tukang, Servis AC, Montir..." value="<?= e($header_q) ?>" autocomplete="off">
+            <input type="text" name="q" class="search-input" placeholder="Cari jasa: Servis AC, Montir, Tukang..." value="<?= e($header_q) ?>" autocomplete="off">
             <?php if ($header_dist): ?>
                 <input type="hidden" name="kecamatan" value="<?= $header_dist ?>">
             <?php endif; ?>
