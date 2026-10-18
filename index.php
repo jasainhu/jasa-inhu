@@ -1640,34 +1640,21 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Modal Pop-Up Promo Poster JASA INHU -->
+<!-- Modal Pop-Up Promo Poster Ala Shopee (Clean, Compact & Hanya Tombol X) -->
 <div class="modal fade" id="promoWelcomeModal" tabindex="-1" aria-labelledby="promoWelcomeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 420px;">
-        <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden position-relative bg-dark text-white">
-            <!-- Close Button (Tombol Silang Melayang) -->
-            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 bg-dark bg-opacity-75 rounded-circle p-2.5 shadow-sm hover-lift" data-bs-dismiss="modal" aria-label="Tutup" style="backdrop-filter: blur(6px); width: 36px; height: 36px; opacity: 0.95;"></button>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 330px; margin: 1.75rem auto;">
+        <div class="modal-content border-0 bg-transparent position-relative text-center p-0">
+            <!-- Close Button X (Kecil di Pojok Kanan Atas ala Shopee) -->
+            <button type="button" class="btn text-white rounded-circle position-absolute top-0 end-0 d-flex align-items-center justify-content-center shadow" data-bs-dismiss="modal" aria-label="Tutup" style="width: 32px; height: 32px; margin-top: -12px; margin-right: -12px; z-index: 1060; background: rgba(0, 0, 0, 0.75); border: 2px solid #ffffff; backdrop-filter: blur(4px);">
+                <i class="fa-solid fa-xmark fs-6"></i>
+            </button>
             
-            <!-- Poster Image -->
-            <div class="position-relative overflow-hidden bg-black text-center">
+            <!-- Poster Image Ramping & Rapi -->
+            <div class="rounded-4 overflow-hidden shadow-2xl" style="background: transparent;">
                 <img src="<?= BASE_URL ?>/assets/images/poster-jasa-inhu-melayu.jpg?v=<?= file_exists(__DIR__ . '/assets/images/poster-jasa-inhu-melayu.jpg') ? filemtime(__DIR__ . '/assets/images/poster-jasa-inhu-melayu.jpg') : time() ?>" 
-                     alt="Poster Layanan JASA INHU - Pusat Layanan Terpadu Indragiri Hulu" 
+                     alt="Promo JASA INHU" 
                      class="w-100 h-auto d-block" 
-                     style="max-height: 78vh; object-fit: contain;">
-            </div>
-
-            <!-- Modal Footer Aksi Cepat -->
-            <div class="p-3 bg-dark d-flex align-items-center justify-content-between gap-2 border-top border-secondary border-opacity-25">
-                <a href="https://instagram.com/jasainhu" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" style="font-size: 0.78rem;">
-                    <i class="fa-brands fa-instagram text-danger fs-6"></i> <span>@jasainhu</span>
-                </a>
-                <div class="d-flex gap-1.5">
-                    <a href="<?= BASE_URL ?>/poster.php?download=1" class="btn btn-sm btn-teal text-white rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1.5 shadow-xs" style="font-size: 0.78rem;" title="Download file gambar poster">
-                        <i class="fa-solid fa-download"></i> <span>Download</span>
-                    </a>
-                    <button type="button" class="btn btn-sm btn-light rounded-pill px-3 py-1.5 fw-bold text-dark" data-bs-dismiss="modal" style="font-size: 0.78rem;">
-                        Tutup
-                    </button>
-                </div>
+                     style="border-radius: 18px; max-height: 75vh; object-fit: contain;">
             </div>
         </div>
     </div>
