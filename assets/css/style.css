@@ -639,12 +639,13 @@ a:hover {
    Tingkat 2: Capsule Search Bar Lebar 100% Super Nyaman
    ========================================================= */
 .gojek-mobile-header {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.16);
+    background: linear-gradient(180deg, #064e43 0%, #0d9488 100%);
+    box-shadow: 0 4px 20px rgba(6, 78, 67, 0.22);
     position: sticky;
     top: 0;
     z-index: 1020;
-    padding: 10px 14px 10px 14px;
+    padding: 12px 16px 24px 16px;
+    margin-bottom: 22px;
 }
 
 /* Baris 1: Lokasi di Kiri, Aksi di Kanan */
@@ -815,21 +816,21 @@ a:hover {
 }
 
 .gojek-user-avatar-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    border: 1.5px solid #ffffff;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2.5px rgba(94, 234, 212, 0.8), 0 2px 8px rgba(0, 0, 0, 0.2);
     overflow: hidden;
     background: rgba(255, 255, 255, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    font-size: 0.8rem;
+    font-size: 0.88rem;
     font-weight: 700;
     text-decoration: none;
     flex-shrink: 0;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 .gojek-user-avatar-btn img {
     width: 100%;
@@ -873,28 +874,31 @@ a:hover {
     transform: scale(0.95);
 }
 
-/* Baris 2: Search Bar 100% Lebar Penuh */
+/* Baris 3: Search Bar Floating ala Mockup Gambar 2 */
 .gojek-header-search-row {
     width: 100%;
+    position: relative;
+    margin-bottom: -46px; /* Floating 50% melewati batas header ke banner bawah! */
+    z-index: 5;
 }
 
 .gojek-search-capsule {
     display: flex;
     align-items: center;
     background: #ffffff;
-    border-radius: 12px;
-    height: 42px;
-    padding: 0 6px 0 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 999px; /* Kapsul membulat penuh ala Gambar 2 */
+    height: 48px;
+    padding: 0 6px 0 16px;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.16), 0 4px 8px -2px rgba(0, 0, 0, 0.08);
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.95);
     width: 100%;
 }
 
 .gojek-search-capsule .search-icon {
-    color: #0d9488;
-    font-size: 0.95rem;
-    margin-right: 8px;
+    color: #64748b;
+    font-size: 1rem;
+    margin-right: 10px;
     flex-shrink: 0;
 }
 
@@ -916,19 +920,24 @@ a:hover {
 }
 
 .gojek-search-btn {
-    background: #0d9488;
+    background: #0f766e;
     color: #ffffff;
     border: none;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 8px;
+    padding: 8px 18px;
+    border-radius: 999px; /* Tombol kapsul lonjong membulat */
     cursor: pointer;
     flex-shrink: 0;
-    transition: background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.35);
+    transition: all 0.15s ease;
 }
 .gojek-search-btn:active {
-    background: #0f766e;
+    background: #0d9488;
+    transform: scale(0.96);
 }
 
 .btn-subbar-tender {
@@ -1991,6 +2000,12 @@ body.modal-open .mobile-bottom-nav {
     background: #f8fafc;
     padding-top: 1rem;
     padding-bottom: 0.5rem;
+}
+
+@media (max-width: 991.98px) {
+    .shopee-hero-section {
+        padding-top: 1.85rem;
+    }
 }
 
 /* Main Carousel Banner Responsive Aspect Ratio (Teks Jelas & Tidak Terpotong) */

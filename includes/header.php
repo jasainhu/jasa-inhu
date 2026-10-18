@@ -932,8 +932,9 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
             <?php if ($header_dist): ?>
                 <input type="hidden" name="kecamatan" value="<?= $header_dist ?>">
             <?php endif; ?>
-            <button type="submit" class="gojek-search-btn" title="Cari Jasa">
-                Cari
+            <button type="submit" class="gojek-search-btn" title="Filter & Cari Jasa">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Filter</span>
             </button>
         </form>
     </div>
