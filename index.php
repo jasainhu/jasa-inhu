@@ -592,23 +592,23 @@ require_once __DIR__ . '/includes/header.php';
                                     </span>
                                 </div>
 
-                                <!-- Trust & Credibility Badges (KTP & Sertifikat/STR) -->
+                                <!-- Trust & Credibility Badges (KTP & Sertifikat/STR - Sesuai UI Mockup) -->
                                 <?php 
                                     $has_verified_ktp = !empty($prov['is_verified']);
                                     $has_certificate = (!empty($prov['certificate_url']) && strlen($prov['certificate_url']) > 5) || (!empty($prov['credential_title']) && strlen($prov['credential_title']) > 2);
                                 ?>
                                 <?php if ($has_verified_ktp || $has_certificate): ?>
-                                    <div class="d-flex align-items-center gap-1 flex-wrap mb-2">
+                                    <div class="provider-trust-row">
                                         <?php if ($has_verified_ktp): ?>
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-0.5 px-1.5 d-inline-flex align-items-center gap-1 fw-bold" style="font-size: 0.62rem;" title="Identitas KTP Resmi Terverifikasi Admin">
+                                            <span class="badge-trust-ktp" title="Identitas KTP Resmi Terverifikasi Admin JASA INHU">
                                                 <i class="fa-solid <?= (($prov['id_card_type'] ?? '') === 'pelajar') ? 'fa-id-badge' : 'fa-id-card' ?>"></i>
                                                 <span><?= (($prov['id_card_type'] ?? '') === 'pelajar') ? 'Kartu Pelajar' : 'KTP Terverifikasi' ?></span>
                                             </span>
                                         <?php endif; ?>
 
                                         <?php if ($has_certificate): ?>
-                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill py-0.5 px-1.5 d-inline-flex align-items-center gap-1 fw-bold" style="font-size: 0.62rem;" title="Memiliki Sertifikat Keahlian / STR Resmi">
-                                                <i class="fa-solid fa-award text-warning"></i>
+                                            <span class="badge-trust-cert" title="Memiliki Sertifikat Keahlian / STR Resmi">
+                                                <i class="fa-solid fa-graduation-cap"></i>
                                                 <span class="text-truncate" style="max-width: 130px;"><?= !empty($prov['credential_title']) ? e($prov['credential_title']) : 'Bersertifikat' ?></span>
                                             </span>
                                         <?php endif; ?>
@@ -649,15 +649,15 @@ require_once __DIR__ . '/includes/header.php';
                                     </div>
                                 </div>
 
-                                <!-- Action Buttons: 2 Tombol Sejajar (Chat & Pesan - Tanpa Teks Terpotong/Numpuk) -->
+                                <!-- Action Buttons: 2 Tombol Sejajar (Chat & Pesan - Sesuai Mockup) -->
                                 <div class="row g-1 g-md-2 mt-auto">
                                     <div class="col-6">
-                                        <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $prov['id'] ?>" class="btn btn-outline-teal w-100 py-1.5 py-md-2 px-1 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1 rounded-3 text-nowrap" style="font-size: 0.74rem;">
-                                            <i class="fa-solid fa-comments"></i> <span>Chat</span>
+                                        <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $prov['id'] ?>" class="btn btn-outline-teal w-100 py-1.5 py-md-2 px-1 fw-bold shadow-xs d-flex align-items-center justify-content-center gap-1 rounded-pill text-nowrap" style="font-size: 0.74rem;">
+                                            <i class="fa-regular fa-comment-dots"></i> <span>Obrolan</span>
                                         </a>
                                     </div>
                                     <div class="col-6">
-                                        <button type="button" class="btn btn-teal text-white w-100 py-1.5 py-md-2 px-1 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-1 rounded-3 text-nowrap" style="font-size: 0.74rem;" onclick="openDirectQuickOrderModal(<?= htmlspecialchars(json_encode([
+                                        <button type="button" class="btn btn-teal text-white w-100 py-1.5 py-md-2 px-1 fw-bold shadow-xs d-flex align-items-center justify-content-center gap-1 rounded-pill text-nowrap" style="font-size: 0.74rem;" onclick="openDirectQuickOrderModal(<?= htmlspecialchars(json_encode([
                                             'id' => (int)$prov['id'],
                                             'name' => $prov['business_name'],
                                             'phone' => $prov['phone'],

@@ -1982,6 +1982,79 @@ body.modal-open .mobile-bottom-nav {
     height: 100%;
 }
 
+/* ============================================================ */
+/* CREDIBILITY & TRUST BADGES (MATCHING UI MOCKUP EXACTLY)     */
+/* ============================================================ */
+.provider-trust-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 0.65rem;
+}
+
+.badge-trust-ktp {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 50px;
+    padding: 4.5px 11px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+    letter-spacing: 0.1px;
+    line-height: 1.2;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+.badge-trust-ktp:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.35);
+}
+.badge-trust-ktp i {
+    font-size: 0.74rem;
+}
+
+.badge-trust-cert {
+    background: #e0e7ff;
+    color: #4338ca !important;
+    border: 1px solid #c7d2fe;
+    border-radius: 50px;
+    padding: 4.5px 11px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.12);
+    letter-spacing: 0.1px;
+    line-height: 1.2;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+.badge-trust-cert:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.22);
+}
+.badge-trust-cert i {
+    font-size: 0.74rem;
+    color: #4f46e5;
+}
+
+@media (max-width: 575.98px) {
+    .badge-trust-ktp, .badge-trust-cert {
+        font-size: 0.60rem;
+        padding: 3.5px 8px;
+        gap: 3.5px;
+    }
+    .badge-trust-ktp i, .badge-trust-cert i {
+        font-size: 0.66rem;
+    }
+}
+
 .empty-state-icon-circle {
     width: 76px;
     height: 76px;
