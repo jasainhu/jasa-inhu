@@ -1640,5 +1640,62 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- Modal Pop-Up Promo Poster JASA INHU -->
+<div class="modal fade" id="promoWelcomeModal" tabindex="-1" aria-labelledby="promoWelcomeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 420px;">
+        <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden position-relative bg-dark text-white">
+            <!-- Close Button (Tombol Silang Melayang) -->
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 bg-dark bg-opacity-75 rounded-circle p-2.5 shadow-sm hover-lift" data-bs-dismiss="modal" aria-label="Tutup" style="backdrop-filter: blur(6px); width: 36px; height: 36px; opacity: 0.95;"></button>
+            
+            <!-- Poster Image -->
+            <div class="position-relative overflow-hidden bg-black text-center">
+                <img src="<?= BASE_URL ?>/assets/images/poster-jasa-inhu-melayu.jpg?v=<?= file_exists(__DIR__ . '/assets/images/poster-jasa-inhu-melayu.jpg') ? filemtime(__DIR__ . '/assets/images/poster-jasa-inhu-melayu.jpg') : time() ?>" 
+                     alt="Poster Layanan JASA INHU - Pusat Layanan Terpadu Indragiri Hulu" 
+                     class="w-100 h-auto d-block" 
+                     style="max-height: 78vh; object-fit: contain;">
+            </div>
+
+            <!-- Modal Footer Aksi Cepat -->
+            <div class="p-3 bg-dark d-flex align-items-center justify-content-between gap-2 border-top border-secondary border-opacity-25">
+                <a href="https://instagram.com/jasainhu" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" style="font-size: 0.78rem;">
+                    <i class="fa-brands fa-instagram text-danger fs-6"></i> <span>@jasainhu</span>
+                </a>
+                <div class="d-flex gap-1.5">
+                    <a href="<?= BASE_URL ?>/poster.php?download=1" class="btn btn-sm btn-teal text-white rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1.5 shadow-xs" style="font-size: 0.78rem;" title="Download file gambar poster">
+                        <i class="fa-solid fa-download"></i> <span>Download</span>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-light rounded-pill px-3 py-1.5 fw-bold text-dark" data-bs-dismiss="modal" style="font-size: 0.78rem;">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-show Promo Pop-up on First Visit of Session
+document.addEventListener('DOMContentLoaded', function() {
+    const promoModalEl = document.getElementById('promoWelcomeModal');
+    if (promoModalEl) {
+        const hasShownPromo = sessionStorage.getItem('jasa_inhu_promo_popup_v1');
+        if (!hasShownPromo) {
+            setTimeout(function() {
+                const promoModal = new bootstrap.Modal(promoModalEl);
+                promoModal.show();
+                sessionStorage.setItem('jasa_inhu_promo_popup_v1', 'true');
+            }, 900); // 900ms delay for smooth loading
+        }
+    }
+});
+function openPromoPosterModal() {
+    const promoModalEl = document.getElementById('promoWelcomeModal');
+    if (promoModalEl) {
+        const promoModal = bootstrap.Modal.getOrCreateInstance(promoModalEl);
+        promoModal.show();
+    }
+}
+</script>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
