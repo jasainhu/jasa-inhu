@@ -16,8 +16,14 @@ $user = current_user();
 $db = get_db();
 $error = '';
 
-// Ambil provider record
-$stmtProv = $db->prepare("SELECT * FROM service_providers WHERE user_id = ? LIMIT 1");
+// Ambil provider record lengkap beserta kategori
+$stmtProv = $db->prepare("
+    SELECT sp.*, sc.name as category_name, sc.slug as category_slug 
+    FROM service_providers sp
+    LEFT JOIN service_categories sc ON sp.primary_category_id = sc.id
+    WHERE sp.user_id = ? 
+    LIMIT 1
+");
 $stmtProv->execute([$user['id']]);
 $provider = $stmtProv->fetch();
 
@@ -26,23 +32,27 @@ if (!$provider) {
     redirect('/provider/profile.php');
 }
 
+$is_culinary = is_culinary_category($provider['category_name'] ?? '');
+$page_title = $is_culinary ? 'Katalog Menu & Harga Makanan' : 'Portofolio Hasil Kerja';
+
 // Handle Add Portfolio
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_portfolio') {
     if (!validate_csrf()) {
         $error = 'Sesi keamanan berakhir. Silakan ulangi.';
     } else {
         $title = trim($_POST['title'] ?? '');
+        $price = trim($_POST['price'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $service_date = !empty($_POST['service_date']) ? $_POST['service_date'] : date('Y-m-d');
 
         if (empty($title)) {
-            $error = 'Judul pekerjaan atau nama proyek wajib diisi.';
+            $error = $is_culinary ? 'Nama menu atau makanan wajib diisi.' : 'Judul pekerjaan atau nama proyek wajib diisi.';
         } elseif (!isset($_FILES['image_after']) || $_FILES['image_after']['error'] === UPLOAD_ERR_NO_FILE) {
-            $error = 'Foto hasil pengerjaan (sesudah) wajib diunggah.';
+            $error = $is_culinary ? 'Foto menu/makanan wajib diunggah.' : 'Foto hasil pengerjaan (sesudah) wajib diunggah.';
         } elseif ($_FILES['image_after']['error'] === UPLOAD_ERR_INI_SIZE || $_FILES['image_after']['error'] === UPLOAD_ERR_FORM_SIZE) {
-            $error = 'Ukuran foto hasil pengerjaan terlalu besar melebihi batas upload server. Silakan coba kembali, foto akan dikompresi otomatis.';
+            $error = 'Ukuran foto terlalu besar melebihi batas upload server. Silakan coba kembali, foto akan dikompresi otomatis.';
         } elseif ($_FILES['image_after']['error'] !== UPLOAD_ERR_OK) {
-            $error = 'Gagal mengunggah foto hasil pengerjaan (Kode error: ' . $_FILES['image_after']['error'] . '). Silakan pilih ulang foto.';
+            $error = 'Gagal mengunggah foto (Kode error: ' . $_FILES['image_after']['error'] . '). Silakan pilih ulang foto.';
         } else {
             $allowed = ['jpg', 'jpeg', 'png', 'webp', 'jfif'];
             $max_size = 10 * 1024 * 1024; // 10MB
@@ -63,12 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 $stmtIns = $db->prepare("
                     INSERT INTO provider_portfolios 
-                    (provider_id, title, description, image_before, image_after, service_date, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, NOW())
+                    (provider_id, title, price, description, image_before, image_after, service_date, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
                 ");
-                $stmtIns->execute([$provider['id'], $title, $description, $pathBefore, $pathAfter, $service_date]);
+                $stmtIns->execute([$provider['id'], $title, $price ?: null, $description, $pathBefore, $pathAfter, $service_date]);
 
-                set_flash('success', 'Foto hasil kerja berhasil ditambahkan ke portofolio Anda!');
+                set_flash('success', $is_culinary ? 'Menu makanan berhasil ditambahkan ke daftar menu Anda!' : 'Foto hasil kerja berhasil ditambahkan ke portofolio Anda!');
                 redirect('/provider/portfolio.php');
             } catch (Exception $e) {
                 $error = 'Gagal menyimpan portofolio: ' . $e->getMessage();
@@ -98,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmtDel = $db->prepare("DELETE FROM provider_portfolios WHERE id = ? AND provider_id = ?");
             $stmtDel->execute([$portfolio_id, $provider['id']]);
 
-            set_flash('success', 'Foto portofolio berhasil dihapus.');
+            set_flash('success', $is_culinary ? 'Menu makanan berhasil dihapus.' : 'Foto portofolio berhasil dihapus.');
             redirect('/provider/portfolio.php');
         } else {
             $error = 'Data portofolio tidak ditemukan atau Anda tidak memiliki akses.';
@@ -123,12 +133,24 @@ require_once __DIR__ . '/../includes/header.php';
                     <i class="fa-solid fa-arrow-left"></i> Dashboard
                 </a>
                 <span class="badge bg-teal-subtle text-teal fw-bold">Mitra JASA INHU</span>
+                <?php if ($is_culinary): ?>
+                    <span class="badge bg-warning-subtle text-warning-emphasis fw-bold">
+                        <i class="fa-solid fa-utensils me-1"></i> Kuliner & Katering
+                    </span>
+                <?php endif; ?>
             </div>
-            <h3 class="fw-bold mb-1 text-dark">Galeri Portofolio Hasil Kerja</h3>
-            <p class="text-muted small mb-0">Tampilkan foto nyata hasil pengerjaan Anda (Sebelum & Sesudah) agar calon pelanggan di Inhu makin percaya.</p>
+            <h3 class="fw-bold mb-1 text-dark">
+                <?= $is_culinary ? 'Katalog Menu & Daftar Harga Makanan' : 'Galeri Portofolio Hasil Kerja' ?>
+            </h3>
+            <p class="text-muted small mb-0">
+                <?= $is_culinary 
+                    ? 'Kelola foto menu makanan, minuman, dan paket katering beserta harganya agar pembeli se-Inhu dapat langsung memilih hidangan favorit mereka.' 
+                    : 'Tampilkan foto nyata hasil pengerjaan Anda (Sebelum & Sesudah) agar calon pelanggan di Inhu makin percaya.' ?>
+            </p>
         </div>
         <button type="button" class="btn btn-primary-custom fw-bold px-3 py-2 shadow-sm rounded-3 text-nowrap" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
-            <i class="fa-solid fa-cloud-arrow-up me-1"></i> Tambah Foto Hasil Kerja
+            <i class="fa-solid <?= $is_culinary ? 'fa-plus' : 'fa-cloud-arrow-up' ?> me-1"></i> 
+            <?= $is_culinary ? 'Tambah Menu Makanan' : 'Tambah Foto Hasil Kerja' ?>
         </button>
     </div>
 
@@ -146,15 +168,15 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php if (has_media($p['image_before'] ?? '')): ?>
                             <div class="row g-0 border-bottom" style="height: 190px;">
                                 <div class="col-6 position-relative border-end overflow-hidden">
-                                    <img src="<?= e(get_portfolio_image_url($p, 'before')) ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover" loading="lazy">
-                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2 fw-bold" style="font-size: 0.65rem;">
-                                        SEBELUM
+                                    <img src="<?= e(get_portfolio_image_url($p, 'before')) ?>" alt="<?= $is_culinary ? 'Foto 1' : 'Sebelum' ?>" class="w-100 h-100 object-fit-cover" loading="lazy">
+                                    <span class="badge <?= $is_culinary ? 'bg-secondary' : 'bg-danger' ?> position-absolute top-0 start-0 m-2 fw-bold" style="font-size: 0.65rem;">
+                                        <?= $is_culinary ? 'FOTO 1' : 'SEBELUM' ?>
                                     </span>
                                 </div>
                                 <div class="col-6 position-relative overflow-hidden">
-                                    <img src="<?= e(get_portfolio_image_url($p, 'after')) ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover" loading="lazy">
+                                    <img src="<?= e(get_portfolio_image_url($p, 'after')) ?>" alt="<?= $is_culinary ? 'Foto 2' : 'Sesudah' ?>" class="w-100 h-100 object-fit-cover" loading="lazy">
                                     <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">
-                                        SESUDAH
+                                        <?= $is_culinary ? 'FOTO 2' : 'SESUDAH' ?>
                                     </span>
                                 </div>
                             </div>
@@ -162,7 +184,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="position-relative overflow-hidden border-bottom" style="height: 190px;">
                                 <img src="<?= e(get_portfolio_image_url($p, 'after')) ?>" alt="<?= e($p['title']) ?>" class="w-100 h-100 object-fit-cover" loading="lazy">
                                 <span class="badge bg-success position-absolute top-0 end-0 m-2 fw-bold" style="font-size: 0.65rem;">
-                                    HASIL PENGERJAAN
+                                    <?= $is_culinary ? 'MENU AKTIF' : 'HASIL PENGERJAAN' ?>
                                 </span>
                             </div>
                         <?php endif; ?>
@@ -173,12 +195,20 @@ require_once __DIR__ . '/../includes/header.php';
                                 <span class="text-muted small" style="font-size: 0.75rem;">
                                     <i class="fa-regular fa-calendar me-1"></i> <?= date('d M Y', strtotime($p['service_date'] ?: $p['created_at'])) ?>
                                 </span>
-                                <?php if (!empty($p['image_before'])): ?>
+                                <?php if (!empty($p['image_before']) && !$is_culinary): ?>
                                     <span class="badge bg-primary-subtle text-primary border" style="font-size: 0.68rem;">Sebelum vs Sesudah</span>
                                 <?php endif; ?>
                             </div>
 
                             <h5 class="fw-bold mb-1 text-dark fs-6"><?= e($p['title']) ?></h5>
+
+                            <?php if (!empty($p['price'])): ?>
+                                <div class="mb-2">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold px-2 py-1" style="font-size: 0.85rem;">
+                                        <i class="fa-solid fa-tag me-1"></i> <?= e(format_portfolio_price($p['price'])) ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
 
                             <?php if (!empty($p['description'])): ?>
                                 <p class="text-muted small mb-3 flex-grow-1" style="font-size: 0.82rem; line-height: 1.4;">
@@ -190,9 +220,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                             <div class="pt-2 border-top d-flex align-items-center justify-content-end">
                                 <form method="POST" action="<?= BASE_URL ?>/provider/portfolio.php"
-                                      data-confirm="Foto portofolio hasil kerja ini akan dihapus permanen dari etalase profil Anda."
-                                      data-confirm-title="Hapus Foto Hasil Kerja?"
-                                      data-confirm-btn="Ya, Hapus Foto"
+                                      data-confirm="<?= $is_culinary ? 'Menu makanan ini akan dihapus permanen dari daftar menu Anda.' : 'Foto portofolio hasil kerja ini akan dihapus permanen dari etalase profil Anda.' ?>"
+                                      data-confirm-title="<?= $is_culinary ? 'Hapus Menu Makanan?' : 'Hapus Foto Hasil Kerja?' ?>"
+                                      data-confirm-btn="Ya, Hapus"
                                       data-confirm-cancel="Batal"
                                       data-confirm-type="danger">
                                     <?= csrf_field() ?>
@@ -212,15 +242,20 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Empty State -->
         <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
             <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle" style="width: 72px; height: 72px; background: #ccfbf1; color: #0d9488;">
-                <i class="fa-solid fa-camera-retro fs-2"></i>
+                <i class="fa-solid <?= $is_culinary ? 'fa-utensils' : 'fa-camera-retro' ?> fs-2"></i>
             </div>
-            <h4 class="fw-bold mb-1 text-dark">Belum Ada Foto Portofolio</h4>
+            <h4 class="fw-bold mb-1 text-dark">
+                <?= $is_culinary ? 'Belum Ada Menu Makanan yang Ditambahkan' : 'Belum Ada Foto Portofolio' ?>
+            </h4>
             <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
-                Calon pelanggan di Indragiri Hulu 3x lebih cepat memesan jasa jika melihat bukti foto nyata pekerjaan Anda sebelumnya.
+                <?= $is_culinary 
+                    ? 'Calon pembeli di Indragiri Hulu 3x lebih cepat memesan jika melihat foto hidangan yang menggugah selera dan daftar harga yang jelas.' 
+                    : 'Calon pelanggan di Indragiri Hulu 3x lebih cepat memesan jasa jika melihat bukti foto nyata pekerjaan Anda sebelumnya.' ?>
             </p>
             <div>
                 <button type="button" class="btn btn-primary-custom fw-bold px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
-                    <i class="fa-solid fa-plus me-1"></i> Unggah Foto Hasil Kerja Pertama
+                    <i class="fa-solid fa-plus me-1"></i> 
+                    <?= $is_culinary ? 'Tambah Menu Makanan Pertama' : 'Unggah Foto Hasil Kerja Pertama' ?>
                 </button>
             </div>
         </div>
@@ -234,9 +269,15 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="modal-header bg-light border-bottom px-4 py-3">
                 <div>
                     <h5 class="modal-title fw-bold mb-0 text-dark" id="addPortfolioModalLabel">
-                        <i class="fa-solid fa-camera text-teal me-1"></i> Tambah Foto Hasil Pengerjaan
+                        <?php if ($is_culinary): ?>
+                            <i class="fa-solid fa-bowl-food text-teal me-1"></i> Tambah Menu Makanan & Minuman
+                        <?php else: ?>
+                            <i class="fa-solid fa-camera text-teal me-1"></i> Tambah Foto Hasil Pengerjaan
+                        <?php endif; ?>
                     </h5>
-                    <span class="text-muted small" style="font-size: 0.78rem;">Unggah bukti nyata hasil perbaikan atau pekerjaan Anda</span>
+                    <span class="text-muted small" style="font-size: 0.78rem;">
+                        <?= $is_culinary ? 'Unggah foto menu beserta harga dan porsi hidangan' : 'Unggah bukti nyata hasil perbaikan atau pekerjaan Anda' ?>
+                    </span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -246,48 +287,79 @@ require_once __DIR__ . '/../includes/header.php';
                     <input type="hidden" name="action" value="add_portfolio">
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Judul Pekerjaan / Layanan <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" placeholder="Contoh: Pemasangan Kanopi Baja Ringan di Belilas" required>
+                        <label class="form-label small fw-bold text-dark">
+                            <?= $is_culinary ? 'Nama Menu / Makanan / Minuman' : 'Judul Pekerjaan / Layanan' ?> <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="title" class="form-control" 
+                               placeholder="<?= $is_culinary ? 'Contoh: Ayam Geprek Sambal Korek + Nasi' : 'Contoh: Pemasangan Kanopi Baja Ringan di Belilas' ?>" required>
+                    </div>
+
+                    <!-- Harga / Tarif -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">
+                            <?= $is_culinary ? 'Harga Menu' : 'Estimasi Tarif / Biaya' ?> 
+                            <span class="text-muted small fw-normal">(Opsional)</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted fw-bold">Rp</span>
+                            <input type="text" name="price" class="form-control" 
+                                   placeholder="<?= $is_culinary ? 'Contoh: 15.000 atau 15.000 / porsi' : 'Contoh: 75.000 atau 60.000 - 80.000' ?>">
+                        </div>
+                        <div class="form-text small" style="font-size: 0.72rem;">
+                            <?= $is_culinary ? 'Bisa diisi harga per porsi, per kotak, atau paket.' : 'Biarkan kosong jika biaya perlu survei lapangan terlebih dahulu.' ?>
+                        </div>
                     </div>
 
                     <div class="row g-3 mb-3">
-                        <!-- Foto Hasil Jadi (Sesudah) -->
+                        <!-- Foto Utama (Sesudah / Foto Menu) -->
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-success">
-                                <i class="fa-solid fa-circle-check me-1"></i> Foto Hasil Selesai (Sesudah) <span class="text-danger">*</span>
+                                <i class="fa-solid fa-circle-check me-1"></i> 
+                                <?= $is_culinary ? 'Foto Menu / Makanan' : 'Foto Hasil Selesai (Sesudah)' ?> <span class="text-danger">*</span>
                             </label>
                             <input type="file" name="image_after" id="portfolioImageAfterInput" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp,image/*" required>
                             <div id="portfolioAfterStatus"></div>
                             <div class="form-text small" style="font-size: 0.72rem;">Wajib diisi. Format JPG, PNG, WebP (Otomatis dikompresi).</div>
                         </div>
 
-                        <!-- Foto Sebelum (Opsional) -->
+                        <!-- Foto Sebelum / Tambahan (Opsional) -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-danger">
-                                <i class="fa-solid fa-clock-rotate-left me-1"></i> Foto Kondisi Awal (Sebelum) <span class="text-muted small fw-normal">(Opsional)</span>
+                            <label class="form-label small fw-bold <?= $is_culinary ? 'text-secondary' : 'text-danger' ?>">
+                                <i class="fa-solid <?= $is_culinary ? 'fa-image' : 'fa-clock-rotate-left' ?> me-1"></i> 
+                                <?= $is_culinary ? 'Foto Tambahan / Variasi' : 'Foto Kondisi Awal (Sebelum)' ?> 
+                                <span class="text-muted small fw-normal">(Opsional)</span>
                             </label>
                             <input type="file" name="image_before" id="portfolioImageBeforeInput" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp,image/*">
                             <div id="portfolioBeforeStatus"></div>
-                            <div class="form-text small" style="font-size: 0.72rem;">Opsional untuk perbandingan Sebelum vs Sesudah.</div>
+                            <div class="form-text small" style="font-size: 0.72rem;">
+                                <?= $is_culinary ? 'Opsional untuk foto varian atau kemasan.' : 'Opsional untuk perbandingan Sebelum vs Sesudah.' ?>
+                            </div>
                         </div>
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-dark">Tanggal Selesai Pengerjaan</label>
+                            <label class="form-label small fw-semibold text-dark">
+                                <?= $is_culinary ? 'Tanggal Ditambahkan / Rilis Menu' : 'Tanggal Selesai Pengerjaan' ?>
+                            </label>
                             <input type="date" name="service_date" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label small fw-semibold text-dark">Keterangan Singkat / Catatan Pekerjaan</label>
-                        <textarea name="description" rows="3" class="form-control" placeholder="Contoh: Pengerjaan selesai dalam 2 hari, bahan tebal galvanis tahan karat dan rapi."></textarea>
+                        <label class="form-label small fw-semibold text-dark">
+                            <?= $is_culinary ? 'Keterangan Menu / Porsi / Komposisi' : 'Keterangan Singkat / Catatan Pekerjaan' ?> 
+                            <span class="text-muted small fw-normal">(Opsional)</span>
+                        </label>
+                        <textarea name="description" rows="3" class="form-control" 
+                                  placeholder="<?= $is_culinary ? 'Contoh: Sudah termasuk lalapan timun, kemangi, dan sambal terasi. Tersedia level pedas 1-5.' : 'Contoh: Pengerjaan selesai dalam 2 hari, bahan tebal galvanis tahan karat dan rapi.' ?>"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer bg-light px-4 py-3">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary-custom fw-bold px-4">
-                        <i class="fa-solid fa-floppy-disk me-1"></i> Simpan ke Portofolio
+                        <i class="fa-solid fa-floppy-disk me-1"></i> 
+                        <?= $is_culinary ? 'Simpan ke Buku Menu' : 'Simpan ke Portofolio' ?>
                     </button>
                 </div>
             </form>

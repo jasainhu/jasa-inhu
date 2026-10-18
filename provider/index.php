@@ -28,6 +28,7 @@ $stmtProv = $db->prepare("
 ");
 $stmtProv->execute([$user['id']]);
 $provider = $stmtProv->fetch();
+$is_culinary = is_culinary_category($provider['category_name'] ?? '');
 $prov_avatar_url = has_media($provider['image_url'] ?? '') ? get_media_url($provider['image_url']) : (has_media($provider['owner_avatar'] ?? '') ? get_media_url($provider['owner_avatar']) : asset_url('images/logo.png'));
 $lead_fee_amount = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
 
@@ -858,13 +859,13 @@ require_once __DIR__ . '/../includes/header.php';
                             <?= (int)($provider['completed_jobs'] ?? 0) ?> Pekerjaan
                         </div>
                     </div>
-                    <div class="provider-stat-badge">
-                        <div class="text-white-50" style="font-size: 0.72rem;">Portofolio Hasil Kerja</div>
+                    <a href="<?= BASE_URL ?>/provider/portfolio.php" class="provider-stat-badge text-decoration-none text-white hover-opacity">
+                        <div class="text-white-50" style="font-size: 0.72rem;"><?= $is_culinary ? 'Buku Menu & Makanan' : 'Portofolio Hasil Kerja' ?></div>
                         <div class="fw-bold fs-6">
-                            <i class="fa-solid fa-images text-info me-1"></i>
-                            <?= $total_portfolios ?> Foto
+                            <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?> me-1"></i>
+                            <?= $total_portfolios ?> <?= $is_culinary ? 'Menu' : 'Foto' ?>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
 

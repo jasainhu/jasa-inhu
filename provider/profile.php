@@ -36,6 +36,8 @@ if (!$provider) {
     redirect('/user/profile.php');
 }
 
+$is_culinary = is_culinary_category($provider['category_name'] ?? '');
+
 // Ensure required upload directories exist
 foreach ([
     __DIR__ . '/../uploads/providers',
@@ -432,17 +434,23 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
         </a>
 
-        <!-- Menu 3: Portofolio Foto Kerja -->
+        <!-- Menu 3: Portofolio Foto Kerja / Katalog Menu -->
         <a href="<?= BASE_URL ?>/provider/portfolio.php" class="shopee-list-item">
             <div class="shopee-list-item-left">
-                <i class="fa-solid fa-images shopee-list-icon text-primary"></i>
+                <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning-emphasis' : 'fa-images text-primary' ?> shopee-list-icon"></i>
                 <div>
-                    <span class="d-block fw-bold text-dark">Galeri Portofolio & Foto Kerja</span>
-                    <span class="text-muted small" style="font-size: 0.72rem;">Upload foto hasil pekerjaan untuk meyakinkan pelanggan</span>
+                    <span class="d-block fw-bold text-dark">
+                        <?= $is_culinary ? 'Katalog Menu & Daftar Harga Makanan' : 'Galeri Portofolio & Foto Kerja' ?>
+                    </span>
+                    <span class="text-muted small" style="font-size: 0.72rem;">
+                        <?= $is_culinary ? 'Kelola foto menu makanan, minuman, dan harga hidangan' : 'Upload foto hasil pekerjaan untuk meyakinkan pelanggan' ?>
+                    </span>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-1.5">
-                <span class="badge bg-teal-subtle text-teal py-0.5 px-2 rounded-pill small" style="font-size: 0.68rem;"><?= $portfolio_count ?> Foto</span>
+                <span class="badge bg-teal-subtle text-teal py-0.5 px-2 rounded-pill small" style="font-size: 0.68rem;">
+                    <?= $portfolio_count ?> <?= $is_culinary ? 'Menu' : 'Foto' ?>
+                </span>
                 <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
             </div>
         </a>

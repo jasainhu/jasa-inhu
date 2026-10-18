@@ -1147,7 +1147,42 @@ function get_domain_subscription_info(): array {
     ];
 }
 
+/**
+ * Memeriksa apakah suatu nama kategori termasuk kuliner / makanan / minuman / katering
+ */
+function is_culinary_category(?string $category_name): bool {
+    if (empty($category_name)) return false;
+    $lower = strtolower($category_name);
+    return (
+        strpos($lower, 'kuliner') !== false ||
+        strpos($lower, 'makan') !== false ||
+        strpos($lower, 'katering') !== false ||
+        strpos($lower, 'kue') !== false ||
+        strpos($lower, 'minuman') !== false ||
+        strpos($lower, 'snack') !== false ||
+        strpos($lower, 'warung') !== false ||
+        strpos($lower, 'resto') !== false ||
+        strpos($lower, 'cafe') !== false
+    );
+}
 
-
-
+/**
+ * Format tampilan harga portofolio / katalog menu
+ */
+function format_portfolio_price(?string $raw_price): string {
+    if ($raw_price === null || trim($raw_price) === '') return '';
+    $raw = trim($raw_price);
+    
+    // Jika hanya angka murni (misal "15000")
+    if (ctype_digit($raw)) {
+        return 'Rp ' . number_format((float)$raw, 0, ',', '.');
+    }
+    
+    // Jika sudah ada format Rp, biarkan
+    if (stripos($raw, 'rp') !== false) {
+        return $raw;
+    }
+    
+    return 'Rp ' . $raw;
+}
 

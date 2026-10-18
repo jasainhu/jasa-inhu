@@ -41,10 +41,11 @@ if (!$provider) {
     redirect('/');
 }
 
+$is_culinary = is_culinary_category($provider['category_name'] ?? '');
 $has_provider_photo = has_media($provider['image_url'] ?? '') || has_media($provider['owner_avatar'] ?? '');
 $provider_photo = $has_provider_photo ? get_provider_cover_url($provider) : '';
 
-$page_title = e($provider['business_name']) . ' - Profil & Testimoni Mitra JASA INHU';
+$page_title = e($provider['business_name']) . ($is_culinary ? ' - Daftar Menu & Profil Kuliner Inhu' : ' - Profil & Testimoni Mitra JASA INHU');
 $og_title = e($provider['business_name']) . ' (' . e($provider['category_name']) . ') - JASA INHU';
 $og_description = 'Layanan ' . e($provider['category_name']) . ' terpercaya di Kec. ' . e($provider['district_name'] ?: 'Kab. Indragiri Hulu') . '. Hubungi langsung via WhatsApp atau pesan instan di platform JASA INHU.';
 // Pastikan selalu menyediakan URL gambar toko mitra yang didukung WhatsApp crawler
@@ -383,16 +384,20 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endif; ?>
             </div>
 
-            <!-- 3. Portofolio Hasil Kerja (Jika Ada) -->
+            <!-- 3. Portofolio Hasil Kerja / Katalog Menu (Jika Ada) -->
             <?php if (!empty($portfolios)): ?>
                 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" id="section-portofolio">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
                             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                                <i class="fa-solid fa-images text-teal"></i>
-                                <span>Bukti Hasil Kerja & Layanan (<?= count($portfolios) ?>)</span>
+                                <i class="fa-solid <?= $is_culinary ? 'fa-utensils' : 'fa-images' ?> text-teal"></i>
+                                <span><?= $is_culinary ? 'Daftar Menu & Foto Hidangan' : 'Bukti Hasil Kerja & Layanan' ?> (<?= count($portfolios) ?>)</span>
                             </h5>
-                            <span class="text-muted small">Klik pada gambar untuk melihat ukuran penuh / brosur lengkap</span>
+                            <span class="text-muted small">
+                                <?= $is_culinary 
+                                    ? 'Pilihan hidangan lezat dan menu favorit yang tersedia di ' . e($provider['business_name']) 
+                                    : 'Klik pada gambar untuk melihat ukuran penuh / brosur lengkap' ?>
+                            </span>
                         </div>
                     </div>
 
@@ -403,29 +408,34 @@ require_once __DIR__ . '/includes/header.php';
                                 $hasAfter = has_media($port['image_after'] ?? '');
                                 $portTitleSafe = e($port['title']);
                                 $portDescSafe = e($port['description'] ?? '');
+                                $portPrice = format_portfolio_price($port['price'] ?? null);
                                 $portDateFormatted = format_date($port['service_date'] ?: $port['created_at']);
                                 $imgAfterUrl = $hasAfter ? e(get_portfolio_image_url($port, 'after')) : '';
                                 $imgBeforeUrl = $hasBefore ? e(get_portfolio_image_url($port, 'before')) : '';
                             ?>
                             <div class="col-md-6">
-                                <div class="card border rounded-3 overflow-hidden shadow-xs h-100 hover-lift-subtle">
+                                <div class="card border rounded-3 overflow-hidden shadow-xs h-100 hover-lift-subtle bg-white">
                                     <div class="position-relative overflow-hidden" style="min-height: 190px; background: #0f172a;">
                                         <?php if ($hasBefore && $hasAfter): ?>
                                             <div class="row g-0 h-100">
                                                 <div class="col-6 position-relative border-end cursor-pointer portfolio-zoom-trigger" style="height: 190px;" 
-                                                     onclick="openPortfolioModal('<?= $imgBeforeUrl ?>', '<?= $portTitleSafe ?> (Sebelum)', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
-                                                     title="Klik untuk lihat foto sebelum">
-                                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">SEBELUM</span>
-                                                    <img src="<?= $imgBeforeUrl ?>" alt="Sebelum" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
+                                                     onclick="openPortfolioModal('<?= $imgBeforeUrl ?>', '<?= $portTitleSafe ?> (<?= $is_culinary ? 'Foto 1' : 'Sebelum' ?>)', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
+                                                     title="Klik untuk lihat foto">
+                                                    <span class="badge <?= $is_culinary ? 'bg-secondary' : 'bg-danger' ?> position-absolute top-0 start-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">
+                                                        <?= $is_culinary ? 'FOTO 1' : 'SEBELUM' ?>
+                                                    </span>
+                                                    <img src="<?= $imgBeforeUrl ?>" alt="Foto 1" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
                                                     <div class="portfolio-hover-overlay">
                                                         <i class="fa-solid fa-magnifying-glass-plus text-white fs-4"></i>
                                                     </div>
                                                 </div>
                                                 <div class="col-6 position-relative cursor-pointer portfolio-zoom-trigger" style="height: 190px;" 
-                                                     onclick="openPortfolioModal('<?= $imgAfterUrl ?>', '<?= $portTitleSafe ?> (Sesudah)', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
-                                                     title="Klik untuk lihat foto sesudah">
-                                                    <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">SESUDAH</span>
-                                                    <img src="<?= $imgAfterUrl ?>" alt="Sesudah" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
+                                                     onclick="openPortfolioModal('<?= $imgAfterUrl ?>', '<?= $portTitleSafe ?> (<?= $is_culinary ? 'Foto 2' : 'Sesudah' ?>)', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
+                                                     title="Klik untuk lihat foto">
+                                                    <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2; font-size: 0.65rem;">
+                                                        <?= $is_culinary ? 'FOTO 2' : 'SESUDAH' ?>
+                                                    </span>
+                                                    <img src="<?= $imgAfterUrl ?>" alt="Foto 2" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
                                                     <div class="portfolio-hover-overlay">
                                                         <i class="fa-solid fa-magnifying-glass-plus text-white fs-4"></i>
                                                     </div>
@@ -436,7 +446,10 @@ require_once __DIR__ . '/includes/header.php';
                                                  onclick="openPortfolioModal('<?= $imgAfterUrl ?>', '<?= $portTitleSafe ?>', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
                                                  title="Klik untuk memperbesar gambar">
                                                 <img src="<?= $imgAfterUrl ?>" alt="<?= $portTitleSafe ?>" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
-                                                <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2;">Hasil Selesai</span>
+                                                <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2;">
+                                                    <i class="fa-solid <?= $is_culinary ? 'fa-utensils' : 'fa-circle-check' ?> me-1"></i>
+                                                    <?= $is_culinary ? 'Menu Pilihan' : 'Hasil Selesai' ?>
+                                                </span>
                                                 <div class="portfolio-hover-overlay">
                                                     <div class="badge bg-dark bg-opacity-80 text-white px-3 py-1.5 rounded-pill shadow-sm d-flex align-items-center gap-1.5">
                                                         <i class="fa-solid fa-magnifying-glass-plus"></i> Klik untuk perbesar
@@ -448,7 +461,9 @@ require_once __DIR__ . '/includes/header.php';
                                                  onclick="openPortfolioModal('<?= $imgBeforeUrl ?>', '<?= $portTitleSafe ?>', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')" 
                                                  title="Klik untuk memperbesar gambar">
                                                 <img src="<?= $imgBeforeUrl ?>" alt="<?= $portTitleSafe ?>" class="w-100 h-100 object-fit-cover portfolio-thumb-img">
-                                                <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2;">Sebelum Pengerjaan</span>
+                                                <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-xs" style="z-index: 2;">
+                                                    <?= $is_culinary ? 'Foto Menu' : 'Sebelum Pengerjaan' ?>
+                                                </span>
                                                 <div class="portfolio-hover-overlay">
                                                     <div class="badge bg-dark bg-opacity-80 text-white px-3 py-1.5 rounded-pill shadow-sm d-flex align-items-center gap-1.5">
                                                         <i class="fa-solid fa-magnifying-glass-plus"></i> Klik untuk perbesar
@@ -461,17 +476,40 @@ require_once __DIR__ . '/includes/header.php';
                                             </div>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="card-body p-3">
+                                    <div class="card-body p-3 d-flex flex-column">
                                         <h6 class="fw-bold text-dark mb-1 fs-6"><?= $portTitleSafe ?></h6>
-                                        <?php if (!empty($port['description'])): ?>
-                                            <p class="text-muted small mb-2" style="font-size: 0.8rem; line-height: 1.45;"><?= $portDescSafe ?></p>
+
+                                        <?php if (!empty($portPrice)): ?>
+                                            <div class="mb-2">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold fs-6 px-2.5 py-1">
+                                                    <i class="fa-solid fa-tag me-1"></i> <?= e($portPrice) ?>
+                                                </span>
+                                            </div>
                                         <?php endif; ?>
-                                        <div class="d-flex align-items-center justify-content-between text-muted small pt-1 border-top mt-2" style="font-size: 0.72rem;">
-                                            <span><i class="fa-regular fa-calendar me-1"></i> Selesai: <?= $portDateFormatted ?></span>
+
+                                        <?php if (!empty($port['description'])): ?>
+                                            <p class="text-muted small mb-2 flex-grow-1" style="font-size: 0.82rem; line-height: 1.45;"><?= $portDescSafe ?></p>
+                                        <?php else: ?>
+                                            <div class="flex-grow-1"></div>
+                                        <?php endif; ?>
+
+                                        <div class="d-flex align-items-center justify-content-between text-muted small pt-2 border-top mt-2" style="font-size: 0.74rem;">
+                                            <?php if ($is_culinary): ?>
+                                                <?php 
+                                                    $orderMsg = urlencode("Halo " . $provider['business_name'] . ", saya melihat menu \"" . $port['title'] . "\"" . (!empty($portPrice) ? " (" . $portPrice . ")" : "") . " di JASA INHU dan ingin memesan. Apakah menu ini tersedia hari ini?");
+                                                    $orderWaUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $provider['phone'] ?? '') . "?text=" . $orderMsg;
+                                                ?>
+                                                <a href="<?= $orderWaUrl ?>" target="_blank" rel="noopener" class="btn btn-sm btn-success py-1 px-2.5 rounded-pill fw-bold text-decoration-none d-inline-flex align-items-center gap-1 shadow-xs" style="font-size: 0.74rem;">
+                                                    <i class="fa-brands fa-whatsapp"></i> Pesan Menu
+                                                </a>
+                                            <?php else: ?>
+                                                <span><i class="fa-regular fa-calendar me-1"></i> Selesai: <?= $portDateFormatted ?></span>
+                                            <?php endif; ?>
+
                                             <?php if ($hasAfter || $hasBefore): ?>
                                                 <button type="button" class="btn btn-link btn-sm p-0 text-teal text-decoration-none fw-semibold d-inline-flex align-items-center gap-1" 
                                                         onclick="openPortfolioModal('<?= $imgAfterUrl ?: $imgBeforeUrl ?>', '<?= $portTitleSafe ?>', '<?= $portDescSafe ?>', '<?= $portDateFormatted ?>')">
-                                                    <i class="fa-solid fa-expand"></i> Lihat Detail
+                                                    <i class="fa-solid fa-expand"></i> Foto Penuh
                                                 </button>
                                             <?php endif; ?>
                                         </div>
@@ -485,16 +523,22 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="card border-0 shadow-sm rounded-4 p-3.5 p-md-4 mb-4" id="section-portofolio">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                            <i class="fa-solid fa-images text-teal"></i>
-                            <span>Bukti Hasil Kerja</span>
+                            <i class="fa-solid <?= $is_culinary ? 'fa-utensils' : 'fa-images' ?> text-teal"></i>
+                            <span><?= $is_culinary ? 'Daftar Menu & Foto Makanan' : 'Bukti Hasil Kerja' ?></span>
                         </h5>
                     </div>
                     <div class="text-center py-4 px-3 bg-light rounded-3 border">
                         <div class="rounded-circle bg-white text-teal d-inline-flex align-items-center justify-content-center p-3 mb-2 shadow-xs" style="width: 52px; height: 52px;">
-                            <i class="fa-solid fa-camera-retro fs-4 opacity-75"></i>
+                            <i class="fa-solid <?= $is_culinary ? 'fa-utensils' : 'fa-camera-retro' ?> fs-4 opacity-75"></i>
                         </div>
-                        <h6 class="fw-bold text-dark mb-1 small">Dokumentasi Portofolio Segera Hadir</h6>
-                        <p class="text-muted small mb-0" style="font-size: 0.78rem;">Mitra sedang menyiapkan dokumentasi pengerjaan proyek terbaru. Anda dapat langsung berkonsultasi mengenai kebutuhan jasa Anda melalui tombol Chat & Pesan.</p>
+                        <h6 class="fw-bold text-dark mb-1 small">
+                            <?= $is_culinary ? 'Buku Menu & Foto Makanan Segera Hadir' : 'Dokumentasi Portofolio Segera Hadir' ?>
+                        </h6>
+                        <p class="text-muted small mb-0" style="font-size: 0.78rem;">
+                            <?= $is_culinary 
+                                ? 'Mitra ' . e($provider['business_name']) . ' sedang menyiapkan dokumentasi menu makanan & minuman terbaiknya. Anda dapat langsung menanyakan menu favorit hari ini melalui tombol Chat & Pesan WhatsApp.' 
+                                : 'Mitra sedang menyiapkan dokumentasi pengerjaan proyek terbaru. Anda dapat langsung berkonsultasi mengenai kebutuhan jasa Anda melalui tombol Chat & Pesan.' ?>
+                        </p>
                     </div>
                 </div>
             <?php endif; ?>
