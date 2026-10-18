@@ -69,6 +69,9 @@ require_once __DIR__ . '/includes/header.php';
         <p class="text-muted small mb-0">Pemantauan aktivitas marketplace jasa Kabupaten Indragiri Hulu</p>
     </div>
     <div class="btn-toolbar mb-2 mb-md-0 d-flex align-items-center gap-2">
+        <a href="<?= BASE_URL ?>/admin/export_providers.php" target="_blank" class="btn btn-danger btn-sm fw-semibold shadow-xs">
+            <i class="fa-solid fa-file-pdf me-1"></i> Cetak PDF Mitra
+        </a>
         <a href="<?= BASE_URL ?>/admin/banners.php" class="btn btn-primary-custom btn-sm fw-semibold">
             <i class="fa-solid fa-rectangle-ad me-1"></i> Kelola Banner & Iklan
         </a>
@@ -153,13 +156,45 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
+<!-- Banner Arsip & Rekapitulasi Data Mitra Resmi -->
+<div class="card border-0 rounded-3 shadow-xs mb-4 text-white overflow-hidden position-relative" style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #0369a1 100%);">
+    <div class="card-body p-3 p-md-4 position-relative z-1 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center text-white flex-shrink-0" style="width: 50px; height: 50px; font-size: 1.4rem;">
+                <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold mb-1 text-white">Laporan & Rekapitulasi Data Mitra Resmi</h5>
+                <p class="mb-0 opacity-90 small" style="font-size: 0.82rem;">
+                    Unduh atau cetak Buku Daftar <?= $total_providers ?> Mitra berizin/terdaftar lengkap dengan kop surat resmi untuk arsip, audiensi Pemkab/Dinas Koperasi & UMKM, atau presentasi kemitraan.
+                </p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <a href="<?= BASE_URL ?>/admin/export_providers.php" target="_blank" class="btn btn-light text-teal fw-bold shadow-sm d-flex align-items-center gap-1.5 px-3 py-2 rounded-3">
+                <i class="fa-solid fa-file-pdf text-danger"></i>
+                <span>Cetak / Unduh PDF</span>
+            </a>
+            <a href="<?= BASE_URL ?>/admin/export_providers.php?format=excel" class="btn btn-outline-light fw-semibold d-flex align-items-center gap-1.5 px-3 py-2 rounded-3">
+                <i class="fa-solid fa-file-excel text-warning"></i>
+                <span>Excel (CSV)</span>
+            </a>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <!-- Tabel Mitra Penyedia Jasa -->
     <div class="col-lg-7">
         <div class="card border shadow-sm">
             <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                 <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-users-gear me-2 text-primary"></i> Mitra Penyedia Jasa Terdaftar</h6>
-                <a href="<?= BASE_URL ?>/admin/users.php" class="small text-decoration-none">Semua Pengguna &rarr;</a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="<?= BASE_URL ?>/admin/export_providers.php" target="_blank" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none py-1.5 px-2">
+                        <i class="fa-solid fa-file-pdf me-0.5"></i> PDF
+                    </a>
+                    <a href="<?= BASE_URL ?>/admin/users.php?role=penyedia" class="small text-decoration-none">Semua Mitra &rarr;</a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 small">

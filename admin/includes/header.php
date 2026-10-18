@@ -109,6 +109,11 @@ $page_title = $page_title ?? 'Admin Dashboard';
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="sidebar-link <?= ($admin_active ?? '') === 'export' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/export_providers.php" target="_blank">
+                            <i class="fa-solid fa-file-pdf text-danger"></i> Cetak PDF Data Mitra
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="sidebar-link <?= ($admin_active ?? '') === 'wallet' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/wallet.php">
                             <i class="fa-solid fa-wallet text-warning"></i> Saldo & Biaya Kontak
                         </a>
