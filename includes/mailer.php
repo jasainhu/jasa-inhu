@@ -486,3 +486,90 @@ function render_verification_email_html(string $name, string $otp_code, string $
 </html>
 HTML;
 }
+
+/**
+ * Render template email Reset Kata Sandi JASA INHU
+ */
+function render_password_reset_email_html(string $name, string $reset_link, int $expire_minutes = 30): string {
+    $safe_name = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+    
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atur Ulang Kata Sandi JASA INHU</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 30px 15px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); padding: 32px 30px; text-align: center;">
+                            <div style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-bottom: 4px;">
+                                JASA INHU
+                            </div>
+                            <div style="font-size: 13px; color: #ccfbf1; font-weight: 500;">
+                                Pusat Layanan & Jasa Terpadu Kab. Indragiri Hulu
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Body Content -->
+                    <tr>
+                        <td style="padding: 36px 30px;">
+                            <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 12px;">
+                                Permintaan Atur Ulang Kata Sandi
+                            </h2>
+                            <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 16px 0;">
+                                Halo <strong>{$safe_name}</strong>, kami menerima permintaan untuk mengatur ulang kata sandi akun <strong>JASA INHU</strong> Anda.
+                            </p>
+                            <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 25px 0;">
+                                Klik tombol di bawah ini untuk membuat kata sandi baru Anda:
+                            </p>
+
+                            <!-- Tombol Reset Password -->
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{$reset_link}" style="display: inline-block; background-color: #0d9488; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 34px; border-radius: 8px; box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);">
+                                    Atur Ulang Kata Sandi Saya &raquo;
+                                </a>
+                            </div>
+
+                            <p style="font-size: 13px; line-height: 1.6; color: #64748b; margin: 20px 0 10px 0;">
+                                Atau salin tautan berikut ke peramban (browser) Anda jika tombol di atas tidak dapat diklik:
+                            </p>
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; font-size: 12px; color: #0d9488; word-break: break-all; font-family: monospace;">
+                                {$reset_link}
+                            </div>
+
+                            <!-- Catatan Keamanan -->
+                            <div style="background-color: #fffbeb; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #92400e; line-height: 1.5; border-left: 3px solid #f59e0b; margin-top: 25px;">
+                                <strong>Peringatan Keamanan:</strong> Tautan ini hanya berlaku selama <strong>{$expire_minutes} menit</strong>. Jika Anda tidak pernah meminta reset kata sandi, abaikan email ini dan kata sandi Anda akan tetap aman.
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 30px; text-align: center;">
+                            <p style="font-size: 12px; color: #94a3b8; margin: 0 0 6px 0;">
+                                Email otomatis dari Sistem Resmi JASA INHU &bull; Kab. Indragiri Hulu, Riau
+                            </p>
+                            <p style="font-size: 11px; color: #cbd5e1; margin: 0;">
+                                Harap jangan membalas langsung email otomatis ini.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
+}
