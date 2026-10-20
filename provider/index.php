@@ -669,9 +669,9 @@ require_once __DIR__ . '/../includes/header.php';
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-radius: 14px;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     color: #ffffff;
-    padding: 10px 4px;
+    padding: 10px 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -680,7 +680,7 @@ require_once __DIR__ . '/../includes/header.php';
     text-decoration: none;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
     transition: transform 0.2s ease, background 0.2s ease;
-    min-height: 68px;
+    min-height: 64px;
     width: 100%;
 }
 .provider-quick-tile i {
@@ -904,73 +904,75 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Baris 2: Dompet Saldo & Ringkasan Performa Cepat (Permukaan Kaca Halus Tanpa Border) -->
-        <div class="row g-2 align-items-stretch mb-2.5">
-            <!-- Kolom Kiri: Saldo Dompet Mitra -->
-            <div class="col-12 col-md-6">
-                <div class="provider-glass-card p-3 h-100 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-2.5">
-                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 38px; height: 38px;">
-                            <i class="fa-solid fa-wallet fs-6"></i>
+        <!-- Baris 2: Dompet Saldo & Ringkasan Performa (1 KOTAK KACA TUNGGAL ELEGAN) -->
+        <div class="provider-glass-card p-3 p-md-3.5 mb-3">
+            <div class="row align-items-center g-3">
+                <!-- Sisi Kiri: Dompet Saldo -->
+                <div class="col-12 col-md-6 border-bottom border-md-bottom-0 border-md-end border-white border-opacity-10 pb-2.5 pb-md-0 pe-md-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 40px; height: 40px;">
+                                <i class="fa-solid fa-wallet fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="text-white-50" style="font-size: 0.72rem; line-height: 1.1;">Saldo Dompet Mitra</div>
+                                <div class="fw-bold fs-4 text-white mb-0" style="line-height: 1.2;">
+                                    Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
+                                </div>
+                                <div class="text-white-50" style="font-size: 0.68rem;">Biaya flat Rp <?= number_format($lead_fee_amount, 0, ',', '.') ?> saat setujui pesanan</div>
+                            </div>
                         </div>
                         <div>
-                            <div class="text-white-50" style="font-size: 0.7rem; line-height: 1.1;">Saldo Dompet Mitra</div>
-                            <div class="fw-bold fs-4 text-white mb-0" style="line-height: 1.2;">
-                                Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
-                            </div>
-                            <div class="text-white-50" style="font-size: 0.65rem;">Biaya flat Rp <?= number_format($lead_fee_amount, 0, ',', '.') ?> saat setujui pesanan</div>
+                            <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill text-dark shadow-xs d-inline-flex align-items-center gap-1" style="font-size: 0.78rem; border: none; background-color: #fbbf24;">
+                                <i class="fa-solid fa-plus"></i> Top Up
+                            </a>
                         </div>
                     </div>
-                    <div>
-                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill text-dark shadow-xs d-inline-flex align-items-center gap-1" style="font-size: 0.76rem; border: none; background-color: #fbbf24;">
-                            <i class="fa-solid fa-plus"></i> Top Up
+                </div>
+
+                <!-- Sisi Kanan: 3 Ringkasan Performa -->
+                <div class="col-12 col-md-6 ps-md-3">
+                    <div class="d-flex align-items-center justify-content-around text-center">
+                        <!-- Rating Pelanggan -->
+                        <div class="px-2">
+                            <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
+                                ⭐ <?= number_format((float)($provider['rating_avg'] ?? 0), 1) ?>
+                            </div>
+                            <div class="text-white-50" style="font-size: 0.7rem;"><?= (int)($provider['reviews_count'] ?? 0) ?> ulasan</div>
+                        </div>
+                        <div class="vr bg-white opacity-20" style="height: 28px;"></div>
+                        <!-- Pekerjaan Selesai -->
+                        <div class="px-2">
+                            <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
+                                <i class="fa-solid fa-circle-check text-success me-0.5"></i> <?= (int)($provider['completed_jobs'] ?? 0) ?>
+                            </div>
+                            <div class="text-white-50" style="font-size: 0.7rem;">Selesai</div>
+                        </div>
+                        <div class="vr bg-white opacity-20" style="height: 28px;"></div>
+                        <!-- Portofolio / Menu -->
+                        <a href="<?= BASE_URL ?>/provider/portfolio.php" class="px-2 text-decoration-none text-white hover-opacity">
+                            <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
+                                <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?> me-0.5"></i> <?= $total_portfolios ?>
+                            </div>
+                            <div class="text-white-50" style="font-size: 0.7rem;"><?= $is_culinary ? 'Katalog Menu' : 'Portofolio' ?> ↗</div>
                         </a>
                     </div>
                 </div>
             </div>
-
-            <!-- Kolom Kanan: 3 Ringkasan Performa (Rating, Selesai, Menu/Foto) -->
-            <div class="col-12 col-md-6">
-                <div class="provider-glass-card p-3 h-100 d-flex align-items-center justify-content-around text-center">
-                    <!-- Rating Pelanggan -->
-                    <div class="px-2">
-                        <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
-                            ⭐ <?= number_format((float)($provider['rating_avg'] ?? 0), 1) ?>
-                        </div>
-                        <div class="text-white-50" style="font-size: 0.68rem;"><?= (int)($provider['reviews_count'] ?? 0) ?> ulasan</div>
-                    </div>
-                    <div class="vr bg-white opacity-25" style="height: 28px;"></div>
-                    <!-- Pekerjaan Selesai -->
-                    <div class="px-2">
-                        <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
-                            <i class="fa-solid fa-circle-check text-success me-0.5"></i> <?= (int)($provider['completed_jobs'] ?? 0) ?>
-                        </div>
-                        <div class="text-white-50" style="font-size: 0.68rem;">Pekerjaan Selesai</div>
-                    </div>
-                    <div class="vr bg-white opacity-25" style="height: 28px;"></div>
-                    <!-- Portofolio / Menu -->
-                    <a href="<?= BASE_URL ?>/provider/portfolio.php" class="px-2 text-decoration-none text-white hover-opacity">
-                        <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
-                            <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?> me-0.5"></i> <?= $total_portfolios ?>
-                        </div>
-                        <div class="text-white-50" style="font-size: 0.68rem;"><?= $is_culinary ? 'Katalog Menu' : 'Portofolio' ?> ↗</div>
-                    </a>
-                </div>
-            </div>
         </div>
 
-        <!-- Baris 3: 4 Tombol Aksi Cepat (Sleek Glass Tiles - Tanpa Garis Kawat) -->
-        <div class="row g-2">
+        <!-- Baris 3: 3 Tombol Utama Harian (Proporsional & Nyaman Disentuh di HP) -->
+        <div class="row g-2 mb-1">
             <!-- 1. Menu / Portofolio -->
-            <div class="col-3">
+            <div class="col-4">
                 <a href="<?= BASE_URL ?>/provider/portfolio.php" class="provider-quick-tile">
                     <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?>"></i>
-                    <span><?= $is_culinary ? 'Menu' : 'Foto' ?></span>
+                    <span><?= $is_culinary ? 'Buku Menu' : 'Portofolio' ?></span>
                 </a>
             </div>
 
             <!-- 2. Kartu Usaha WA -->
-            <div class="col-3">
+            <div class="col-4">
                 <button type="button" class="provider-quick-tile" onclick="triggerCardModal()" title="Bagikan Kartu Usaha ke WhatsApp">
                     <i class="fa-solid fa-id-card text-warning"></i>
                     <span>Kartu WA</span>
@@ -978,19 +980,11 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- 3. Toggle & Tes Nada Dering HP -->
-            <div class="col-3">
+            <div class="col-4">
                 <button type="button" class="provider-quick-tile sound-toggle-btn" onclick="ProviderNotification.toggleSound()" title="Klik untuk aktifkan/bisu & tes bunyi dering">
                     <i class="fa-solid fa-volume-high text-success"></i>
                     <span>Suara: On</span>
                 </button>
-            </div>
-
-            <!-- 4. Pusat Keamanan & SOP Anti Penipuan -->
-            <div class="col-3">
-                <a href="<?= BASE_URL ?>/provider/safety.php" class="provider-quick-tile">
-                    <i class="fa-solid fa-shield-halved text-warning"></i>
-                    <span>Pusat Aman</span>
-                </a>
             </div>
         </div>
     </div>
