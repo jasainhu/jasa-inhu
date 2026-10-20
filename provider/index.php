@@ -635,43 +635,76 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 <style>
-/* Modern Provider Dashboard Styling */
+/* Modern Compact Provider Dashboard Styling */
 .provider-hero-card {
     background: linear-gradient(135deg, #092c28 0%, #0f766e 60%, #115e59 100%);
-    border-radius: 20px;
+    border-radius: 18px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(15, 118, 110, 0.2);
+    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.16);
 }
 .provider-hero-card::after {
     content: '';
     position: absolute;
     top: -40%;
     right: -10%;
-    width: 280px;
-    height: 280px;
+    width: 240px;
+    height: 240px;
     background: radial-gradient(circle, rgba(45, 212, 191, 0.15) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
-.provider-stat-badge {
+.provider-quick-btn {
     background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
     color: #fff;
-    transition: transform 0.2s ease, background 0.2s ease;
+    border-radius: 10px;
+    padding: 7px 10px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
-.provider-stat-badge:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
+.provider-quick-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    transform: translateY(-1px);
+}
+.provider-quick-btn.active-action {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fef08a;
+}
+.provider-quick-btn.active-action:hover {
+    background: rgba(245, 158, 11, 0.3);
+    color: #fff;
 }
 .modern-nav-pills {
     background: #f1f5f9;
     padding: 6px;
     border-radius: 16px;
     gap: 6px;
+}
+@media (max-width: 576px) {
+    .modern-nav-pills {
+        padding: 4px;
+        gap: 4px;
+        border-radius: 12px;
+    }
+    .modern-nav-pills .nav-link {
+        padding: 8px 4px !important;
+        font-size: 0.74rem !important;
+        gap: 4px !important;
+        border-radius: 10px !important;
+    }
+    .modern-nav-pills .nav-link i {
+        font-size: 0.85rem;
+    }
 }
 .modern-nav-pills .nav-link {
     border-radius: 12px;
@@ -803,145 +836,178 @@ require_once __DIR__ . '/../includes/header.php';
 }
 </style>
 
-<div class="container py-4">
+<div class="container py-3">
 
     <!-- Flash Error / Alert -->
     <?php if (!empty($error)): ?>
-        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-3">
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-3 d-flex align-items-center gap-3">
             <i class="fa-solid fa-circle-exclamation fs-4"></i>
             <div><?= e($error) ?></div>
         </div>
     <?php endif; ?>
 
-    <!-- 1. Modern Hero Header Card -->
-    <div class="provider-hero-card p-4 p-md-5 mb-4 text-white">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-7">
-                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                    <span class="badge bg-emerald-500 text-white fw-bold px-3 py-1.5 rounded-pill" style="background-color: #10b981;">
-                        <i class="fa-solid fa-id-badge me-1"></i> Mitra Resmi Inhu
-                    </span>
-                    <?php if (!empty($provider['is_verified'])): ?>
-                        <span class="badge bg-white text-teal fw-bold px-3 py-1.5 rounded-pill shadow-xs" style="color: #0d9488;">
-                            <i class="fa-solid fa-circle-check text-success"></i> Terverifikasi
-                        </span>
-                    <?php else: ?>
-                        <span class="badge bg-warning text-dark fw-bold px-3 py-1.5 rounded-pill">
-                            <i class="fa-solid fa-clock-rotate-left"></i> Menunggu Verifikasi
-                        </span>
-                    <?php endif; ?>
+    <!-- 1. Compact Modern Partner Header (Seller Hub Style - Hemat Tempat) -->
+    <div class="provider-hero-card p-3 p-md-4 mb-3 text-white">
+        <!-- Baris 1: Identitas Profil Ringkas & Link Toko Publik -->
+        <div class="d-flex align-items-center justify-content-between gap-2 pb-2.5 mb-2.5 border-bottom border-white border-opacity-15 flex-wrap flex-sm-nowrap">
+            <div class="d-flex align-items-center gap-2.5 min-w-0">
+                <img src="<?= e($prov_avatar_url) ?>" alt="<?= e($provider['business_name'] ?? $user['name']) ?>" class="rounded-circle border border-2 border-white shadow-xs object-fit-cover flex-shrink-0" style="width: 44px; height: 44px;" onerror="this.src='<?= asset_url('images/logo.png') ?>'">
+                <div class="min-w-0">
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                        <h1 class="fw-bold fs-5 text-white mb-0 text-truncate" style="max-width: 260px;">
+                            <?= e($provider['business_name'] ?? $user['name']) ?>
+                        </h1>
+                        <?php if (!empty($provider['is_verified'])): ?>
+                            <span class="badge bg-emerald-500 text-white fw-bold px-2 py-0.5 rounded-pill shadow-xs" style="background-color: #10b981; font-size: 0.68rem;">
+                                <i class="fa-solid fa-circle-check"></i> Terverifikasi
+                            </span>
+                        <?php else: ?>
+                            <span class="badge bg-warning text-dark fw-bold px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Review
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="text-white-50 small mt-0.5">
+                        <i class="fa-solid <?= e($provider['category_icon'] ?? 'fa-wrench') ?> text-warning me-0.5"></i>
+                        <span class="text-white fw-medium"><?= e($provider['category_name'] ?? 'Jasa Umum') ?></span> &bull;
+                        <i class="fa-solid fa-location-dot text-danger me-0.5"></i>
+                        <span class="text-white fw-medium"><?= e($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?></span>
+                    </div>
                 </div>
+            </div>
+            <div class="d-flex align-items-center gap-1.5 ms-auto flex-shrink-0">
+                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-sm btn-light text-teal fw-bold px-3 py-1.5 rounded-pill shadow-xs" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-store me-1"></i> Toko Publik ↗
+                </a>
+            </div>
+        </div>
 
-                <h1 class="fw-bold fs-2 mb-2 text-white">
-                    <?= e($provider['business_name'] ?? $user['name']) ?>
-                </h1>
-
-                <p class="text-white-50 mb-3 small">
-                    <i class="fa-solid <?= e($provider['category_icon'] ?? 'fa-wrench') ?> text-warning me-1"></i>
-                    Bidang: <strong class="text-white"><?= e($provider['category_name'] ?? 'Jasa Umum') ?></strong> &bull;
-                    <i class="fa-solid fa-location-dot text-danger ms-2 me-1"></i>
-                    Wilayah: <strong class="text-white"><?= e($provider['district_name'] ?: 'Kab. Indragiri Hulu') ?></strong>
-                </p>
-
-                <!-- Quick Performance Stats -->
-                <div class="d-flex flex-wrap gap-2">
-                    <div class="provider-stat-badge">
-                        <div class="text-white-50" style="font-size: 0.72rem;">Rating Pelanggan</div>
-                        <div class="fw-bold fs-6">
-                            ⭐ <?= number_format((float)($provider['rating_avg'] ?? 0), 1) ?>
-                            <span class="text-white-50 fw-normal small">(<?= (int)($provider['reviews_count'] ?? 0) ?> ulasan)</span>
+        <!-- Baris 2: Dompet Saldo & Ringkasan Performa Cepat (1 Baris Ramping) -->
+        <div class="row g-2 align-items-stretch mb-2.5">
+            <!-- Kolom Kiri: Saldo Dompet Mitra -->
+            <div class="col-12 col-md-6">
+                <div class="p-2.5 px-3 bg-white bg-opacity-10 rounded-3 border border-white border-opacity-15 h-100 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center shadow-2xs flex-shrink-0" style="width: 38px; height: 38px;">
+                            <i class="fa-solid fa-wallet fs-6"></i>
+                        </div>
+                        <div>
+                            <div class="text-white-50" style="font-size: 0.7rem; line-height: 1.1;">Saldo Dompet Mitra</div>
+                            <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
+                                Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
+                            </div>
+                            <div class="text-white-50" style="font-size: 0.65rem;">Biaya kontak flat Rp <?= number_format($lead_fee_amount, 0, ',', '.') ?> saat setujui pesanan</div>
                         </div>
                     </div>
-                    <div class="provider-stat-badge">
-                        <div class="text-white-50" style="font-size: 0.72rem;">Pekerjaan Selesai</div>
-                        <div class="fw-bold fs-6">
-                            <i class="fa-solid fa-circle-check text-success me-1"></i>
-                            <?= (int)($provider['completed_jobs'] ?? 0) ?> Pekerjaan
-                        </div>
+                    <div>
+                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill text-dark shadow-2xs" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-plus me-0.5"></i> Top Up
+                        </a>
                     </div>
-                    <a href="<?= BASE_URL ?>/provider/portfolio.php" class="provider-stat-badge text-decoration-none text-white hover-opacity">
-                        <div class="text-white-50" style="font-size: 0.72rem;"><?= $is_culinary ? 'Buku Menu & Makanan' : 'Portofolio Hasil Kerja' ?></div>
-                        <div class="fw-bold fs-6">
-                            <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?> me-1"></i>
-                            <?= $total_portfolios ?> <?= $is_culinary ? 'Menu' : 'Foto' ?>
-                        </div>
-                    </a>
                 </div>
             </div>
 
-            <!-- Saldo & Quick Links -->
-            <div class="col-lg-5 text-lg-end">
-                <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-20 backdrop-blur d-inline-block text-start w-100" style="max-width: 380px;">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-white-50 small"><i class="fa-solid fa-wallet me-1"></i> Saldo Dompet Mitra:</span>
-                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="badge bg-warning text-dark text-decoration-none fw-bold px-2 py-1 rounded-pill">
-                            + Top Up Saldo
-                        </a>
+            <!-- Kolom Kanan: 3 Ringkasan Performa (Rating, Selesai, Menu/Foto) -->
+            <div class="col-12 col-md-6">
+                <div class="p-2.5 px-3 bg-white bg-opacity-10 rounded-3 border border-white border-opacity-15 h-100 d-flex align-items-center justify-content-around text-center">
+                    <!-- Rating Pelanggan -->
+                    <div class="px-2">
+                        <div class="fw-bold fs-6 text-white mb-0" style="line-height: 1.2;">
+                            ⭐ <?= number_format((float)($provider['rating_avg'] ?? 0), 1) ?>
+                        </div>
+                        <div class="text-white-50" style="font-size: 0.68rem;"><?= (int)($provider['reviews_count'] ?? 0) ?> ulasan</div>
                     </div>
-                    <div class="fs-3 fw-bold text-white mb-2">
-                        Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
+                    <div class="vr bg-white opacity-25" style="height: 26px;"></div>
+                    <!-- Pekerjaan Selesai -->
+                    <div class="px-2">
+                        <div class="fw-bold fs-6 text-white mb-0" style="line-height: 1.2;">
+                            <i class="fa-solid fa-circle-check text-success me-0.5"></i> <?= (int)($provider['completed_jobs'] ?? 0) ?>
+                        </div>
+                        <div class="text-white-50" style="font-size: 0.68rem;">Pekerjaan Selesai</div>
                     </div>
-                    <div class="text-white-50 mb-3" style="font-size: 0.72rem;">
-                        Biaya kontak flat <?= $lead_fee_amount > 0 ? 'Rp ' . number_format($lead_fee_amount, 0, ',', '.') : 'GRATIS (Rp 0)' ?> hanya dipotong saat Anda menyetujui pesanan baru.
-                    </div>
-                    <div class="d-flex gap-2 mb-2">
-                        <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-light btn-sm fw-bold flex-fill rounded-3 text-teal">
-                            <i class="fa-solid fa-store me-1"></i> Toko Publik ↗
-                        </a>
-                        <button type="button" class="btn btn-warning btn-sm fw-bold rounded-3 text-dark flex-fill" onclick="triggerCardModal()" title="Bagikan Kartu Usaha Digital & Status WA">
-                            <i class="fa-solid fa-id-card me-1"></i> Kartu Digital
-                        </button>
-                    </div>
-                    <!-- Sound & Notification Controller Bar -->
-                    <div class="pt-2 border-top border-white border-opacity-20 d-flex gap-2 mb-2">
-                        <button type="button" class="btn btn-sm btn-light text-teal fw-bold flex-fill rounded-3 sound-toggle-btn shadow-2xs" onclick="ProviderNotification.toggleSound()" style="font-size: 0.72rem;">
-                            <i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-light fw-bold rounded-3" onclick="ProviderNotification.testSound()" style="font-size: 0.72rem;" title="Uji Coba Bunyi Nada Dering HP">
-                            <i class="fa-solid fa-play me-1"></i> Tes Dering
-                        </button>
-                    </div>
-                    <!-- Pusat Keamanan Mitra Link -->
-                    <div class="text-center">
-                        <a href="<?= BASE_URL ?>/provider/safety.php" class="btn btn-sm btn-outline-warning text-white fw-bold w-100 rounded-3 py-1.5 d-flex align-items-center justify-content-center gap-1.5 shadow-2xs" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.5);">
-                            <i class="fa-solid fa-shield-halved text-warning"></i> Pusat Keamanan & SOP Anti Penipuan ↗
-                        </a>
-                    </div>
+                    <div class="vr bg-white opacity-25" style="height: 26px;"></div>
+                    <!-- Portofolio / Menu -->
+                    <a href="<?= BASE_URL ?>/provider/portfolio.php" class="px-2 text-decoration-none text-white hover-opacity">
+                        <div class="fw-bold fs-6 text-white mb-0" style="line-height: 1.2;">
+                            <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?> me-0.5"></i> <?= $total_portfolios ?>
+                        </div>
+                        <div class="text-white-50" style="font-size: 0.68rem;"><?= $is_culinary ? 'Katalog Menu' : 'Portofolio' ?> ↗</div>
+                    </a>
                 </div>
+            </div>
+        </div>
+
+        <!-- Baris 3: 4 Tombol Aksi Cepat (Quick Action Bar) -->
+        <div class="row g-2">
+            <!-- 1. Menu / Portofolio -->
+            <div class="col-6 col-md-3">
+                <a href="<?= BASE_URL ?>/provider/portfolio.php" class="provider-quick-btn w-100">
+                    <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?>"></i>
+                    <span><?= $is_culinary ? 'Kelola Menu' : 'Kelola Foto' ?></span>
+                </a>
+            </div>
+
+            <!-- 2. Kartu Usaha WA -->
+            <div class="col-6 col-md-3">
+                <button type="button" class="provider-quick-btn w-100 border-0" onclick="triggerCardModal()" title="Bagikan Kartu Usaha ke WhatsApp">
+                    <i class="fa-solid fa-id-card text-warning"></i>
+                    <span>Kartu WA</span>
+                </button>
+            </div>
+
+            <!-- 3. Toggle & Tes Nada Dering HP -->
+            <div class="col-6 col-md-3">
+                <div class="btn-group w-100 shadow-2xs" role="group">
+                    <button type="button" class="provider-quick-btn flex-fill border-0 sound-toggle-btn" onclick="ProviderNotification.toggleSound()" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                        <i class="fa-solid fa-volume-high text-success"></i>
+                        <span>Suara: Aktif</span>
+                    </button>
+                    <button type="button" class="provider-quick-btn px-2.5 border-0 border-start border-white border-opacity-20" onclick="ProviderNotification.testSound()" title="Tes Bunyi Dering" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                        <i class="fa-solid fa-play" style="font-size: 0.7rem;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Pusat Keamanan & SOP Anti Penipuan -->
+            <div class="col-6 col-md-3">
+                <a href="<?= BASE_URL ?>/provider/safety.php" class="provider-quick-btn w-100 active-action">
+                    <i class="fa-solid fa-shield-halved text-warning"></i>
+                    <span>Pusat Aman</span>
+                </a>
             </div>
         </div>
     </div>
 
     <!-- 2. Banner Notifikasi Lowongan Baru Warga (Jika Ada) -->
     <?php if (!empty($open_leads) && count($open_leads) > 0): ?>
-        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-3 mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" style="background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);">
-            <div class="d-flex align-items-center gap-3">
-                <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 44px; height: 44px; min-width: 44px;">
-                    <i class="fa-solid fa-bullhorn fs-5"></i>
+        <div class="alert alert-warning border-0 shadow-sm rounded-3 p-2.5 p-md-3 mb-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2.5" style="background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="fa-solid fa-bullhorn fs-6"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold mb-0 text-dark">Ada <?= count($open_leads) ?> Permintaan Jasa Terbuka!</h6>
-                    <span class="text-muted small">Pelanggan di Kab. Inhu sedang mencari jasa kategori Anda. Kirim penawaran sekarang untuk dapat orderan!</span>
+                    <h6 class="fw-bold mb-0 text-dark fs-6">Ada <?= count($open_leads) ?> Permintaan Jasa Terbuka!</h6>
+                    <span class="text-muted small">Pelanggan di Kab. Inhu sedang mencari jasa kategori Anda. Kirim penawaran sekarang!</span>
                 </div>
             </div>
-            <a href="#pills-leads" onclick="document.getElementById('pills-leads-tab').click();" class="btn btn-dark btn-sm fw-bold px-3 py-2 rounded-pill shadow-xs text-nowrap">
+            <a href="#pills-leads" onclick="document.getElementById('pills-leads-tab').click();" class="btn btn-dark btn-sm fw-bold px-3 py-1.5 rounded-pill shadow-xs text-nowrap">
                 Lihat Permintaan Jasa <i class="fa-solid fa-arrow-right ms-1"></i>
             </a>
         </div>
     <?php endif; ?>
 
     <!-- 3. Modern Segmented Tab Navigation -->
-    <div class="mb-4">
+    <div class="mb-3">
         <ul class="nav nav-pills modern-nav-pills shadow-xs" id="providerOrderTabs" role="tablist">
             <!-- Tab 1: Pesanan Baru -->
             <li class="nav-item flex-fill" role="presentation">
                 <button class="nav-link w-100 <?= (!empty($direct_orders) || empty($active_jobs)) ? 'active' : '' ?>" id="pills-new-tab" data-bs-toggle="pill" data-bs-target="#pills-new" type="button" role="tab" aria-controls="pills-new" aria-selected="<?= (!empty($direct_orders) || empty($active_jobs)) ? 'true' : 'false' ?>">
                     <i class="fa-solid fa-inbox text-danger"></i>
-                    <span>Pesanan Baru</span>
+                    <span><span class="d-none d-sm-inline">Pesanan </span>Baru</span>
                     <?php if (count($direct_orders) > 0): ?>
-                        <span class="badge bg-danger rounded-pill px-2 py-1"><?= count($direct_orders) ?></span>
+                        <span class="badge bg-danger rounded-pill px-2 py-0.5 animate-pulse"><?= count($direct_orders) ?></span>
                     <?php else: ?>
-                        <span class="badge bg-light text-muted rounded-pill px-2 py-1">0</span>
+                        <span class="badge bg-light text-muted rounded-pill px-1.5 py-0.5" style="font-size: 0.72rem;">0</span>
                     <?php endif; ?>
                 </button>
             </li>
@@ -950,11 +1016,11 @@ require_once __DIR__ . '/../includes/header.php';
             <li class="nav-item flex-fill" role="presentation">
                 <button class="nav-link w-100 <?= (empty($direct_orders) && !empty($active_jobs)) ? 'active' : '' ?>" id="pills-active-tab" data-bs-toggle="pill" data-bs-target="#pills-active" type="button" role="tab" aria-controls="pills-active" aria-selected="<?= (empty($direct_orders) && !empty($active_jobs)) ? 'true' : 'false' ?>">
                     <i class="fa-solid fa-motorcycle text-primary"></i>
-                    <span>Sedang Dikerjakan</span>
+                    <span><span class="d-none d-sm-inline">Sedang </span>Proses</span>
                     <?php if (count($active_jobs) > 0): ?>
-                        <span class="badge bg-primary rounded-pill px-2 py-1"><?= count($active_jobs) ?></span>
+                        <span class="badge bg-primary rounded-pill px-2 py-0.5"><?= count($active_jobs) ?></span>
                     <?php else: ?>
-                        <span class="badge bg-light text-muted rounded-pill px-2 py-1">0</span>
+                        <span class="badge bg-light text-muted rounded-pill px-1.5 py-0.5" style="font-size: 0.72rem;">0</span>
                     <?php endif; ?>
                 </button>
             </li>
@@ -963,9 +1029,9 @@ require_once __DIR__ . '/../includes/header.php';
             <li class="nav-item flex-fill" role="presentation">
                 <button class="nav-link w-100" id="pills-leads-tab" data-bs-toggle="pill" data-bs-target="#pills-leads" type="button" role="tab" aria-controls="pills-leads" aria-selected="false">
                     <i class="fa-solid fa-briefcase text-warning"></i>
-                    <span>Bursa Permintaan Jasa</span>
+                    <span>Bursa<span class="d-none d-sm-inline"> Jasa</span></span>
                     <?php if (count($open_leads) > 0): ?>
-                        <span class="badge bg-warning text-dark rounded-pill px-2 py-1"><?= count($open_leads) ?></span>
+                        <span class="badge bg-warning text-dark rounded-pill px-2 py-0.5"><?= count($open_leads) ?></span>
                     <?php endif; ?>
                 </button>
             </li>
@@ -974,8 +1040,8 @@ require_once __DIR__ . '/../includes/header.php';
             <li class="nav-item flex-fill" role="presentation">
                 <button class="nav-link w-100" id="pills-completed-tab" data-bs-toggle="pill" data-bs-target="#pills-completed" type="button" role="tab" aria-controls="pills-completed" aria-selected="false">
                     <i class="fa-solid fa-circle-check text-success"></i>
-                    <span>Riwayat Selesai</span>
-                    <span class="badge bg-light text-muted rounded-pill px-2 py-1"><?= count($completed_jobs) ?></span>
+                    <span>Selesai</span>
+                    <span class="badge bg-light text-muted rounded-pill px-1.5 py-0.5" style="font-size: 0.72rem;"><?= count($completed_jobs) ?></span>
                 </button>
             </li>
         </ul>
