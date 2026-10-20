@@ -173,9 +173,13 @@ if (typeof window.AppNotification === 'undefined') {
             const soundToggles = document.querySelectorAll('.sound-toggle-btn');
             soundToggles.forEach(btn => {
                 const isMiniTile = btn.classList.contains('provider-quick-tile');
+                const isGlassBtn = btn.classList.contains('btn-glass');
                 if (isSoundMuted) {
                     if (isMiniTile) {
                         btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-danger"></i><span>Suara: Bisu</span>';
+                    } else if (isGlassBtn) {
+                        btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-danger me-1"></i> Suara: Bisu';
+                        btn.classList.add('border-danger', 'text-danger');
                     } else {
                         btn.innerHTML = '<i class="fa-solid fa-volume-xmark me-1 text-danger"></i> Suara: Bisu (Muted)';
                         btn.classList.remove('btn-teal', 'btn-light', 'text-teal');
@@ -184,6 +188,9 @@ if (typeof window.AppNotification === 'undefined') {
                 } else {
                     if (isMiniTile) {
                         btn.innerHTML = '<i class="fa-solid fa-volume-high text-success"></i><span>Suara: On</span>';
+                    } else if (isGlassBtn) {
+                        btn.innerHTML = '<i class="fa-solid fa-volume-high text-success me-1"></i> Suara: On';
+                        btn.classList.remove('border-danger', 'text-danger');
                     } else {
                         btn.innerHTML = '<i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif (On)';
                         btn.classList.remove('btn-outline-danger');
