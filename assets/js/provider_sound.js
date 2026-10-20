@@ -172,14 +172,23 @@ if (typeof window.AppNotification === 'undefined') {
         function updateSoundUI() {
             const soundToggles = document.querySelectorAll('.sound-toggle-btn');
             soundToggles.forEach(btn => {
+                const isMiniTile = btn.classList.contains('provider-quick-tile');
                 if (isSoundMuted) {
-                    btn.innerHTML = '<i class="fa-solid fa-volume-xmark me-1 text-danger"></i> Suara: Bisu (Muted)';
-                    btn.classList.remove('btn-teal', 'btn-light', 'text-teal');
-                    btn.classList.add('btn-outline-danger');
+                    if (isMiniTile) {
+                        btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-danger"></i><span>Suara: Bisu</span>';
+                    } else {
+                        btn.innerHTML = '<i class="fa-solid fa-volume-xmark me-1 text-danger"></i> Suara: Bisu (Muted)';
+                        btn.classList.remove('btn-teal', 'btn-light', 'text-teal');
+                        btn.classList.add('btn-outline-danger');
+                    }
                 } else {
-                    btn.innerHTML = '<i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif (On)';
-                    btn.classList.remove('btn-outline-danger');
-                    btn.classList.add('btn-light', 'text-teal');
+                    if (isMiniTile) {
+                        btn.innerHTML = '<i class="fa-solid fa-volume-high text-success"></i><span>Suara: On</span>';
+                    } else {
+                        btn.innerHTML = '<i class="fa-solid fa-volume-high me-1 text-success"></i> Suara: Aktif (On)';
+                        btn.classList.remove('btn-outline-danger');
+                        btn.classList.add('btn-light', 'text-teal');
+                    }
                 }
             });
         }

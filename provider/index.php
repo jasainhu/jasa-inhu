@@ -635,54 +635,76 @@ require_once __DIR__ . '/../includes/header.php';
 
 
 <style>
-/* Modern Compact Provider Dashboard Styling */
+/* Modern Ultra-Sleek Glassmorphism Provider Dashboard */
 .provider-hero-card {
-    background: linear-gradient(135deg, #092c28 0%, #0f766e 60%, #115e59 100%);
-    border-radius: 18px;
+    background: radial-gradient(circle at 80% 20%, #134e4a 0%, #064e3b 40%, #062b25 100%);
+    border-radius: 20px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.16);
+    box-shadow: 0 12px 36px rgba(6, 78, 59, 0.28);
+    border: none;
 }
 .provider-hero-card::after {
     content: '';
     position: absolute;
-    top: -40%;
+    top: -30%;
     right: -10%;
-    width: 240px;
-    height: 240px;
-    background: radial-gradient(circle, rgba(45, 212, 191, 0.15) 0%, transparent 70%);
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.22) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
-.provider-quick-btn {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #fff;
-    border-radius: 10px;
-    padding: 7px 10px;
-    font-size: 0.76rem;
-    font-weight: 600;
+.provider-glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+}
+.provider-quick-tile {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 14px;
+    border: none;
+    color: #ffffff;
+    padding: 10px 4px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 6px;
     text-decoration: none;
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, background 0.2s ease;
+    min-height: 68px;
+    width: 100%;
+}
+.provider-quick-tile i {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+.provider-quick-tile span {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #f8fafc;
     white-space: nowrap;
 }
-.provider-quick-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
-    color: #fff;
-    transform: translateY(-1px);
+.provider-quick-tile:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    transform: translateY(-2px);
 }
-.provider-quick-btn.active-action {
-    background: rgba(245, 158, 11, 0.2);
-    border-color: rgba(245, 158, 11, 0.4);
-    color: #fef08a;
+.provider-quick-tile.sound-toggle-btn {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
 }
-.provider-quick-btn.active-action:hover {
-    background: rgba(245, 158, 11, 0.3);
-    color: #fff;
+.provider-quick-tile.sound-toggle-btn.btn-outline-danger {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #fecaca !important;
 }
 .modern-nav-pills {
     background: #f1f5f9;
@@ -846,12 +868,12 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- 1. Compact Modern Partner Header (Seller Hub Style - Hemat Tempat) -->
+    <!-- 1. Compact Modern Partner Header (Ultra-Sleek Glassmorphism - Opsi 1) -->
     <div class="provider-hero-card p-3 p-md-4 mb-3 text-white">
-        <!-- Baris 1: Identitas Profil Ringkas & Link Toko Publik -->
-        <div class="d-flex align-items-center justify-content-between gap-2 pb-2.5 mb-2.5 border-bottom border-white border-opacity-15 flex-wrap flex-sm-nowrap">
+        <!-- Baris 1: Identitas Profil Ringkas & Link Toko Publik (Tanpa Garis Pembatas Kaku) -->
+        <div class="d-flex align-items-center justify-content-between gap-2 pb-1 mb-3 flex-wrap flex-sm-nowrap">
             <div class="d-flex align-items-center gap-2.5 min-w-0">
-                <img src="<?= e($prov_avatar_url) ?>" alt="<?= e($provider['business_name'] ?? $user['name']) ?>" class="rounded-circle border border-2 border-white shadow-xs object-fit-cover flex-shrink-0" style="width: 44px; height: 44px;" onerror="this.src='<?= asset_url('images/logo.png') ?>'">
+                <img src="<?= e($prov_avatar_url) ?>" alt="<?= e($provider['business_name'] ?? $user['name']) ?>" class="rounded-circle shadow-xs object-fit-cover flex-shrink-0" style="width: 44px; height: 44px; border: 2px solid rgba(255,255,255,0.35);" onerror="this.src='<?= asset_url('images/logo.png') ?>'">
                 <div class="min-w-0">
                     <div class="d-flex align-items-center gap-1.5 flex-wrap">
                         <h1 class="fw-bold fs-5 text-white mb-0 text-truncate" style="max-width: 260px;">
@@ -876,32 +898,32 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
             <div class="d-flex align-items-center gap-1.5 ms-auto flex-shrink-0">
-                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-sm btn-light text-teal fw-bold px-3 py-1.5 rounded-pill shadow-xs" style="font-size: 0.75rem;">
-                    <i class="fa-solid fa-store me-1"></i> Toko Publik ↗
+                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-sm fw-bold px-3 py-1.5 rounded-pill shadow-xs text-nowrap d-inline-flex align-items-center gap-1.5" style="background: rgba(255,255,255,0.92); color: #0d9488; font-size: 0.76rem; border: none;">
+                    <i class="fa-solid fa-store"></i> Toko Publik ↗
                 </a>
             </div>
         </div>
 
-        <!-- Baris 2: Dompet Saldo & Ringkasan Performa Cepat (1 Baris Ramping) -->
+        <!-- Baris 2: Dompet Saldo & Ringkasan Performa Cepat (Permukaan Kaca Halus Tanpa Border) -->
         <div class="row g-2 align-items-stretch mb-2.5">
             <!-- Kolom Kiri: Saldo Dompet Mitra -->
             <div class="col-12 col-md-6">
-                <div class="p-2.5 px-3 bg-white bg-opacity-10 rounded-3 border border-white border-opacity-15 h-100 d-flex align-items-center justify-content-between">
+                <div class="provider-glass-card p-3 h-100 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-2.5">
-                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center shadow-2xs flex-shrink-0" style="width: 38px; height: 38px;">
+                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center shadow-xs flex-shrink-0" style="width: 38px; height: 38px;">
                             <i class="fa-solid fa-wallet fs-6"></i>
                         </div>
                         <div>
                             <div class="text-white-50" style="font-size: 0.7rem; line-height: 1.1;">Saldo Dompet Mitra</div>
-                            <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
+                            <div class="fw-bold fs-4 text-white mb-0" style="line-height: 1.2;">
                                 Rp <?= number_format((float)($provider['wallet_balance'] ?? 0), 0, ',', '.') ?>
                             </div>
-                            <div class="text-white-50" style="font-size: 0.65rem;">Biaya kontak flat Rp <?= number_format($lead_fee_amount, 0, ',', '.') ?> saat setujui pesanan</div>
+                            <div class="text-white-50" style="font-size: 0.65rem;">Biaya flat Rp <?= number_format($lead_fee_amount, 0, ',', '.') ?> saat setujui pesanan</div>
                         </div>
                     </div>
                     <div>
-                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill text-dark shadow-2xs" style="font-size: 0.75rem;">
-                            <i class="fa-solid fa-plus me-0.5"></i> Top Up
+                        <a href="<?= BASE_URL ?>/provider/wallet.php" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill text-dark shadow-xs d-inline-flex align-items-center gap-1" style="font-size: 0.76rem; border: none; background-color: #fbbf24;">
+                            <i class="fa-solid fa-plus"></i> Top Up
                         </a>
                     </div>
                 </div>
@@ -909,26 +931,26 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Kolom Kanan: 3 Ringkasan Performa (Rating, Selesai, Menu/Foto) -->
             <div class="col-12 col-md-6">
-                <div class="p-2.5 px-3 bg-white bg-opacity-10 rounded-3 border border-white border-opacity-15 h-100 d-flex align-items-center justify-content-around text-center">
+                <div class="provider-glass-card p-3 h-100 d-flex align-items-center justify-content-around text-center">
                     <!-- Rating Pelanggan -->
                     <div class="px-2">
-                        <div class="fw-bold fs-6 text-white mb-0" style="line-height: 1.2;">
+                        <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
                             ⭐ <?= number_format((float)($provider['rating_avg'] ?? 0), 1) ?>
                         </div>
                         <div class="text-white-50" style="font-size: 0.68rem;"><?= (int)($provider['reviews_count'] ?? 0) ?> ulasan</div>
                     </div>
-                    <div class="vr bg-white opacity-25" style="height: 26px;"></div>
+                    <div class="vr bg-white opacity-25" style="height: 28px;"></div>
                     <!-- Pekerjaan Selesai -->
                     <div class="px-2">
-                        <div class="fw-bold fs-6 text-white mb-0" style="line-height: 1.2;">
+                        <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
                             <i class="fa-solid fa-circle-check text-success me-0.5"></i> <?= (int)($provider['completed_jobs'] ?? 0) ?>
                         </div>
                         <div class="text-white-50" style="font-size: 0.68rem;">Pekerjaan Selesai</div>
                     </div>
-                    <div class="vr bg-white opacity-25" style="height: 26px;"></div>
+                    <div class="vr bg-white opacity-25" style="height: 28px;"></div>
                     <!-- Portofolio / Menu -->
                     <a href="<?= BASE_URL ?>/provider/portfolio.php" class="px-2 text-decoration-none text-white hover-opacity">
-                        <div class="fw-bold fs-6 text-white mb-0" style="line-height: 1.2;">
+                        <div class="fw-bold fs-5 text-white mb-0" style="line-height: 1.2;">
                             <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?> me-0.5"></i> <?= $total_portfolios ?>
                         </div>
                         <div class="text-white-50" style="font-size: 0.68rem;"><?= $is_culinary ? 'Katalog Menu' : 'Portofolio' ?> ↗</div>
@@ -937,40 +959,35 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Baris 3: 4 Tombol Aksi Cepat (Quick Action Bar) -->
+        <!-- Baris 3: 4 Tombol Aksi Cepat (Sleek Glass Tiles - Tanpa Garis Kawat) -->
         <div class="row g-2">
             <!-- 1. Menu / Portofolio -->
-            <div class="col-6 col-md-3">
-                <a href="<?= BASE_URL ?>/provider/portfolio.php" class="provider-quick-btn w-100">
+            <div class="col-3">
+                <a href="<?= BASE_URL ?>/provider/portfolio.php" class="provider-quick-tile">
                     <i class="fa-solid <?= $is_culinary ? 'fa-utensils text-warning' : 'fa-images text-info' ?>"></i>
-                    <span><?= $is_culinary ? 'Kelola Menu' : 'Kelola Foto' ?></span>
+                    <span><?= $is_culinary ? 'Menu' : 'Foto' ?></span>
                 </a>
             </div>
 
             <!-- 2. Kartu Usaha WA -->
-            <div class="col-6 col-md-3">
-                <button type="button" class="provider-quick-btn w-100 border-0" onclick="triggerCardModal()" title="Bagikan Kartu Usaha ke WhatsApp">
+            <div class="col-3">
+                <button type="button" class="provider-quick-tile" onclick="triggerCardModal()" title="Bagikan Kartu Usaha ke WhatsApp">
                     <i class="fa-solid fa-id-card text-warning"></i>
                     <span>Kartu WA</span>
                 </button>
             </div>
 
             <!-- 3. Toggle & Tes Nada Dering HP -->
-            <div class="col-6 col-md-3">
-                <div class="btn-group w-100 shadow-2xs" role="group">
-                    <button type="button" class="provider-quick-btn flex-fill border-0 sound-toggle-btn" onclick="ProviderNotification.toggleSound()" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                        <i class="fa-solid fa-volume-high text-success"></i>
-                        <span>Suara: Aktif</span>
-                    </button>
-                    <button type="button" class="provider-quick-btn px-2.5 border-0 border-start border-white border-opacity-20" onclick="ProviderNotification.testSound()" title="Tes Bunyi Dering" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                        <i class="fa-solid fa-play" style="font-size: 0.7rem;"></i>
-                    </button>
-                </div>
+            <div class="col-3">
+                <button type="button" class="provider-quick-tile sound-toggle-btn" onclick="ProviderNotification.toggleSound()" title="Klik untuk aktifkan/bisu & tes bunyi dering">
+                    <i class="fa-solid fa-volume-high text-success"></i>
+                    <span>Suara: On</span>
+                </button>
             </div>
 
             <!-- 4. Pusat Keamanan & SOP Anti Penipuan -->
-            <div class="col-6 col-md-3">
-                <a href="<?= BASE_URL ?>/provider/safety.php" class="provider-quick-btn w-100 active-action">
+            <div class="col-3">
+                <a href="<?= BASE_URL ?>/provider/safety.php" class="provider-quick-tile">
                     <i class="fa-solid fa-shield-halved text-warning"></i>
                     <span>Pusat Aman</span>
                 </a>
