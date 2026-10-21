@@ -79,12 +79,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $urgency = in_array($_POST['urgency'] ?? '', ['normal', 'urgent', 'scheduled']) ? $_POST['urgency'] : 'normal';
         $preferred_time = trim($_POST['preferred_time'] ?? '');
 
+        // Smart fallback: jika pengguna hanya mengisi judul atau memilih chip masalah
+        if (empty($description) && !empty($title)) {
+            $description = "Kebutuhan jasa: " . $title;
+        }
+        if (empty($title) && !empty($description)) {
+            $title = mb_substr($description, 0, 70);
+        }
+
         if (!empty($preferred_time)) {
             $description .= "\n\nWaktu yang diinginkan pemohon: " . $preferred_time;
         }
 
-        if (empty($title) || empty($description) || empty($district_id)) {
-            $error = 'Judul pekerjaan, deskripsi, dan kecamatan wajib diisi.';
+        if (empty($title) || empty($district_id)) {
+            $error = 'Judul / jenis masalah dan kecamatan wajib diisi.';
         } else {
             try {
                 $db->beginTransaction();
@@ -140,126 +148,283 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $districts = get_all_districts();
 
+// Preset chip masalah sesuai kategori mitra
+$catNameLower = strtolower($provider['category_name'] ?? '');
+$quick_problems = [];
+if (str_contains($catNameLower, 'ac') || str_contains($catNameLower, 'elektronik') || str_contains($catNameLower, 'kulkas')) {
+    $quick_problems = ['❄️ AC Tidak Dingin', '💧 AC Bocor Air', '🧼 Cuci AC Rutin', '⚡ Isi Freon', '🔌 Kulkas / Mesin Cuci'];
+} elseif (str_contains($catNameLower, 'motor') || str_contains($catNameLower, 'otomotif') || str_contains($catNameLower, 'montir')) {
+    $quick_problems = ['🔧 Servis & Ganti Oli', '🔋 Motor Mogok / Mati', '🛞 Ganti / Tambal Ban', '⚡ Kelistrikan & Lampu'];
+} elseif (str_contains($catNameLower, 'bangun') || str_contains($catNameLower, 'renov') || str_contains($catNameLower, 'tukang')) {
+    $quick_problems = ['🧱 Renovasi Rumah', '💧 Atap / Seng Bocor', '🎨 Cat Dinding', '🔨 Tukang Harian'];
+} elseif (str_contains($catNameLower, 'kebun') || str_contains($catNameLower, 'sawit')) {
+    $quick_problems = ['🌴 Regu Panen TBS', '🌾 Babat Rumput', '🚜 Angkut Sawit', '🌱 Rawat / Pupuk'];
+} else {
+    $quick_problems = ['⚡ Panggilan Cepat', '🛠️ Perbaikan / Servis', '🔍 Cek Kondisi & Biaya', '📦 Bantuan Kerja'];
+}
+
+$hide_floating_wa = true; // Sembunyikan WA admin agar layar tidak padat
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container py-4" style="max-width: 850px;">
-    <!-- Breadcrumb & Back -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="<?= BASE_URL ?>/" class="btn btn-sm btn-outline-secondary">
-            <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Beranda
+<style>
+/* Modern Compact Order Form Styles */
+.order-container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding-bottom: 90px;
+}
+.order-provider-card {
+    background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%);
+    border-radius: 16px;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(13, 148, 136, 0.15);
+}
+.order-urgency-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.urgency-pill {
+    cursor: pointer;
+    margin-bottom: 0;
+}
+.urgency-pill input {
+    display: none;
+}
+.urgency-box {
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 8px 6px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+.urgency-box .pill-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: block;
+    color: #334155;
+}
+.urgency-box .pill-sub {
+    font-size: 0.68rem;
+    color: #64748b;
+    display: block;
+}
+.urgency-pill input:checked + .urgency-box {
+    border-color: #0d9488;
+    background: #f0fdfa;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.15);
+}
+.urgency-pill input:checked + .urgency-box .pill-title {
+    color: #0f766e;
+}
+.chip-btn {
+    font-size: 0.74rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.chip-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+.chip-btn.active {
+    background: #0d9488;
+    border-color: #0d9488;
+    color: #fff;
+    font-weight: 600;
+}
+.order-form-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+.section-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #0d9488;
+    background: #f0fdfa;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+</style>
+
+<div class="container py-2 order-container">
+    <!-- Top Back Navigation Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <a href="<?= BASE_URL ?>/" class="btn btn-sm btn-light border text-muted py-1 px-2.5 rounded-pill" style="font-size: 0.78rem;">
+            <i class="fa-solid fa-arrow-left me-1"></i> Beranda
         </a>
-        <span class="badge text-bg-light border text-muted">
-            <i class="fa-solid fa-handshake-simple text-teal me-1"></i> Pesanan Langsung (Direct Order)
+        <span class="badge bg-teal-subtle text-teal fw-semibold" style="font-size: 0.72rem;">
+            <i class="fa-solid fa-bolt text-warning me-1"></i> Pesanan Langsung
         </span>
     </div>
 
-    <!-- Kartu Informasi Penyedia Jasa yang Dipilih -->
-    <div class="card border-0 shadow-sm p-4 mb-4 text-white" style="background: linear-gradient(135deg, var(--dark) 0%, #0f766e 100%); border-radius: 16px;">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <?php $prov_cover_url = get_provider_cover_url($provider); ?>
-                <?php if (!empty($prov_cover_url)): ?>
-                    <img src="<?= e($prov_cover_url) ?>" alt="<?= e($provider['business_name']) ?>" style="width: 68px; height: 68px; object-fit: cover; border-radius: 16px; border: 2px solid rgba(255,255,255,0.3);" class="shadow-sm">
-                <?php else: ?>
-                    <div class="provider-avatar" style="width: 64px; height: 64px; font-size: 1.6rem; border-radius: 16px; background: rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center;">
-                        <i class="fa-solid <?= e($provider['category_icon']) ?>"></i>
-                    </div>
-                <?php endif; ?>
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-warning text-dark fw-bold small">Penyedia Jasa Pilihan Anda</span>
-                        <?php if ($provider['is_verified']): ?>
-                            <span class="badge bg-success small"><i class="fa-solid fa-check"></i> Terverifikasi</span>
-                        <?php endif; ?>
-                    </div>
-                    <h3 class="fw-bold mb-1"><?= e($provider['business_name']) ?></h3>
-                    <p class="text-light opacity-90 small mb-0">
-                        <?= e($provider['category_name']) ?> &bull; 
-                        <i class="fa-solid fa-location-dot ms-1 text-warning"></i> Kec. <?= e($provider['district_name'] ?: 'Kab. Inhu') ?>
-                    </p>
-                </div>
-            </div>
-
-            <div class="text-md-end bg-white bg-opacity-10 p-3 rounded-3">
-                <div class="small text-light opacity-75">Estimasi Biaya Jasa:</div>
-                <div class="fw-bold fs-5 text-warning">
-                    <?= format_rupiah($provider['hourly_rate_min']) ?>
-                    <?php if ($provider['hourly_rate_max'] > $provider['hourly_rate_min']): ?>
-                        - <?= format_rupiah($provider['hourly_rate_max']) ?>
+    <!-- 1. Header Ringkas Mitra (Hemat 60% Tempat) -->
+    <div class="order-provider-card mb-3 p-3 position-relative overflow-hidden">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2.5" style="min-width: 0;">
+                <div class="position-relative flex-shrink-0">
+                    <?php $prov_cover_url = get_provider_cover_url($provider); ?>
+                    <?php if (!empty($prov_cover_url)): ?>
+                        <img src="<?= e($prov_cover_url) ?>" alt="<?= e($provider['business_name']) ?>" class="rounded-3 shadow-sm object-fit-cover" style="width: 46px; height: 46px; border: 2px solid rgba(255,255,255,0.4);">
+                    <?php else: ?>
+                        <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 46px; height: 46px; background: rgba(255,255,255,0.2); font-size: 1.25rem;">
+                            <i class="fa-solid <?= e($provider['category_icon']) ?>"></i>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($provider['is_verified']): ?>
+                        <span class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center border border-white" style="width: 16px; height: 16px; font-size: 0.55rem;" title="Terverifikasi">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
                     <?php endif; ?>
                 </div>
-                <div class="small opacity-75">Pengalaman: <?= (int)$provider['experience_years'] ?> Tahun</div>
-            </div>
-    </div>
 
-    <!-- Foto Hasil Kerja Nyata Mitra -->
-    <?php if (!empty($provider_portfolios)): ?>
-        <div class="card border shadow-sm p-3 mb-4 bg-white rounded-4">
-            <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
-                <span class="fw-bold small text-dark">
-                    <i class="fa-solid fa-camera text-teal me-1"></i> Bukti Hasil Kerja Nyata Mitra Ini
-                </span>
-                <span class="badge bg-teal-subtle text-teal fw-semibold" style="font-size: 0.72rem;"><?= count($provider_portfolios) ?> Hasil Pengerjaan</span>
-            </div>
-            <div class="row g-2">
-                <?php foreach ($provider_portfolios as $pp): ?>
-                    <div class="col-6 col-md-3">
-                        <div class="border rounded-3 overflow-hidden position-relative shadow-2xs" style="height: 110px; background: #0f172a;">
-                            <img src="<?= e(get_portfolio_image_url($pp, 'after')) ?>" alt="<?= e($pp['title']) ?>" class="w-100 h-100 object-fit-cover" loading="lazy">
-                            <div class="position-absolute bottom-0 start-0 end-0 p-1 text-white bg-dark bg-opacity-75 small text-truncate" style="font-size: 0.68rem;">
-                                <?= e($pp['title']) ?>
-                            </div>
-                        </div>
+                <div class="text-truncate">
+                    <div class="d-flex align-items-center gap-1.5 mb-0.5">
+                        <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.62rem; padding: 2px 6px;">Mitra Dipilih</span>
+                        <?php if ($provider['is_verified']): ?>
+                            <span class="badge bg-success small text-white" style="font-size: 0.62rem; padding: 2px 6px;">Resmi</span>
+                        <?php endif; ?>
                     </div>
-                <?php endforeach; ?>
+                    <h6 class="fw-bold mb-0 text-white text-truncate" style="font-size: 0.95rem;"><?= e($provider['business_name']) ?></h6>
+                    <div class="small opacity-90 text-light text-truncate" style="font-size: 0.72rem;">
+                        <?= e($provider['category_name']) ?> &bull; Kec. <?= e($provider['district_name'] ?: 'Kab. Inhu') ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end flex-shrink-0">
+                <div class="small opacity-75" style="font-size: 0.65rem;">Estimasi Jasa</div>
+                <div class="fw-bold text-warning" style="font-size: 0.88rem;">
+                    <?= format_rupiah($provider['hourly_rate_min']) ?>
+                </div>
+                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" class="btn btn-sm btn-light py-0 px-2 mt-0.5 rounded-pill fw-semibold" style="font-size: 0.65rem; color: #0f766e;">
+                    Profil <i class="fa-solid fa-arrow-right" style="font-size: 0.6rem;"></i>
+                </a>
             </div>
         </div>
-    <?php endif; ?>
+
+        <!-- Strip Portofolio Mini Horizontal -->
+        <?php if (!empty($provider_portfolios)): ?>
+            <div class="mt-2.5 pt-2 border-top border-white border-opacity-15 d-flex align-items-center gap-2 overflow-x-auto" style="scrollbar-width: none;">
+                <span class="small opacity-80 flex-shrink-0" style="font-size: 0.65rem;">
+                    <i class="fa-solid fa-camera me-1"></i> Bukti Kerja (<?= count($provider_portfolios) ?>):
+                </span>
+                <?php foreach ($provider_portfolios as $pp): ?>
+                    <a href="<?= e(get_portfolio_image_url($pp, 'after')) ?>" target="_blank" class="flex-shrink-0 rounded-2 overflow-hidden border border-white border-opacity-30" style="width: 40px; height: 28px;" title="<?= e($pp['title']) ?>">
+                        <img src="<?= e(get_portfolio_image_url($pp, 'after')) ?>" alt="<?= e($pp['title']) ?>" class="w-100 h-100 object-fit-cover" loading="lazy">
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
 
     <?php if (!empty($error)): ?>
-        <div class="alert alert-danger d-flex align-items-center mb-4">
-            <i class="fa-solid fa-triangle-exclamation me-2 fs-5"></i>
+        <div class="alert alert-danger py-2 px-3 small d-flex align-items-center mb-3 rounded-3">
+            <i class="fa-solid fa-triangle-exclamation me-2 fs-6"></i>
             <div><?= e($error) ?></div>
         </div>
     <?php endif; ?>
 
-    <!-- Formulir Pemesanan Langsung -->
-    <div class="card border shadow-sm p-4 bg-white" style="border-radius: 16px;">
-        <h5 class="fw-bold text-dark mb-1">
-            <i class="fa-solid fa-file-signature text-primary me-2"></i> Formulir Pemesanan Jasa
-        </h5>
-        <p class="text-muted small mb-4">
-            Pesanan ini akan langsung dikirimkan khusus kepada <strong><?= e($provider['business_name']) ?></strong>.
-        </p>
-
-        <form method="POST" action="<?= BASE_URL ?>/order.php?provider_id=<?= $provider['id'] ?>">
+    <!-- 2. Formulir Modern Berdesain Kompak -->
+    <div class="order-form-card p-3 p-sm-4">
+        <form method="POST" action="<?= BASE_URL ?>/order.php?provider_id=<?= $provider['id'] ?>" id="orderForm">
             <?= csrf_field() ?>
 
-            <div class="row g-3">
-                <div class="col-12">
-                    <label class="form-label small fw-semibold">Judul Pekerjaan / Masalah yang Dihadapi <span class="text-danger">*</span></label>
-                    <input type="text" name="title" class="form-control" placeholder="Contoh: Butuh Servis Kulkas 2 Pintu Bocor / Ganti Ban Motor Mogok" required autofocus>
+            <!-- A. Bagian Kebutuhan & Masalah -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1.5">
+                    <label class="form-label small fw-bold text-dark mb-0">
+                        <i class="fa-solid fa-wrench text-teal me-1"></i> Masalah / Jasa yang Dibutuhkan <span class="text-danger">*</span>
+                    </label>
+                    <span class="text-muted" style="font-size: 0.7rem;">Pilih cepat:</span>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Tingkat Urgensi</label>
-                    <select name="urgency" class="form-select">
-                        <option value="normal">Biasa (1-2 hari ke depan)</option>
-                        <option value="urgent">Mendesak (Hari ini / Secepatnya)</option>
-                        <option value="scheduled">Terjadwal (Tanggal tertentu)</option>
-                    </select>
+                <!-- Chips Cepat Sesuai Kategori -->
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    <?php foreach ($quick_problems as $qp): 
+                        $cleanText = preg_replace('/^[^\p{L}\p{N}]+/u', '', $qp);
+                    ?>
+                        <button type="button" class="chip-btn problem-chip" data-val="<?= e($cleanText) ?>">
+                            <?= e($qp) ?>
+                        </button>
+                    <?php endforeach; ?>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Waktu / Jadwal Kedatangan yang Diinginkan</label>
-                    <input type="text" name="preferred_time" class="form-control" placeholder="Contoh: Besok pagi pukul 09.00 WIB">
-                </div>
+                <input type="text" name="title" id="order_title" class="form-control rounded-3 py-2 fw-semibold" placeholder="Contoh: Butuh Servis Kulkas 2 Pintu / AC Bocor" required autofocus style="font-size: 0.9rem;">
+            </div>
 
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Kecamatan Lokasi Anda di Inhu <span class="text-danger">*</span></label>
-                    <select name="district_id" id="district_select" class="form-select" required>
-                        <option value="">-- Pilih Kecamatan --</option>
+            <!-- Detail Kerusakan (Kompak 2 Baris) -->
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-muted mb-1">
+                    <i class="fa-regular fa-comment-dots me-1"></i> Detail Kerusakan / Catatan Tambahan
+                </label>
+                <textarea name="description" id="order_desc" rows="2" class="form-control rounded-3 small py-2" placeholder="Tuliskan merk barang atau ciri-ciri kerusakan jika ada (opsional)..." style="font-size: 0.85rem;"></textarea>
+            </div>
+
+            <!-- B. Tingkat Urgensi (Pill Selector 1-Klik) -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-dark mb-1 d-flex align-items-center justify-content-between">
+                    <span><i class="fa-solid fa-bolt text-warning me-1"></i> Kapan Perlu Dikerjakan?</span>
+                </label>
+                <div class="order-urgency-grid">
+                    <label class="urgency-pill">
+                        <input type="radio" name="urgency" value="urgent" checked>
+                        <div class="urgency-box">
+                            <span class="pill-title text-danger"><i class="fa-solid fa-fire me-0.5"></i> Cepat</span>
+                            <span class="pill-sub">Hari ini / Segera</span>
+                        </div>
+                    </label>
+                    <label class="urgency-pill">
+                        <input type="radio" name="urgency" value="normal">
+                        <div class="urgency-box">
+                            <span class="pill-title text-teal"><i class="fa-regular fa-clock me-0.5"></i> Santai</span>
+                            <span class="pill-sub">1-2 hari ke depan</span>
+                        </div>
+                    </label>
+                    <label class="urgency-pill">
+                        <input type="radio" name="urgency" value="scheduled">
+                        <div class="urgency-box">
+                            <span class="pill-title text-primary"><i class="fa-regular fa-calendar-days me-0.5"></i> Jadwal</span>
+                            <span class="pill-sub">Tanggal khusus</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- C. Waktu Kedatangan (Quick Time Chips) -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-dark mb-1">
+                    <i class="fa-regular fa-calendar-check text-teal me-1"></i> Jam Kedatangan yang Diinginkan
+                </label>
+                <div class="d-flex flex-wrap gap-1 mb-1.5">
+                    <button type="button" class="chip-btn time-chip" data-time="Pagi (08.00 - 12.00 WIB)">🌅 Pagi</button>
+                    <button type="button" class="chip-btn time-chip" data-time="Siang (13.00 - 16.00 WIB)">☀️ Siang</button>
+                    <button type="button" class="chip-btn time-chip" data-time="Sore (16.00 - 18.00 WIB)">🌇 Sore</button>
+                    <button type="button" class="chip-btn time-chip" data-time="Malam (19.00 - 21.00 WIB)">🌙 Malam</button>
+                    <button type="button" class="chip-btn time-chip" data-time="Kapan saja mitra senggang">⏱️ Bebas</button>
+                </div>
+                <input type="text" name="preferred_time" id="preferred_time_input" class="form-control form-control-sm rounded-3 py-1.5" placeholder="Pilih tombol jam di atas atau ketik jadwal Anda...">
+            </div>
+
+            <!-- D. Lokasi (Berdampingan 50% - 50%) -->
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-dark mb-1">Kecamatan <span class="text-danger">*</span></label>
+                    <select name="district_id" id="district_select" class="form-select form-select-sm rounded-3 py-1.5" required>
+                        <option value="">-- Pilih --</option>
                         <?php foreach ($districts as $d): ?>
                             <option value="<?= $d['id'] ?>" <?= (($user['district_id'] ?? 0) == $d['id']) ? 'selected' : '' ?>>
                                 Kec. <?= e($d['name']) ?>
@@ -267,50 +432,89 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
-
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Desa / Kelurahan</label>
-                    <select name="village_id" id="village_select" class="form-select">
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-dark mb-1">Desa / Kelurahan</label>
+                    <select name="village_id" id="village_select" class="form-select form-select-sm rounded-3 py-1.5">
                         <option value="<?= $user['village_id'] ?? '' ?>">
-                            <?= e($user['village_name'] ?? '-- Pilih Desa / Kelurahan --') ?>
+                            <?= e($user['village_name'] ?? '-- Pilih Desa --') ?>
                         </option>
                     </select>
                 </div>
+            </div>
 
-                <div class="col-12">
-                    <label class="form-label small fw-semibold">Alamat Lengkap & Patokan Lokasi</label>
-                    <input type="text" name="address_detail" class="form-control" placeholder="Nama jalan, RT/RW, nomor rumah, atau patokan dekat masjid/toko..." value="<?= e($user['address'] ?? '') ?>">
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Penawaran Anggaran Anda (Rp)</label>
-                    <input type="number" name="budget" class="form-control" placeholder="Contoh: 150000 (Kosongkan jika negosiasi di tempat)">
-                    <div class="form-text" style="font-size: 0.72rem;">Opsional. Boleh dikosongkan untuk disepakati langsung.</div>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Nomor Kontak WhatsApp Anda</label>
-                    <input type="text" class="form-control bg-light" value="<?= e($user['phone']) ?>" readonly>
-                    <div class="form-text" style="font-size: 0.72rem;">Penyedia jasa akan menghubungi Anda via WhatsApp ke nomor ini.</div>
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label small fw-semibold">Deskripsi Lengkap Kebutuhan / Kerusakan <span class="text-danger">*</span></label>
-                    <textarea name="description" rows="4" class="form-control" placeholder="Jelaskan jenis barang/alat, gejala kerusakan, atau detail bantuan yang Anda butuhkan secara jelas..." required></textarea>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-dark mb-1">Alamat Lengkap / Patokan</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light text-muted border-end-0 rounded-start-3"><i class="fa-solid fa-location-dot text-danger"></i></span>
+                    <input type="text" name="address_detail" class="form-control rounded-end-3 py-1.5" placeholder="Nama jalan, RT/RW, atau dekat masjid/toko..." value="<?= e($user['address'] ?? '') ?>">
                 </div>
             </div>
 
-            <div class="mt-4 pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $provider['id'] ?>" class="btn btn-outline-teal">
-                    <i class="fa-solid fa-comments me-1"></i> Tanya-tanya Dulu di Obrolan
+            <!-- E. Accordion Lipat (Opsional: Penawaran Anggaran) -->
+            <div class="mb-3">
+                <a class="d-flex align-items-center justify-content-between p-2 px-3 rounded-3 bg-light text-decoration-none border text-muted small" data-bs-toggle="collapse" href="#optionalFields" role="button" aria-expanded="false">
+                    <span><i class="fa-solid fa-sliders text-teal me-1.5"></i> <strong>Atur Penawaran Anggaran (Opsional)</strong></span>
+                    <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 0.72rem;"></i>
                 </a>
+                <div class="collapse mt-2" id="optionalFields">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <label class="form-label small fw-bold text-dark mb-1">Tawaran Anggaran Anda (Rp)</label>
+                        <input type="number" name="budget" class="form-control form-control-sm rounded-3" placeholder="Contoh: 150000 (Kosongkan jika negosiasi di tempat)">
+                        <div class="form-text" style="font-size: 0.72rem;">Kosongkan jika ingin disepakati langsung saat mitra memeriksa kerusakan.</div>
+                    </div>
+                </div>
+            </div>
 
-                <button type="submit" class="btn btn-primary-custom px-4 py-2">
-                    <i class="fa-solid fa-paper-plane me-1"></i> Kirim Pesanan Langsung
+            <!-- F. Notifikasi WhatsApp Bar (Ramping) -->
+            <div class="d-flex align-items-center gap-2 p-2 px-3 bg-teal-subtle text-teal-emphasis rounded-3 small mb-3 border border-teal-subtle">
+                <i class="fa-brands fa-whatsapp fs-5 text-success flex-shrink-0"></i>
+                <div style="font-size: 0.74rem;">
+                    Status pesanan & konfirmasi mitra dikirim ke WA Anda: <strong><?= e($user['phone']) ?></strong>
+                </div>
+            </div>
+
+            <!-- G. Tombol Aksi (Kompak & Modern) -->
+            <div class="d-flex align-items-center gap-2 pt-2 border-top">
+                <a href="<?= BASE_URL ?>/chat.php?provider_id=<?= $provider['id'] ?>" class="btn btn-outline-secondary rounded-3 py-2 px-3 flex-shrink-0 text-center" title="Chat Dulu">
+                    <i class="fa-solid fa-comments"></i> <span class="d-none d-sm-inline ms-1">Tanya Dulu</span>
+                </a>
+                <button type="submit" class="btn btn-success flex-grow-1 py-2 px-3 rounded-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" style="background: linear-gradient(135deg, #0d9488 0%, #059669 100%); border: none;">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Kirim Pesanan Sekarang</span>
                 </button>
             </div>
         </form>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Chip Cepat Masalah
+    const problemChips = document.querySelectorAll('.problem-chip');
+    const orderTitle = document.getElementById('order_title');
+    
+    problemChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            problemChips.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            orderTitle.value = this.getAttribute('data-val') || this.textContent.trim();
+            orderTitle.focus();
+        });
+    });
+
+    // 2. Chip Cepat Waktu
+    const timeChips = document.querySelectorAll('.time-chip');
+    const timeInput = document.getElementById('preferred_time_input');
+    
+    timeChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            timeChips.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            timeInput.value = this.getAttribute('data-time') || this.textContent.trim();
+        });
+    });
+});
+</script>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
