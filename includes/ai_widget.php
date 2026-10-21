@@ -939,15 +939,13 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
 
         try {
+            const formData = new FormData();
+            formData.append('message', text);
+            formData.append('history', JSON.stringify(chatHistory));
+
             const resp = await fetch('<?= BASE_URL ?>/ai_chat.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: text,
-                    history: chatHistory
-                })
+                body: formData
             });
 
             const data = await resp.json();

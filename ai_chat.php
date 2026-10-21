@@ -48,7 +48,14 @@ if (empty($data)) {
 }
 
 $message = trim((string)($data['message'] ?? ''));
-$history = is_array($data['history'] ?? null) ? $data['history'] : [];
+$history = [];
+if (isset($data['history'])) {
+    if (is_array($data['history'])) {
+        $history = $data['history'];
+    } elseif (is_string($data['history'])) {
+        $history = json_decode($data['history'], true) ?: [];
+    }
+}
 
 if ($message === '') {
     echo json_encode([
