@@ -106,6 +106,13 @@ $page_title = $page_title ?? 'Admin Dashboard';
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="sidebar-link <?= ($admin_active ?? '') === 'ai_studio' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/ai_studio.php">
+                            <i class="fa-solid fa-wand-magic-sparkles text-warning"></i> 
+                            <span>Studio Konten AI</span>
+                            <span class="badge text-bg-warning text-dark ms-auto fw-bold" style="font-size: 0.65rem;">Viral AI</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="sidebar-link <?= ($admin_active ?? '') === 'users' ? 'active' : '' ?>" href="<?= BASE_URL ?>/admin/users.php">
                             <i class="fa-solid fa-users"></i> Kelola Pengguna
                         </a>
