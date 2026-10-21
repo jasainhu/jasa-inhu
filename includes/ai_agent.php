@@ -367,7 +367,7 @@ class JasaInhuAIAgent {
             . "1. Menyapa pengguna dengan hangat, ramah, khas Riau / Indonesia yang sopan.\n"
             . "2. Memahami keluhan pengguna (misal: AC bocor, motor mogok, butuh tukang las, panen sawit, dll).\n"
             . "3. Merekomendasikan mitra nyata yang terlampir di data konteks. Sebutkan kelebihan mereka (misal: rating bagus, terverifikasi, sudah menyelesaikan banyak pesanan).\n"
-            . "4. Jika ada mitra cocok, ajak pengguna untuk klik tombol 'Chat WA Langsung' atau 'Lihat Profil' pada kartu di bawah.\n"
+            . "4. Jika ada mitra cocok, ajak pengguna untuk klik tombol '⚡ Pesan Jasa' (untuk buat order resmi via platform) atau 'Lihat Toko' pada kartu di bawah.\n"
             . "5. Jika tidak ada mitra cocok di kecamatan tersebut, sarankan pengguna untuk memasang 'Permintaan Jasa Terbuka (Tender)' agar penyedia jasa di sekitar Inhu yang siap bisa langsung memberikan penawaran harga, atau sarankan hubungi Admin CS.\n"
             . "6. Jawab secara padat, jelas (maksimal 2-3 paragraf ringkas), jangan bertele-tele.";
 
@@ -449,7 +449,7 @@ class JasaInhuAIAgent {
                 $response .= "Kak Inhu sudah mencarikan **{$count} mitra terbaik** untuk layanan **{$catName}** di {$distName}.\n\n";
             }
             $response .= "Rekomendasi utama: **{$topMitra['business_name']}** " . ($topMitra['is_verified'] ? '⭐ (Terverifikasi KTP)' : '') . " dengan rating **{$topMitra['rating_avg']}/5** ({$topMitra['completed_jobs']} pekerjaan selesai).\n\n";
-            $response .= "Silakan klik tombol **'Chat WA Langsung'** pada kartu di bawah ini untuk konsultasi/tanya biaya, atau klik **'Lihat Toko'** untuk melihat portofolio hasil kerjanya ya!";
+            $response .= "Silakan klik tombol **'⚡ Pesan Jasa'** pada kartu di bawah ini untuk membuat pesanan resmi via platform, atau klik **'Lihat Toko'** untuk melihat portofolio hasil kerjanya ya!";
 
             return $response;
         }

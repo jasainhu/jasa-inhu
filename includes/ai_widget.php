@@ -530,26 +530,29 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     transition: all 0.2s;
 }
 
-.kakinhu-card-btn.wa {
-    background: #25d366;
-    color: #ffffff;
-    box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);
+.kakinhu-card-btn.order {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.35);
+    border: none;
 }
 
-.kakinhu-card-btn.wa:hover {
-    background: #1eb857;
-    color: #ffffff;
+.kakinhu-card-btn.order:hover {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.5);
 }
 
 .kakinhu-card-btn.profile {
     background: #f1f5f9;
-    color: #334155;
+    color: #334155 !important;
     border: 1px solid #cbd5e1;
 }
 
 .kakinhu-card-btn.profile:hover {
     background: #e2e8f0;
-    color: #0f172a;
+    color: #0f172a !important;
 }
 
 /* Typing Indicator Animation */
@@ -891,7 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                         <div class="kakinhu-card-actions">
-                            ${p.wa_url ? `<a href="${p.wa_url}" target="_blank" class="kakinhu-card-btn wa"><i class="fa-brands fa-whatsapp"></i> Chat WA</a>` : ''}
+                            <a href="${p.order_url || p.profile_url}" class="kakinhu-card-btn order"><i class="fa-solid fa-bolt text-warning"></i> Pesan Jasa</a>
                             <a href="${p.profile_url}" class="kakinhu-card-btn profile"><i class="fa-solid fa-store"></i> Lihat Toko</a>
                         </div>
                     </div>
