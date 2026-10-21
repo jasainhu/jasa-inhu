@@ -52,6 +52,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    // Aksi 4: Kirim Langsung ke Nomor WA Target via Fonnte Gateway
+    if ($action === 'send_wa_direct') {
+        $target = trim($_POST['target'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+
+        if (empty($target) || empty($message)) {
+            echo json_encode(['status' => 'error', 'message' => 'Nomor WhatsApp tujuan dan isi pesan tidak boleh kosong']);
+            exit;
+        }
+
+        $res = send_wa_notification($target, $message, 'ai_studio_direct');
+        if ($res['status'] === 'sent') {
+            echo json_encode(['status' => 'success', 'message' => 'Pesan promosi berhasil terkirim via WhatsApp Gateway!']);
+        } else {
+            $errMsg = is_string($res['response']) ? $res['response'] : ($res['message'] ?? 'Koneksi Fonnte sedang kendala atau nomor tidak valid');
+            echo json_encode(['status' => 'error', 'message' => 'Gagal mengirim: ' . $errMsg]);
+        }
+        exit;
+    }
+
+    // Aksi 5: Broadcast Promosi Otomatis ke Mitra di Kecamatan Tertentu
+    if ($action === 'broadcast_to_partners') {
+        $district = trim($_POST['district'] ?? 'Seluruh Inhu');
+        $category = trim($_POST['category'] ?? 'Semua');
+        $message = trim($_POST['message'] ?? '');
+
+        if (empty($message)) {
+            echo json_encode(['status' => 'error', 'message' => 'Pesan promosi tidak boleh kosong']);
+            exit;
+        }
+
+        $query = "
+            SELECT DISTINCT u.phone, sp.business_name
+            FROM service_providers sp
+            JOIN users u ON sp.user_id = u.id
+            LEFT JOIN districts d ON sp.district_id = d.id
+            LEFT JOIN service_categories sc ON sp.primary_category_id = sc.id
+            WHERE u.is_active = 1 AND u.phone IS NOT NULL AND LENGTH(u.phone) >= 9
+        ";
+        $params = [];
+        if ($district !== 'Seluruh Inhu' && !empty($district)) {
+            $query .= " AND d.name = ?";
+            $params[] = $district;
+        }
+        if ($category !== 'Semua' && !empty($category)) {
+            $query .= " AND sc.name = ?";
+            $params[] = $category;
+        }
+        $query .= " LIMIT 20";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute($params);
+        $recipients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($recipients)) {
+            echo json_encode(['status' => 'error', 'message' => 'Tidak ditemukan mitra aktif dengan nomor HP pada filter ini']);
+            exit;
+        }
+
+        $sentCount = 0;
+        foreach ($recipients as $rec) {
+            $cleanPhone = preg_replace('/[^0-9]/', '', $rec['phone']);
+            if (!empty($cleanPhone)) {
+                $personalized = "Halo Mitra *" . $rec['business_name'] . "*,\n\n" . $message;
+                $res = send_wa_notification($cleanPhone, $personalized, 'ai_mitra_broadcast');
+                if ($res['status'] === 'sent') {
+                    $sentCount++;
+                }
+                usleep(1200000); // jeda 1.2 detik per pesan agar aman dari rate-limit
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => "Berhasil mengirim broadcast otomatis ke {$sentCount} dari " . count($recipients) . " mitra via WhatsApp Gateway!"
+        ]);
+        exit;
+    }
+
     echo json_encode(['status' => 'error', 'message' => 'Aksi tidak valid']);
     exit;
 }
@@ -75,6 +154,8 @@ $providers = $db->query("
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 $geminiKey = get_setting('gemini_api_key', '');
+$fonnte_info = get_fonnte_account_info(false);
+$admin_wa = get_setting('admin_wa', '6285126241679');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -89,17 +170,27 @@ require_once __DIR__ . '/includes/header.php';
         </div>
         <p class="text-muted small mb-0">Pabrik script video TikTok/Reels viral, materi promosi WA Story, dan postingan grup Facebook lokal Inhu</p>
     </div>
-    <div class="btn-toolbar mb-2 mb-md-0 d-flex gap-2 align-items-center">
-        <?php if (!empty($geminiKey)): ?>
-            <span class="badge text-bg-success px-3 py-2 fw-semibold shadow-xs">
-                <i class="fa-solid fa-bolt me-1 text-warning"></i> Engine: Google Gemini Flash AI
+    <div class="btn-toolbar mb-2 mb-md-0 d-flex gap-2 align-items-center flex-wrap">
+        <?php if (!empty($fonnte_info['is_connected'])): ?>
+            <span class="badge text-bg-success px-3 py-2 fw-semibold shadow-xs" title="WhatsApp Gateway Fonnte Aktif (<?= e($fonnte_info['device']) ?>)">
+                <i class="fa-brands fa-whatsapp me-1 text-white"></i> Bot WA: Terhubung (Kuota: <?= number_format($fonnte_info['quota']) ?>)
             </span>
         <?php else: ?>
-            <span class="badge text-bg-info text-white px-3 py-2 fw-semibold shadow-xs" style="background-color: #0d9488 !important;">
-                <i class="fa-solid fa-microchip me-1"></i> Engine: Smart Local Matrix (Rp 0 Biaya)
+            <a href="<?= BASE_URL ?>/admin/settings.php" class="badge text-bg-secondary px-3 py-2 fw-semibold text-decoration-none shadow-xs" title="Klik untuk hubungkan WhatsApp Gateway">
+                <i class="fa-brands fa-whatsapp me-1"></i> Bot WA: Offline
+            </a>
+        <?php endif; ?>
+
+        <?php if (!empty($geminiKey)): ?>
+            <span class="badge text-bg-dark px-3 py-2 fw-semibold shadow-xs">
+                <i class="fa-solid fa-bolt me-1 text-warning"></i> Gemini Flash AI
+            </span>
+        <?php else: ?>
+            <span class="badge text-white px-3 py-2 fw-semibold shadow-xs" style="background-color: #0d9488 !important;">
+                <i class="fa-solid fa-microchip me-1"></i> Smart Local Matrix
             </span>
         <?php endif; ?>
-        <a href="<?= BASE_URL ?>/admin/settings.php" class="btn btn-outline-secondary btn-sm" title="Pengaturan API Key">
+        <a href="<?= BASE_URL ?>/admin/settings.php" class="btn btn-outline-secondary btn-sm" title="Pengaturan AI & WA Gateway">
             <i class="fa-solid fa-sliders"></i>
         </a>
     </div>
@@ -561,6 +652,8 @@ document.getElementById('formSocial').addEventListener('submit', async function(
             document.getElementById('btnCopySocial').classList.remove('d-none');
             window.currentSocialCopy = data.copy;
 
+            const selectedCat = document.getElementById('socCategory').value;
+            const selectedDis = document.getElementById('socDistrict').value;
             const waShareUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(data.copy);
 
             box.innerHTML = `
@@ -568,11 +661,57 @@ document.getElementById('formSocial').addEventListener('submit', async function(
                     <span class="badge bg-teal-subtle text-teal border border-teal-subtle" style="font-size: 0.7rem;">
                         ${escapeHtml(data.engine || 'AI Engine')}
                     </span>
-                    <a href="${waShareUrl}" target="_blank" class="btn btn-xs btn-success py-1 px-2.5 fw-semibold" style="font-size: 0.76rem;">
-                        <i class="fa-brands fa-whatsapp me-1"></i> Langsung Buka di WA
+                    <a href="${waShareUrl}" target="_blank" class="btn btn-xs btn-outline-secondary py-1 px-2.5 fw-semibold" style="font-size: 0.74rem;">
+                        <i class="fa-brands fa-whatsapp me-1 text-success"></i> Buka WA Manual
                     </a>
                 </div>
-                <div class="p-3 output-code-box rounded-3" style="white-space: pre-wrap; line-height: 1.6;" id="textSocialPreview">${escapeHtml(data.copy)}</div>
+                <div class="p-3 output-code-box rounded-3 mb-3" style="white-space: pre-wrap; line-height: 1.6;" id="textSocialPreview">${escapeHtml(data.copy)}</div>
+
+                <!-- Panel Kirim Otomatis via Bot WA Gateway -->
+                <div class="card border border-success-subtle bg-success bg-opacity-10 rounded-3 p-3">
+                    <div class="d-flex align-items-center gap-2 mb-1.5">
+                        <i class="fa-brands fa-whatsapp text-success fs-5"></i>
+                        <h6 class="fw-bold text-dark mb-0">Robot WA: Kirim Otomatis (Tanpa Buka WhatsApp)</h6>
+                    </div>
+                    <p class="small text-muted mb-2.5" style="font-size: 0.8rem;">
+                        Pilih ke mana bot AI harus menembakkan pesan ini secara langsung:
+                    </p>
+
+                    <div class="bg-white p-2.5 rounded-2 border mb-2.5">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="sendTargetType" id="targetAdmin" value="admin" checked onchange="toggleTargetInput()">
+                            <label class="form-check-label small fw-bold text-dark" for="targetAdmin">
+                                Kirim ke Nomor WA Saya Sendiri (<code><?= e($admin_wa) ?></code>)
+                                <span class="badge text-bg-success ms-1" style="font-size: 0.65rem;">Instan</span>
+                            </label>
+                            <div class="text-muted" style="font-size: 0.72rem;">Bot akan mengirimkan teks ini ke WhatsApp Anda, sehingga Anda tinggal buat status / forward.</div>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="sendTargetType" id="targetCustom" value="custom" onchange="toggleTargetInput()">
+                            <label class="form-check-label small fw-bold text-dark" for="targetCustom">
+                                Kirim ke Nomor Lain / Nomor HP Mitra / ID Grup Tertentu
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sendTargetType" id="targetBroadcast" value="broadcast" onchange="toggleTargetInput()">
+                            <label class="form-check-label small fw-bold text-dark" for="targetBroadcast">
+                                Broadcast Otomatis ke Seluruh Mitra Kategori <strong>${escapeHtml(selectedCat)}</strong> di <strong>${escapeHtml(selectedDis)}</strong>
+                            </label>
+                            <div class="text-muted" style="font-size: 0.72rem;">Bot akan mengirim pesan satu per satu ke HP mitra dengan jeda anti-spam.</div>
+                        </div>
+                    </div>
+
+                    <div id="customTargetBox" class="mb-2.5 d-none">
+                        <label class="form-label small fw-bold text-dark mb-1">Ketik Nomor HP WhatsApp Tujuan:</label>
+                        <input type="text" class="form-control form-control-sm" id="inputCustomPhone" placeholder="Contoh: 081234567890 atau 6281234567890">
+                    </div>
+
+                    <button type="button" id="btnAutoSendSocial" class="btn btn-success w-100 py-2 fw-bold shadow-xs" onclick="executeAutoSendSocial()">
+                        <i class="fa-solid fa-paper-plane me-1.5"></i> Kirim Otomatis Sekarang via Bot WA
+                    </button>
+                </div>
             `;
         } else {
             box.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Gagal')}</div>`;
@@ -609,20 +748,34 @@ document.getElementById('formSpotlight').addEventListener('submit', async functi
             document.getElementById('btnCopySpotlight').classList.remove('d-none');
             window.currentSpotlightCopy = data.copy;
 
-            const prov = data.provider;
+            const prov = data.provider || {};
             let cleanPhone = (prov.phone || '').replace(/[^0-9]/g, '');
             if (cleanPhone.startsWith('08')) cleanPhone = '628' + cleanPhone.substring(2);
 
-            const sendToMitraUrl = cleanPhone ? 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent("Halo " + prov.business_name + ", selamat! Toko Anda hari ini terpilih sebagai Spotlight Rekomendasi di media sosial Jasa Inhu! Berikut materi postingannya:\n\n" + data.copy) : null;
+            const sendToMitraUrl = cleanPhone ? 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent("Halo " + (prov.business_name || 'Mitra') + ", selamat! Toko Anda hari ini terpilih sebagai Spotlight Rekomendasi di media sosial Jasa Inhu! Berikut materi postingannya:\n\n" + data.copy) : null;
 
             box.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <span class="badge text-bg-warning text-dark px-2.5 py-1" style="font-size: 0.7rem;">
                         <i class="fa-solid fa-star me-1"></i> Spotlight Terpilih
                     </span>
-                    ${sendToMitraUrl ? `<a href="${sendToMitraUrl}" target="_blank" class="btn btn-xs btn-outline-success py-1 px-2.5 fw-semibold" style="font-size: 0.74rem;"><i class="fa-brands fa-whatsapp me-1"></i> Kirim ke Mitra WA</a>` : ''}
+                    <div class="d-flex gap-2">
+                        ${cleanPhone ? `
+                            <button type="button" class="btn btn-xs btn-success py-1 px-2.5 fw-bold" style="font-size: 0.74rem;" onclick="sendSpotlightAutoViaGateway('${cleanPhone}', '${escapeJs(prov.business_name || 'Mitra')}')">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Kirim Otomatis ke WA Mitra
+                            </button>
+                        ` : ''}
+                        ${sendToMitraUrl ? `
+                            <a href="${sendToMitraUrl}" target="_blank" class="btn btn-xs btn-outline-secondary py-1 px-2 fw-semibold" style="font-size: 0.72rem;">
+                                <i class="fa-brands fa-whatsapp me-1 text-success"></i> Buka WA Web
+                            </a>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="p-3 output-code-box rounded-3" style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(data.copy)}</div>
+                <div class="p-3 output-code-box rounded-3 mb-2" style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(data.copy)}</div>
+                <div class="small text-muted fst-italic" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-circle-check text-success me-1"></i> Tombol <strong>"Kirim Otomatis ke WA Mitra"</strong> akan langsung menembakkan pesan ucapan selamat & materi promosi ini ke WhatsApp pemilik toko (<code>${cleanPhone || 'Nomor HP tidak ada'}</code>) via Bot Gateway tanpa perlu membuka WhatsApp Web.
+                </div>
             `;
         } else {
             box.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Gagal')}</div>`;
@@ -633,6 +786,169 @@ document.getElementById('formSpotlight').addEventListener('submit', async functi
         box.innerHTML = `<div class="alert alert-danger">Kendala koneksi.</div>`;
     }
 });
+
+// Helper Function: Kirim Otomatis Social Copy
+async function executeAutoSendSocial() {
+    if (!window.currentSocialCopy) {
+        Swal.fire('Peringatan', 'Silakan buat teks promosi terlebih dahulu.', 'warning');
+        return;
+    }
+
+    const targetType = document.querySelector('input[name="sendTargetType"]:checked').value;
+    const btn = document.getElementById('btnAutoSendSocial');
+    const origHtml = btn.innerHTML;
+
+    let targetPhone = '';
+    let isBroadcast = false;
+
+    if (targetType === 'admin') {
+        targetPhone = '<?= e($admin_wa) ?>';
+    } else if (targetType === 'custom') {
+        targetPhone = document.getElementById('inputCustomPhone').value.trim();
+        if (!targetPhone) {
+            Swal.fire('Peringatan', 'Masukkan nomor WhatsApp tujuan terlebih dahulu.', 'warning');
+            return;
+        }
+    } else if (targetType === 'broadcast') {
+        isBroadcast = true;
+    }
+
+    if (isBroadcast) {
+        const cat = document.getElementById('socCategory').value;
+        const dis = document.getElementById('socDistrict').value;
+
+        const confirm = await Swal.fire({
+            title: 'Mulai Broadcast Mitra?',
+            html: `Bot WA akan mengirimkan teks promosi ini satu per satu ke seluruh mitra kategori <b>${cat}</b> di wilayah <b>${dis}</b>.<br><br><small class="text-muted">Proses berjalan otomatis di latar belakang dengan jeda aman anti-spam.</small>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Kirim Sekarang',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#198754'
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5"></span> Sedang Mengirim Broadcast...';
+
+        try {
+            const formData = new FormData();
+            formData.append('action', 'broadcast_to_partners');
+            formData.append('district', dis);
+            formData.append('category', cat);
+            formData.append('message', window.currentSocialCopy);
+
+            const resp = await fetch('<?= BASE_URL ?>/admin/ai_studio.php', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await resp.json();
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+
+            if (res.status === 'success') {
+                Swal.fire('Sukses Terkirim!', res.message, 'success');
+            } else {
+                Swal.fire('Gagal', res.message, 'error');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            Swal.fire('Error', 'Kendala koneksi ke server.', 'error');
+        }
+    } else {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1.5"></span> Mengirim ke WhatsApp...';
+
+        try {
+            const formData = new FormData();
+            formData.append('action', 'send_wa_direct');
+            formData.append('target', targetPhone);
+            formData.append('message', window.currentSocialCopy);
+
+            const resp = await fetch('<?= BASE_URL ?>/admin/ai_studio.php', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await resp.json();
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+
+            if (res.status === 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Pesan Berhasil Terkirim!',
+                    text: `Robot AI berhasil menembak pesan ke nomor ${targetPhone} via WhatsApp Gateway Fonnte.`,
+                    timer: 3500
+                });
+            } else {
+                Swal.fire('Gagal Mengirim', res.message, 'error');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            Swal.fire('Error', 'Kendala koneksi ke server.', 'error');
+        }
+    }
+}
+
+function toggleTargetInput() {
+    const custom = document.getElementById('targetCustom');
+    const box = document.getElementById('customTargetBox');
+    if (custom && custom.checked) {
+        box.classList.remove('d-none');
+    } else {
+        box.classList.add('d-none');
+    }
+}
+
+async function sendSpotlightAutoViaGateway(phone, businessName) {
+    if (!window.currentSpotlightCopy) {
+        Swal.fire('Peringatan', 'Silakan generate spotlight terlebih dahulu.', 'warning');
+        return;
+    }
+
+    const confirm = await Swal.fire({
+        title: 'Kirim ke WA Mitra?',
+        html: `Kirim materi spotlight ini langsung ke nomor WhatsApp mitra <b>${escapeHtml(businessName)}</b> (${phone})?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Kirim Otomatis',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#198754'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    Swal.fire({
+        title: 'Mengirim...',
+        text: 'Robot WhatsApp sedang mengirimkan pesan ke HP mitra...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+        const formData = new FormData();
+        formData.append('action', 'send_wa_direct');
+        formData.append('target', phone);
+        formData.append('message', "Halo *" + businessName + "*,\n\nSelamat! Usaha Anda hari ini terpilih sebagai Spotlight Rekomendasi di platform JASA INHU! 🌟\n\nBerikut materi promosinya:\n\n" + window.currentSpotlightCopy);
+
+        const resp = await fetch('<?= BASE_URL ?>/admin/ai_studio.php', {
+            method: 'POST',
+            body: formData
+        });
+        const res = await resp.json();
+
+        if (res.status === 'success') {
+            Swal.fire('Berhasil Terkirim!', `Materi spotlight berhasil dikirim langsung ke WhatsApp ${businessName}.`, 'success');
+        } else {
+            Swal.fire('Gagal Mengirim', res.message, 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error', 'Kendala koneksi ke server.', 'error');
+    }
+}
 
 // Helper Clipboard
 function copyToClipboard(text) {
