@@ -2,13 +2,14 @@
 /**
  * API Endpoint: Chat dengan Kak Inhu (AI Agent)
  * JASA INHU - Marketplace Jasa Lokal Kabupaten Indragiri Hulu
+ * (Placed at root to keep Vercel Hobby serverless functions <= 12)
  */
 header('Content-Type: application/json; charset=utf-8');
 
-require_once __DIR__ . '/../config/app.php';
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/ai_agent.php';
+require_once __DIR__ . '/config/app.php';
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/ai_agent.php';
 
 // Memastikan session aman
 if (session_status() === PHP_SESSION_NONE) {
@@ -24,7 +25,7 @@ if (get_setting('ai_agent_enabled', '1') === '0') {
     exit;
 }
 
-// 2. Proteksi Anti-Flood / Rate Limiting (Maksimal 1 request per 1 detik per user session)
+// 2. Proteksi Anti-Flood / Rate Limiting (Maksimal 1 request per 0.8 detik per user session)
 $now = microtime(true);
 if (isset($_SESSION['ai_last_chat_time']) && ($now - $_SESSION['ai_last_chat_time']) < 0.8) {
     http_response_code(429);

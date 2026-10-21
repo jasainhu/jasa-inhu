@@ -939,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
 
         try {
-            const resp = await fetch('<?= BASE_URL ?>/api/ai_chat.php', {
+            const resp = await fetch('<?= BASE_URL ?>/ai_chat.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
