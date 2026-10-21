@@ -105,48 +105,115 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Penjelasan Alur Agensi AI -->
-<div class="card border-0 shadow-sm rounded-4 mb-4 bg-gradient text-white" style="background: linear-gradient(135deg, #0d9488 0%, #1e3a8a 100%);">
-    <div class="card-body p-4">
+<style>
+/* Custom Studio Tabs High-Contrast Styling */
+#studioTabs {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 6px !important;
+}
+#studioTabs .nav-item {
+    margin: 0;
+}
+#studioTabs .nav-link {
+    color: #334155 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    padding: 12px 18px !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease-in-out !important;
+}
+#studioTabs .nav-link i {
+    transition: all 0.2s ease-in-out !important;
+}
+#studioTabs .nav-link:hover:not(.active) {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+#studioTabs .nav-link.active {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+    border-color: #0d9488 !important;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35) !important;
+}
+#studioTabs .nav-link.active span,
+#studioTabs .nav-link.active i {
+    color: #ffffff !important;
+}
+.ai-hero-banner {
+    background: #0f172a !important;
+    background: linear-gradient(135deg, #042f2e 0%, #0f172a 60%, #1e1b4b 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.ai-hero-banner h4 {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+.ai-hero-banner p {
+    color: #cbd5e1 !important;
+}
+.ai-hero-banner .badge-pill-custom {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+}
+.output-code-box {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 0.88rem !important;
+    line-height: 1.65 !important;
+}
+</style>
+
+<!-- Penjelasan Alur Agensi AI (High Contrast) -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 ai-hero-banner overflow-hidden position-relative">
+    <div class="card-body p-4 position-relative" style="z-index: 2;">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <span class="badge bg-white text-dark fw-bold px-2.5 py-1 mb-2 shadow-xs" style="font-size: 0.72rem;">
+                <span class="badge fw-bold px-3 py-1.5 mb-2 shadow-xs" style="background-color: #f59e0b !important; color: #000000 !important; font-size: 0.75rem; letter-spacing: 0.5px;">
                     🚀 CARA MEMBAKAR ORDERAN DENGAN AI
                 </span>
-                <h4 class="fw-bold mb-2">Punya 30+ Mitra tapi Pesanan Masih Sepi?</h4>
-                <p class="small text-white-50 mb-3" style="max-width: 650px; line-height: 1.5;">
-                    Kuncinya adalah <strong>konsistensi konten</strong>. Gunakan AI Studio ini setiap hari untuk membuat 1 video TikTok/Reels atau 1 postingan di grup Facebook komunitas Inhu (*Info Warga Rengat / Belilas / Pasir Penyu*). Arahkan penonton untuk buka website dan tanya <strong>"Kak Inhu"</strong>!
+                <h4 class="fw-bold mb-2 fs-3 text-white">Punya 30+ Mitra tapi Pesanan Masih Sepi?</h4>
+                <p class="small mb-3" style="max-width: 650px; line-height: 1.6; font-size: 0.9rem;">
+                    Kuncinya adalah <strong class="text-white">konsistensi konten</strong>. Gunakan AI Studio ini setiap hari untuk membuat 1 video TikTok/Reels atau 1 postingan di grup Facebook komunitas Inhu (<em>Info Warga Rengat / Belilas / Pasir Penyu</em>). Arahkan penonton untuk buka website dan tanya <strong style="color: #2dd4bf !important;">"Kak Inhu"</strong>!
                 </p>
-                <div class="d-flex flex-wrap gap-2 small">
-                    <span class="badge bg-white bg-opacity-20 py-1.5 px-2.5"><i class="fa-solid fa-check text-warning me-1"></i> Script Video 3 Detik Hook</span>
-                    <span class="badge bg-white bg-opacity-20 py-1.5 px-2.5"><i class="fa-solid fa-check text-warning me-1"></i> Copywriting Grup FB</span>
-                    <span class="badge bg-white bg-opacity-20 py-1.5 px-2.5"><i class="fa-solid fa-check text-warning me-1"></i> Spotlight Mitra Harian</span>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge badge-pill-custom py-2 px-3 rounded-pill"><i class="fa-solid fa-check text-warning me-1.5"></i> Script Video 3 Detik Hook</span>
+                    <span class="badge badge-pill-custom py-2 px-3 rounded-pill"><i class="fa-solid fa-check text-warning me-1.5"></i> Copywriting Grup FB</span>
+                    <span class="badge badge-pill-custom py-2 px-3 rounded-pill"><i class="fa-solid fa-check text-warning me-1.5"></i> Spotlight Mitra Harian</span>
                 </div>
             </div>
             <div class="col-lg-4 text-center text-lg-end mt-3 mt-lg-0">
-                <div class="display-3 text-white-50"><i class="fa-solid fa-wand-magic-sparkles text-warning animate__animated animate__pulse animate__infinite"></i></div>
+                <div class="display-3"><i class="fa-solid fa-wand-magic-sparkles text-warning animate__animated animate__pulse animate__infinite"></i></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Tabs Navigasi Fitur Generator -->
-<ul class="nav nav-pills nav-fill gap-2 p-1 bg-white rounded-4 border shadow-sm mb-4" id="studioTabs" role="tablist">
+<ul class="nav nav-pills nav-fill gap-2 p-1 rounded-4 shadow-sm mb-4" id="studioTabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active py-2.5 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3" id="tab-tiktok" data-bs-toggle="pill" data-bs-target="#content-tiktok" type="button" role="tab">
-            <i class="fa-brands fa-tiktok text-danger fs-5"></i>
+        <button class="nav-link active d-flex align-items-center justify-content-center gap-2" id="tab-tiktok" data-bs-toggle="pill" data-bs-target="#content-tiktok" type="button" role="tab">
+            <i class="fa-brands fa-tiktok fs-5"></i>
             <span>1. Script Video TikTok & Reels</span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link py-2.5 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3" id="tab-social" data-bs-toggle="pill" data-bs-target="#content-social" type="button" role="tab">
-            <i class="fa-brands fa-facebook text-primary fs-5"></i>
+        <button class="nav-link d-flex align-items-center justify-content-center gap-2" id="tab-social" data-bs-toggle="pill" data-bs-target="#content-social" type="button" role="tab">
+            <i class="fa-brands fa-facebook fs-5 text-primary"></i>
             <span>2. Teks Status WA & Grup Facebook</span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link py-2.5 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3" id="tab-spotlight" data-bs-toggle="pill" data-bs-target="#content-spotlight" type="button" role="tab">
-            <i class="fa-solid fa-star text-warning fs-5"></i>
+        <button class="nav-link d-flex align-items-center justify-content-center gap-2" id="tab-spotlight" data-bs-toggle="pill" data-bs-target="#content-spotlight" type="button" role="tab">
+            <i class="fa-solid fa-star fs-5 text-warning"></i>
             <span>3. Spotlight Rekomendasi Mitra</span>
         </button>
     </li>
@@ -505,7 +572,7 @@ document.getElementById('formSocial').addEventListener('submit', async function(
                         <i class="fa-brands fa-whatsapp me-1"></i> Langsung Buka di WA
                     </a>
                 </div>
-                <div class="p-3.5 bg-light rounded-3 border text-dark font-monospace" style="font-size: 0.84rem; white-space: pre-wrap; line-height: 1.6;" id="textSocialPreview">${escapeHtml(data.copy)}</div>
+                <div class="p-3 output-code-box rounded-3" style="white-space: pre-wrap; line-height: 1.6;" id="textSocialPreview">${escapeHtml(data.copy)}</div>
             `;
         } else {
             box.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Gagal')}</div>`;
@@ -555,7 +622,7 @@ document.getElementById('formSpotlight').addEventListener('submit', async functi
                     </span>
                     ${sendToMitraUrl ? `<a href="${sendToMitraUrl}" target="_blank" class="btn btn-xs btn-outline-success py-1 px-2.5 fw-semibold" style="font-size: 0.74rem;"><i class="fa-brands fa-whatsapp me-1"></i> Kirim ke Mitra WA</a>` : ''}
                 </div>
-                <div class="p-3.5 bg-light rounded-3 border text-dark font-monospace" style="font-size: 0.84rem; white-space: pre-wrap; line-height: 1.6;">${escapeHtml(data.copy)}</div>
+                <div class="p-3 output-code-box rounded-3" style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(data.copy)}</div>
             `;
         } else {
             box.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Gagal')}</div>`;
