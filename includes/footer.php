@@ -188,6 +188,11 @@ if (empty($hide_footer)): ?>
 <!-- Global Smart Mobile App Banner & Modal (Tokopedia/Shopee Style) -->
 <?php require_once __DIR__ . '/app_modal.php'; ?>
 
+<!-- Global AI Agent Concierge: Kak Inhu -->
+<?php if (empty($hide_ai_widget)): ?>
+    <?php require_once __DIR__ . '/ai_widget.php'; ?>
+<?php endif; ?>
+
 <!-- Bootstrap 5 Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- SweetAlert2 Modern Popups -->

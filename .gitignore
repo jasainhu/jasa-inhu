@@ -11,3 +11,4 @@ tests/
 .env
 uploads/temp_mitra/
 backups/*.sql
+banner.txt

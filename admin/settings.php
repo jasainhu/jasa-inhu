@@ -104,7 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 update_setting('smtp_secure', $smtp_secure);
                 update_setting('gmail_webhook_url', $gmail_webhook_url);
 
-                $success = 'Pengaturan sistem, rekening bank, e-wallet, WhatsApp Gateway, Domain, dan email berhasil disimpan!';
+                // Simpan Pengaturan AI Agent (Kak Inhu)
+                $ai_agent_enabled = isset($_POST['ai_agent_enabled']) ? '1' : '0';
+                $gemini_api_key = trim($_POST['gemini_api_key'] ?? '');
+                $ai_agent_name = trim($_POST['ai_agent_name'] ?? 'Kak Inhu');
+                update_setting('ai_agent_enabled', $ai_agent_enabled);
+                update_setting('gemini_api_key', $gemini_api_key);
+                update_setting('ai_agent_name', $ai_agent_name ?: 'Kak Inhu');
+
+                $success = 'Pengaturan sistem, rekening bank, e-wallet, WhatsApp Gateway, Domain, AI Agent, dan email berhasil disimpan!';
             }
         } elseif ($action === 'test_whatsapp') {
             $test_phone = trim($_POST['test_phone'] ?? '');
@@ -215,6 +223,11 @@ try {
     $stmtE = $db->query("SELECT id, recipient_email, subject, status, error_message, created_at FROM email_logs ORDER BY id DESC LIMIT 5");
     $recent_emails = $stmtE->fetchAll();
 } catch (Exception $e) {}
+
+// Pengaturan AI Agent "Kak Inhu"
+$current_ai_enabled = get_setting('ai_agent_enabled', '1');
+$current_gemini_key = get_setting('gemini_api_key', '');
+$current_ai_name = get_setting('ai_agent_name', 'Kak Inhu');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -999,6 +1012,101 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
                 </div>
+        <!-- 7. "Kak Inhu" - AI Agent & Asisten Virtual 24/7 -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border-left: 5px solid #0d9488 !important;">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle text-white shadow-xs" style="width: 38px; height: 38px; background: linear-gradient(135deg, #0d9488 0%, #1e40af 100%);">
+                            <i class="fa-solid fa-robot fs-5"></i>
+                        </span>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <span>"<?= e($current_ai_name) ?>" - AI Agent & Asisten Virtual 24/7</span>
+                            </h5>
+                            <p class="text-muted small mb-0">Virtual Concierge cerdas yang merekomendasikan mitra aktif Inhu secara otomatis ke warga</p>
+                        </div>
+                    </div>
+                    <div>
+                        <?php if ($current_ai_enabled === '1'): ?>
+                            <?php if (!empty($current_gemini_key)): ?>
+                                <span class="badge text-bg-success px-3 py-1.5 fw-bold shadow-xs">
+                                    <i class="fa-solid fa-sparkles me-1 text-warning"></i> Aktif (Google Gemini AI LLM)
+                                </span>
+                            <?php else: ?>
+                                <span class="badge text-bg-info text-white px-3 py-1.5 fw-bold shadow-xs" style="background-color: #0d9488 !important;">
+                                    <i class="fa-solid fa-bolt me-1"></i> Aktif (Smart Heuristik Lokal - Rp 0)
+                                </span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span class="badge text-bg-secondary px-3 py-1.5 fw-bold shadow-xs">
+                                <i class="fa-solid fa-power-off me-1"></i> Nonaktif
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 pt-3">
+                    <div class="p-3 bg-light rounded-4 border mb-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="fa-solid fa-lightbulb text-warning fs-4 mt-1"></i>
+                            <div class="small text-secondary">
+                                <strong class="text-dark">Bagaimana AI Agent Bekerja:</strong> Pengunjung tidak perlu bingung mencari atau mengisi formulir panjang. Mereka cukup mengobrol atau bicara via suara (misal: <em>"Cari tukang servis AC di Air Molek"</em> atau <em>"Motor mogok di Rengat"</em>). Kak Inhu akan langsung menganalisis masalah, mengecek data mitra real di 14 kecamatan, dan menampilkan kartu mitra lengkap dengan tombol <strong>Chat WA Langsung</strong> & <strong>Lihat Toko</strong>!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch p-0 d-flex align-items-center justify-content-between p-3 rounded-3 border bg-white">
+                                <div>
+                                    <label class="form-check-label fw-bold text-dark d-block" for="switchAiEnabled">
+                                        Aktifkan Widget AI Agent di Website
+                                    </label>
+                                    <small class="text-muted">Tampilkan tombol mengambang "Tanya Kak Inhu" di seluruh halaman</small>
+                                </div>
+                                <input class="form-check-input ms-3 fs-5" type="checkbox" role="switch" id="switchAiEnabled" name="ai_agent_enabled" value="1" <?= $current_ai_enabled === '1' ? 'checked' : '' ?>>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Nama Panggilan Asisten AI:</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-id-badge text-muted"></i></span>
+                                <input type="text" name="ai_agent_name" class="form-control fw-bold" value="<?= e($current_ai_name) ?>" placeholder="Contoh: Kak Inhu">
+                            </div>
+                            <small class="text-muted">Nama yang menyapa pelanggan di pojok kiri bawah.</small>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-dark d-flex align-items-center justify-content-between">
+                                <span>API Key Google Gemini (Opsional - Untuk Jawaban Super Natural):</span>
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-teal text-decoration-none fw-semibold">
+                                    <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Dapatkan Google Gemini API Key Gratis di Google AI Studio
+                                </a>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-key text-muted"></i></span>
+                                <input type="password" id="inputGeminiKey" name="gemini_api_key" class="form-control font-monospace fw-bold" value="<?= e($current_gemini_key) ?>" placeholder="AIzaSy...">
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleGeminiKey()">
+                                    <i class="fa-regular fa-eye" id="eyeIconGemini"></i>
+                                </button>
+                            </div>
+                            <div class="form-text small text-muted">
+                                <strong>Tips Hemat:</strong> Jika kolom API Key ini dikosongkan, sistem tetap berjalan 100% normal menggunakan <strong>Mesin Heuristik Lokal Cerdas (0ms latency & Rp 0 biaya)</strong>. Jika diisi dengan API Key gratis Google Gemini Flash, Kak Inhu akan menjawab layaknya manusia profesional khas Riau.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 pt-3 border-top gap-2 bg-light p-3 rounded-3">
+                        <span class="text-muted small">
+                            <i class="fa-solid fa-shield-halved text-success me-1"></i> Terhubung langsung ke database <code>service_providers</code> Jasa Inhu.
+                        </span>
+                        <button type="submit" form="settingsForm" class="btn btn-teal btn-sm fw-bold px-3 py-2 shadow-xs">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Pengaturan AI Agent
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1034,6 +1142,18 @@ require_once __DIR__ . '/includes/header.php';
 function toggleFonnteToken() {
     const input = document.getElementById('inputFonnteToken');
     const icon = document.getElementById('eyeIconFonnte');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+    }
+}
+
+function toggleGeminiKey() {
+    const input = document.getElementById('inputGeminiKey');
+    const icon = document.getElementById('eyeIconGemini');
     if (input.type === 'password') {
         input.type = 'text';
         icon.className = 'fa-regular fa-eye-slash';
