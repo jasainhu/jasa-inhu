@@ -12,7 +12,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
 <!-- KAK INHU - AI AGENT WIDGET -->
 <div id="kakInhuWidgetRoot" class="kakinhu-root" data-agent-name="<?= e($agentName) ?>">
     
-    <!-- 1. Floating Launcher Button & Tooltip (Pojok Kiri Bawah) -->
+    <!-- 1. Floating Launcher Button & Tooltip (Pojok Kanan Bawah, Di Atas WhatsApp CS) -->
     <div id="kakInhuLauncher" class="kakinhu-launcher shadow-lg" role="button" aria-label="Tanya <?= e($agentName) ?> Asisten AI">
         <div class="kakinhu-avatar-wrapper">
             <div class="kakinhu-avatar">
@@ -20,9 +20,9 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
             </div>
             <span class="kakinhu-online-dot" title="Online 24 Jam"></span>
         </div>
-        <div class="kakinhu-launcher-text d-none d-sm-flex">
+        <div class="kakinhu-launcher-text">
             <span class="kakinhu-btn-title">Tanya <?= e($agentName) ?></span>
-            <span class="kakinhu-btn-sub"><i class="fa-solid fa-sparkles text-warning me-1"></i>Asisten AI 24 Jam</span>
+            <span class="kakinhu-btn-sub d-none d-sm-inline"><i class="fa-solid fa-sparkles text-warning me-1"></i>Asisten AI 24 Jam</span>
         </div>
     </div>
 
@@ -125,25 +125,25 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
 .kakinhu-root {
     font-family: inherit;
     position: relative;
-    z-index: 1045;
+    z-index: 999990;
 }
 
-/* 1. Floating Launcher Button (Bottom-Left) */
+/* 1. Floating Launcher Button (Bottom-Right, Tepat di Atas WhatsApp CS) */
 .kakinhu-launcher {
     position: fixed;
-    bottom: 24px;
-    left: 24px;
-    z-index: 1045;
+    bottom: 84px;
+    right: 24px;
+    z-index: 999995;
     background: linear-gradient(135deg, #0d9488 0%, #1e40af 100%);
     color: #ffffff;
     border-radius: 50px;
     padding: 8px 18px 8px 10px;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     cursor: pointer;
     box-shadow: 0 10px 28px rgba(13, 148, 136, 0.45);
-    border: 2px solid rgba(255, 255, 255, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.35);
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     user-select: none;
 }
@@ -216,9 +216,9 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
 /* Tooltip Popup */
 .kakinhu-tooltip {
     position: fixed;
-    bottom: 84px;
-    left: 24px;
-    z-index: 1044;
+    bottom: 144px;
+    right: 24px;
+    z-index: 999994;
     background: #ffffff;
     color: #1e293b;
     border-radius: 16px;
@@ -235,7 +235,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     content: '';
     position: absolute;
     bottom: -8px;
-    left: 32px;
+    right: 32px;
     border-width: 8px 8px 0;
     border-style: solid;
     border-color: #ffffff transparent transparent;
@@ -257,7 +257,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
 .kakinhu-window {
     position: fixed;
     bottom: 24px;
-    left: 24px;
+    right: 24px;
     width: 380px;
     height: 560px;
     max-height: calc(100vh - 48px);
@@ -266,7 +266,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     display: none;
     flex-direction: column;
     overflow: hidden;
-    z-index: 1050;
+    z-index: 999999;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
     border: 1px solid rgba(226, 232, 240, 0.9);
     animation: kakInhuSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -687,23 +687,33 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
    ========================================================= */
 @media (max-width: 991.98px) {
     .kakinhu-launcher {
-        bottom: 82px; /* Di atas mobile bottom navigation */
-        left: 14px;
-        padding: 8px 12px;
+        bottom: 136px; /* Tepat di atas tombol WhatsApp CS di HP */
+        right: 14px;
+        left: auto;
+        padding: 6px 12px;
         gap: 8px;
     }
     .kakinhu-avatar-wrapper {
-        width: 38px;
-        height: 38px;
+        width: 36px;
+        height: 36px;
     }
     .kakinhu-avatar {
-        width: 38px;
-        height: 38px;
-        font-size: 1.15rem;
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+    .kakinhu-btn-title {
+        font-size: 0.82rem;
     }
     .kakinhu-tooltip {
-        bottom: 136px;
-        left: 14px;
+        bottom: 196px;
+        right: 14px;
+        left: auto;
+        max-width: 240px;
+    }
+    .kakinhu-tooltip::after {
+        right: 24px;
+        left: auto;
     }
 }
 
