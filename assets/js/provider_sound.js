@@ -283,7 +283,9 @@ if (typeof window.AppNotification === 'undefined') {
 
             if (pollInterval) clearInterval(pollInterval);
 
-            pollInterval = setInterval(() => {
+            // Fungsi cek pesanan cerdas (hemat kuota TiDB, pause jika tab tidak aktif)
+            const doCheckOrders = () => {
+                if (document.hidden) return; // Jangan request jika tab sedang diminimize / di background!
                 const baseUrl = window.APP_BASE_URL || window.BASE_URL || '';
                 fetch(baseUrl + '/api/provider_check_orders.php', {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -326,7 +328,17 @@ if (typeof window.AppNotification === 'undefined') {
                     }
                 })
                 .catch(() => {});
-            }, 7000);
+            };
+
+            // Polling setiap 30 detik (jauh lebih hemat daripada 7 detik)
+            pollInterval = setInterval(doCheckOrders, 30000);
+
+            // Saat tab dibuka kembali dari background, langsung periksa 1x
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    doCheckOrders();
+                }
+            });
         }
 
         return {
