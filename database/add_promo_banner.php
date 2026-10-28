@@ -24,3 +24,4 @@ if (!$existing) {
 } else {
     echo "INFO: Banner sudah ada dengan ID: " . $existing['id'] . "\n";
 }
+

@@ -285,7 +285,13 @@ require_once __DIR__ . '/includes/header.php';
                                 <div class="carousel-item h-100 <?= $idx === 0 ? 'active' : '' ?>">
                                     <?php if (has_media($b['image_url'] ?? '')): ?>
                                         <div class="banner-slide-wrapper position-relative h-100 w-100 overflow-hidden">
-                                            <img src="<?= e(get_media_url($b['image_url'])) ?>" class="d-block w-100 h-100 banner-img-responsive" alt="Banner Promo">
+                                            <?php if (!empty($b['link_url'])): ?>
+                                                <a href="<?= e($b['link_url']) ?>" target="_blank" class="d-block w-100 h-100 text-decoration-none">
+                                                    <img src="<?= e(get_media_url($b['image_url'])) ?>" class="d-block w-100 h-100 banner-img-responsive" alt="<?= e($b['title'] ?: 'Banner Promo') ?>">
+                                                </a>
+                                            <?php else: ?>
+                                                <img src="<?= e(get_media_url($b['image_url'])) ?>" class="d-block w-100 h-100 banner-img-responsive" alt="<?= e($b['title'] ?: 'Banner Promo') ?>">
+                                            <?php endif; ?>
                                             <?php if (!empty($b['show_overlay'])): ?>
                                                 <div class="banner-slide-overlay d-flex flex-column justify-content-center p-2 p-md-4 text-white">
                                                     <span class="badge py-1 px-2 fw-bold mb-1 align-self-start" style="background-color: <?= e($b['badge_color'] ?: '#0d9488') ?>; font-size: 0.65rem;">
