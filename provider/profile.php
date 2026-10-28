@@ -234,15 +234,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($error)) {
                 try {
+                    $is_uploading_new_ktp = (isset($_FILES['id_card_image']) && $_FILES['id_card_image']['error'] !== UPLOAD_ERR_NO_FILE);
+                    $is_uploading_new_cert = (isset($_FILES['certificate']) && $_FILES['certificate']['error'] !== UPLOAD_ERR_NO_FILE);
+                    $has_new_docs = ($is_uploading_new_ktp || $is_uploading_new_cert);
+
                     $stmtP = $db->prepare("
                         UPDATE service_providers 
-                        SET id_card_type = ?, id_card_number = ?, school_name = ?, id_card_image = ?, credential_title = ?, certificate_url = ?, updated_at = NOW()
+                        SET id_card_type = ?, id_card_number = ?, school_name = ?, id_card_image = ?, credential_title = ?, certificate_url = ?, 
+                            verification_submitted_at = IF(? = 1 OR verification_submitted_at IS NULL, NOW(), verification_submitted_at),
+                            verification_notes = IF(? = 1, NULL, verification_notes),
+                            updated_at = NOW()
                         WHERE id = ?
                     ");
-                    $stmtP->execute([$id_card_type, $id_card_number, $school_name, $id_card_image, $credential_title, $certificate_url, $provider['id']]);
+                    $stmtP->execute([$id_card_type, $id_card_number, $school_name, $id_card_image, $credential_title, $certificate_url, $has_new_docs ? 1 : 0, $has_new_docs ? 1 : 0, $provider['id']]);
 
                     $docName = ($id_card_type === 'pelajar') ? 'Kartu Pelajar' : 'KTP';
-                    set_flash('success', "Dokumen {$docName} berhasil disimpan dan sedang ditinjau pengelola!");
+                    set_flash('success', "Dokumen {$docName} / Sertifikat berhasil disimpan! Berkas Anda sedang dalam proses verifikasi oleh Admin JASA INHU (Maksimal 1 x 24 Jam kerja). Anda akan menerima notifikasi WhatsApp segera setelah disetujui.");
                     redirect('/provider/profile.php');
                 } catch (Exception $e) {
                     $error = 'Gagal menyimpan dokumen verifikasi: ' . $e->getMessage();
@@ -818,10 +825,10 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="modal-body p-3 p-md-4">
-                <!-- Status Badge -->
-                <div class="p-3 rounded-3 mb-3 border <?php if (!empty($provider['is_verified'])): ?>bg-success bg-opacity-10 border-success<?php elseif (!empty($provider['id_card_image'])): ?>bg-warning bg-opacity-10 border-warning<?php else: ?>bg-light border-secondary-subtle<?php endif; ?>">
+                <!-- Status Badge & SLA 1 x 24 Jam Tracker -->
+                <div class="p-3 rounded-3 mb-3 border <?php if (!empty($provider['is_verified'])): ?>bg-success bg-opacity-10 border-success<?php elseif (!empty($provider['id_card_image']) || !empty($provider['certificate_url'])): ?>bg-warning bg-opacity-10 border-warning<?php else: ?>bg-light border-secondary-subtle<?php endif; ?>">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
-                        <span class="small fw-bold text-dark">Status Verifikasi Identitas:</span>
+                        <span class="small fw-bold text-dark">Status Verifikasi Identitas & Dokumen:</span>
                         <?php if (!empty($provider['is_verified'])): ?>
                             <?php if (($provider['id_card_type'] ?? 'ktp') === 'pelajar'): ?>
                                 <span class="badge bg-purple text-white px-2.5 py-1 rounded-pill fw-semibold shadow-xs" style="font-size: 0.72rem; background-color: #7c3aed;">
@@ -832,9 +839,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     <i class="fa-solid fa-circle-check me-1"></i> Terverifikasi KTP Resmi
                                 </span>
                             <?php endif; ?>
-                        <?php elseif (!empty($provider['id_card_image'])): ?>
-                            <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                <i class="fa-solid fa-clock me-1"></i> Berkas Sedang Divalidasi Admin
+                        <?php elseif (!empty($provider['id_card_image']) || !empty($provider['certificate_url'])): ?>
+                            <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold shadow-2xs" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-hourglass-half me-1"></i> Sedang Ditinjau Admin (Maks. 1x24 Jam)
                             </span>
                         <?php else: ?>
                             <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
@@ -845,6 +852,41 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="text-muted small" style="font-size: 0.72rem; line-height: 1.4;">
                         Toko/jasa yang terverifikasi resmi diprioritaskan di hasil pencarian dan lebih dipercaya pelanggan se-Kabupaten Indragiri Hulu.
                     </div>
+
+                    <?php if (empty($provider['is_verified']) && (!empty($provider['id_card_image']) || !empty($provider['certificate_url']))): ?>
+                        <?php
+                            $subTime = !empty($provider['verification_submitted_at']) ? strtotime($provider['verification_submitted_at']) : strtotime($provider['updated_at']);
+                            $elapsedHours = round((time() - $subTime) / 3600, 1);
+                            $remHours = max(0, ceil(24 - $elapsedHours));
+                            $isOverdue = ($elapsedHours >= 24);
+                        ?>
+                        <div class="p-2.5 rounded-3 bg-white border border-warning-subtle mt-2 shadow-2xs small">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="fw-bold text-dark" style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-clock-rotate-left text-warning me-1"></i> Waktu Antrean Review:
+                                </span>
+                                <span class="badge <?= $isOverdue ? 'bg-danger text-white' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' ?> font-monospace" style="font-size: 0.68rem;">
+                                    <?= $isOverdue ? 'Prioritas Antrean (Lewat 24 Jam)' : "Target Selesai: ~{$remHours} Jam Lagi" ?>
+                                </span>
+                            </div>
+                            <p class="text-muted mb-1" style="font-size: 0.72rem; line-height: 1.4;">
+                                Berkas Anda berhasil diterima sistem pada <strong><?= date('d M Y, H:i', $subTime) ?> WIB</strong>. Tim Admin JASA INHU meninjau berkas dalam waktu maksimal <strong>1 x 24 jam kerja</strong>.
+                            </p>
+                            <div class="text-success fw-semibold" style="font-size: 0.71rem;">
+                                <i class="fa-brands fa-whatsapp me-1"></i> Konfirmasi persetujuan centang hijau otomatis dikirimkan ke WhatsApp Anda.
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($provider['verification_notes']) && empty($provider['is_verified'])): ?>
+                        <div class="p-2.5 rounded-3 bg-danger bg-opacity-10 border border-danger-subtle mt-2 small text-danger">
+                            <div class="fw-bold mb-0.5"><i class="fa-solid fa-triangle-exclamation me-1"></i> Catatan Perbaikan dari Admin:</div>
+                            <div class="text-dark bg-white p-2 rounded border border-danger-subtle mb-1" style="font-size: 0.73rem;">
+                                "<?= htmlspecialchars($provider['verification_notes']) ?>"
+                            </div>
+                            <div style="font-size: 0.68rem;">Silakan perbaiki data di formulir bawah atau unggah ulang foto yang jelas, lalu klik Simpan.</div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Pilihan Jenis Identitas (KTP vs Pelajar) -->

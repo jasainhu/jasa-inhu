@@ -12,3 +12,5 @@ tests/
 uploads/temp_mitra/
 backups/*.sql
 banner.txt
+scripts/sync_from_old_cluster.php
+

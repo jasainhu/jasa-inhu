@@ -52,18 +52,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($action === 'toggle_ktp_verified') {
             $user_id = (int)$_POST['user_id'];
             $new_status = (int)$_POST['new_status'];
-            $stmt = $db->prepare("UPDATE service_providers SET is_verified = ?, updated_at = NOW() WHERE user_id = ?");
+            $stmt = $db->prepare("UPDATE service_providers SET is_verified = ?, verification_notes = NULL, updated_at = NOW() WHERE user_id = ?");
             $stmt->execute([$new_status, $user_id]);
 
-            // Cek tipe identitas
-            $stmtSp = $db->prepare("SELECT id_card_type FROM service_providers WHERE user_id = ?");
+            // Cek data mitra dan user untuk kirim WhatsApp otomatis!
+            $stmtSp = $db->prepare("
+                SELECT sp.id, sp.business_name, sp.id_card_type, u.name, u.phone 
+                FROM service_providers sp 
+                JOIN users u ON sp.user_id = u.id 
+                WHERE sp.user_id = ?
+            ");
             $stmtSp->execute([$user_id]);
             $spData = $stmtSp->fetch();
             $isPelajar = ($spData && ($spData['id_card_type'] ?? '') === 'pelajar');
             $docName = $isPelajar ? 'Kartu Pelajar' : 'KTP';
 
-            $msg = ($new_status === 1) ? "Status identitas {$docName} mitra berhasil diverifikasi resmi." : "Status verifikasi {$docName} mitra telah dinonaktifkan.";
+            if ($new_status === 1 && !empty($spData['phone'])) {
+                $waMsg = "Halo Kak *{$spData['name']}* (*{$spData['business_name']}*), salam hangat dari Tim Verifikasi JASA INHU 🙏✨\n\n"
+                       . "Kabar gembira! Dokumen {$docName} / Sertifikat usaha Anda *telah disetujui resmi oleh Admin JASA INHU* ✅\n\n"
+                       . "Toko Anda sekarang resmi memiliki lencana *Centang Hijau (Terverifikasi)* dan diprioritaskan di hasil pencarian warga se-Kabupaten Indragiri Hulu.\n\n"
+                       . "Buka profil toko resmi Anda:\n"
+                       . "👉 " . BASE_URL . "/provider_detail.php?id={$spData['id']}\n\n"
+                       . "Terima kasih banyak atas kerja samanya. Semoga rezeki berkah dan makin laris ya Kak! 💪😊\n\n"
+                       . "— *Admin Verifikasi JASA INHU*";
+                send_wa_notification($spData['phone'], $waMsg, 'ktp_verified_approved', null, $spData['name']);
+            }
+
+            $msg = ($new_status === 1) ? "Status identitas {$docName} mitra berhasil diverifikasi resmi dan notifikasi WhatsApp telah dikirimkan ke mitra." : "Status verifikasi {$docName} mitra telah dinonaktifkan.";
             set_flash('success', $msg);
+            redirect('/admin/users.php');
+        }
+
+        // 1.b.2 Tolak Dokumen Verifikasi dengan Alasan (Kirim WA Otomatis)
+        if ($action === 'reject_ktp_verified') {
+            $user_id = (int)$_POST['user_id'];
+            $reason = trim($_POST['reason'] ?? 'Foto dokumen tidak jelas / buram. Silakan foto ulang dengan jelas.');
+            $stmt = $db->prepare("UPDATE service_providers SET is_verified = 0, verification_notes = ?, updated_at = NOW() WHERE user_id = ?");
+            $stmt->execute([$reason, $user_id]);
+
+            $stmtSp = $db->prepare("
+                SELECT sp.id, sp.business_name, sp.id_card_type, u.name, u.phone 
+                FROM service_providers sp 
+                JOIN users u ON sp.user_id = u.id 
+                WHERE sp.user_id = ?
+            ");
+            $stmtSp->execute([$user_id]);
+            $spData = $stmtSp->fetch();
+
+            if (!empty($spData['phone'])) {
+                $waMsg = "Halo Kak *{$spData['name']}* (*{$spData['business_name']}*), salam dari Tim Verifikasi JASA INHU 🙏\n\n"
+                       . "Terkait pengajuan verifikasi KTP / Sertifikat Anda di portal JASA INHU, mohon maaf berkas *belum dapat kami setujui* saat ini.\n\n"
+                       . "📌 *Catatan Admin:* \"{$reason}\"\n\n"
+                       . "Silakan login ke akun Anda dan unggah ulang foto yang jelas di menu Kelola Profil:\n"
+                       . "👉 " . BASE_URL . "/provider/profile.php\n\n"
+                       . "Jika ada yang bingung atau butuh bantuan, Kakak bisa langsung balas pesan WhatsApp ini ya Kak. Terima kasih! 🙏\n\n"
+                       . "— *Admin Verifikasi JASA INHU*";
+                send_wa_notification($spData['phone'], $waMsg, 'ktp_verified_rejected', null, $spData['name']);
+            }
+
+            set_flash('warning', "Pengajuan verifikasi ditolak dengan catatan: \"{$reason}\". Notifikasi WhatsApp telah otomatis dikirim ke nomor mitra.");
             redirect('/admin/users.php');
         }
 
@@ -75,6 +122,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $db->prepare("UPDATE user_verifications SET is_verified = 1 WHERE user_id = ?")->execute([$user_id]);
             set_flash('success', 'Akun berhasil diverifikasi manual oleh admin.');
             redirect('/admin/users.php');
+        }
+
+        // 1.e. Kirim Pengingat WhatsApp ke Pendaftar yang Belum Selesaikan OTP
+        if ($action === 'send_otp_reminder') {
+            $user_id = (int)($_POST['user_id'] ?? 0);
+            $stmt = $db->prepare("SELECT u.id, u.name, u.phone, sp.business_name FROM users u LEFT JOIN service_providers sp ON u.id = sp.user_id WHERE u.id = ?");
+            $stmt->execute([$user_id]);
+            $targetUser = $stmt->fetch();
+
+            if ($targetUser && !empty($targetUser['phone'])) {
+                $targetName = $targetUser['name'] ?: 'Kak';
+                $waMsg = "Halo Kak *{$targetName}*, salam hangat dari Tim Admin JASA INHU 🙏✨\n\n"
+                       . "Kami melihat Kakak baru saja mendaftar di platform *JASA INHU* (Pusat Layanan & Jasa Se-Indragiri Hulu), namun proses pendaftaran belum selesai pada tahap kode verifikasi OTP WhatsApp.\n\n"
+                       . "Apakah Kakak mengalami kendala saat menerima kode OTP? Kami siap membantu Kakak agar akun segera aktif.\n\n"
+                       . "Kakak bisa langsung melanjutkan pendaftaran atau meminta kode baru di:\n"
+                       . "👉 " . BASE_URL . "/auth/login.php\n\n"
+                       . "Atau Kakak juga bisa langsung membalas pesan WhatsApp ini jika membutuhkan bantuan admin kami ya Kak. Terima kasih banyak! 😊🙏\n\n"
+                       . "— *Tim Support JASA INHU*";
+                $res = send_wa_notification($targetUser['phone'], $waMsg, 'otp_reminder', null, $targetName);
+                if ($res['success']) {
+                    set_flash('success', "Pesan pengingat WhatsApp berhasil otomatis dikirimkan ke {$targetName} ({$targetUser['phone']}).");
+                } else {
+                    set_flash('danger', "Gagal mengirim WhatsApp: " . ($res['message'] ?? 'Gateway Fonnte error'));
+                }
+            } else {
+                set_flash('danger', 'Nomor WhatsApp pengguna tidak ditemukan.');
+            }
+            redirect('/admin/users.php' . ($role_filter ? '?role=' . urlencode($role_filter) : ''));
         }
 
         // 1.d. Reset Kata Sandi Akun oleh Admin
@@ -348,9 +423,9 @@ if ($role_filter === 'unverified') {
 if ($verif_filter === 'verified') {
     $where_clauses[] = "sp.is_verified = 1";
 } elseif ($verif_filter === 'pending') {
-    $where_clauses[] = "(sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50)";
+    $where_clauses[] = "(sp.is_verified = 0 OR sp.is_verified IS NULL) AND ((sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50) OR (sp.certificate_url IS NOT NULL AND LENGTH(sp.certificate_url) > 50))";
 } elseif ($verif_filter === 'unuploaded') {
-    $where_clauses[] = "(sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NULL OR LENGTH(sp.id_card_image) <= 50) AND r.name = 'penyedia'";
+    $where_clauses[] = "(sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NULL OR LENGTH(sp.id_card_image) <= 50) AND (sp.certificate_url IS NULL OR LENGTH(sp.certificate_url) <= 50) AND r.name = 'penyedia'";
 } elseif ($verif_filter === 'blocked') {
     $where_clauses[] = "u.is_active = 0";
 }
@@ -363,6 +438,7 @@ $stmt = $db->prepare("
            p.district_id, p.address, p.gender, p.birth_date,
            d.name as district_name, sp.business_name, sp.id as provider_id,
            sp.is_verified, sp.id_card_number, sp.id_card_type, sp.school_name,
+           sp.verification_submitted_at, sp.verification_notes,
            IF(sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50, 1, 0) as has_ktp,
            sp.credential_title,
            IF(sp.certificate_url IS NOT NULL AND LENGTH(sp.certificate_url) > 50, 1, 0) as has_cert
@@ -386,8 +462,8 @@ $count_unverified = (int)$db->query("SELECT COUNT(*) FROM users WHERE email_veri
 
 // Hitung jumlah statistik untuk tab Status Verifikasi & Blokir
 $count_verif_approved = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE sp.is_verified = 1 AND u.email_verified_at IS NOT NULL")->fetchColumn();
-$count_verif_pending = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE (sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50) AND u.email_verified_at IS NOT NULL")->fetchColumn();
-$count_verif_unuploaded = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE (sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NULL OR LENGTH(sp.id_card_image) <= 50) AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_verif_pending = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE (sp.is_verified = 0 OR sp.is_verified IS NULL) AND ((sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50) OR (sp.certificate_url IS NOT NULL AND LENGTH(sp.certificate_url) > 50)) AND u.email_verified_at IS NOT NULL")->fetchColumn();
+$count_verif_unuploaded = (int)$db->query("SELECT COUNT(*) FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE (sp.is_verified = 0 OR sp.is_verified IS NULL) AND (sp.id_card_image IS NULL OR LENGTH(sp.id_card_image) <= 50) AND (sp.certificate_url IS NULL OR LENGTH(sp.certificate_url) <= 50) AND u.email_verified_at IS NOT NULL")->fetchColumn();
 $count_blocked = (int)$db->query("SELECT COUNT(*) FROM users WHERE is_active = 0 AND email_verified_at IS NOT NULL")->fetchColumn();
 
 $districts = get_all_districts();
@@ -562,9 +638,15 @@ require_once __DIR__ . '/includes/header.php';
                                                 <i class="fa-solid fa-circle-check me-0.5"></i> KTP Terverifikasi
                                             </span>
                                         <?php endif; ?>
-                                    <?php elseif (!empty($u['has_ktp'])): ?>
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-0.5 px-1.5" style="font-size: 0.68rem;">
-                                            <i class="fa-solid fa-clock me-0.5"></i> Menunggu Verifikasi <?= $docTypeLabel ?>
+                                    <?php elseif (!empty($u['has_ktp']) || !empty($u['has_cert'])): ?>
+                                        <?php 
+                                        $subTime = !empty($u['verification_submitted_at']) ? strtotime($u['verification_submitted_at']) : strtotime($u['created_at']);
+                                        $hoursPassed = round((time() - $subTime) / 3600, 1);
+                                        $hoursLeft = max(0, ceil(24 - $hoursPassed));
+                                        $isOverdue = ($hoursPassed >= 24);
+                                        ?>
+                                        <span class="badge <?= $isOverdue ? 'bg-danger text-white' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' ?> py-0.5 px-1.5" style="font-size: 0.68rem;" title="Waktu pengajuan: <?= date('d M Y, H:i', $subTime) ?> WIB">
+                                            <i class="fa-solid fa-hourglass-half me-0.5"></i> <?= $isOverdue ? 'Lewat 24 Jam (Prioritas)' : "Menunggu Review (Sisa {$hoursLeft}j)" ?>
                                         </span>
                                     <?php else: ?>
                                         <span class="badge bg-light text-muted border py-0.5 px-1.5" style="font-size: 0.68rem;">
@@ -653,6 +735,16 @@ require_once __DIR__ . '/includes/header.php';
                                         <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                         <button type="submit" class="btn btn-sm btn-success py-1 px-2" style="font-size: 0.75rem;" title="Verifikasi Akun Manual (Bypass OTP)">
                                             <i class="fa-solid fa-check-double me-1"></i> Verif OTP
+                                        </button>
+                                    </form>
+
+                                    <!-- Tombol Kirim Pengingat WhatsApp Otomatis via Fonnte -->
+                                    <form method="POST" action="<?= BASE_URL ?>/admin/users.php<?= $role_filter ? '?role=' . urlencode($role_filter) : '' ?>" class="d-inline" onsubmit="return confirm('Kirim notifikasi WhatsApp pengingat kelanjutan OTP ke <?= e($u['name']) ?> (<?= e($u['phone']) ?>)?')">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="action" value="send_otp_reminder">
+                                        <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-success py-1 px-2" style="font-size: 0.75rem;" title="Kirim Pengingat WhatsApp Otomatis via Fonnte Gateway">
+                                            <i class="fa-brands fa-whatsapp text-success me-1"></i> Hubungi WA
                                         </button>
                                     </form>
                                 <?php endif; ?>
@@ -1126,22 +1218,23 @@ function openAdminDocPreview(e, userId, type, userName, businessName, metaInfo, 
         : (isKtp ? (metaInfo ? `<strong>NIK:</strong> <code>${metaInfo}</code>` : '<span class="text-danger fw-semibold">Belum mencantumkan nomor NIK</span>') : (metaInfo ? `<strong>Kualifikasi:</strong> ${metaInfo}` : 'STR Medis / Sertifikat Keahlian'));
 
     let verifyActionBtnHtml = '';
-    if (isKtp) {
-        const verifyBtnText = isPelajar ? 'Setujui Verifikasi Pelajar' : 'Setujui Verifikasi KTP';
-        const cancelBtnText = isPelajar ? 'Batalkan Verifikasi Pelajar' : 'Batalkan Verifikasi KTP';
-        if (!isVerified) {
-            verifyActionBtnHtml = `
-                <button type="button" class="btn ${isPelajar ? 'btn-primary' : 'btn-success'} fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 1)">
-                    <i class="fa-solid fa-circle-check"></i> <span>${verifyBtnText}</span>
-                </button>
-            `;
-        } else {
-            verifyActionBtnHtml = `
-                <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 0)">
-                    <i class="fa-solid fa-xmark"></i> <span>${cancelBtnText}</span>
-                </button>
-            `;
-        }
+    const verifyBtnText = isPelajar ? 'Setujui Verifikasi Pelajar' : 'Setujui Verifikasi KTP / STR';
+    const cancelBtnText = isPelajar ? 'Batalkan Verifikasi Pelajar' : 'Batalkan Verifikasi Dokumen';
+    if (!isVerified) {
+        verifyActionBtnHtml = `
+            <button type="button" class="btn ${isPelajar ? 'btn-primary' : 'btn-success'} fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 1)">
+                <i class="fa-solid fa-circle-check"></i> <span>${verifyBtnText}</span>
+            </button>
+            <button type="button" class="btn btn-outline-danger fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="rejectDocFromModal(${userId})">
+                <i class="fa-solid fa-circle-xmark"></i> <span>Tolak & Minta Foto Ulang</span>
+            </button>
+        `;
+    } else {
+        verifyActionBtnHtml = `
+            <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-2 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" onclick="submitVerifyFromModal(${userId}, 0)">
+                <i class="fa-solid fa-xmark"></i> <span>${cancelBtnText}</span>
+            </button>
+        `;
     }
 
     if (typeof Swal !== 'undefined') {
@@ -1213,6 +1306,58 @@ function submitVerifyFromModal(userId, newStatus) {
 
     document.body.appendChild(form);
     form.submit();
+}
+
+function rejectDocFromModal(userId) {
+    Swal.fire({
+        title: 'Tolak / Minta Upload Ulang Dokumen',
+        input: 'textarea',
+        inputLabel: 'Alasan Penolakan (Otomatis dikirim via WhatsApp ke Mitra):',
+        inputPlaceholder: 'Contoh: Foto KTP buram / nomor NIK tidak terbaca jelas. Mohon unggah ulang foto yang jelas di tempat terang...',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Alasan penolakan wajib diisi agar mitra paham apa yang perlu diperbaiki!';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Kirim Penolakan & WA',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<?= BASE_URL ?>/admin/users.php';
+            
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrf_token';
+            csrf.value = '<?= csrf_token() ?>';
+            form.appendChild(csrf);
+
+            const act = document.createElement('input');
+            act.type = 'hidden';
+            act.name = 'action';
+            act.value = 'reject_ktp_verified';
+            form.appendChild(act);
+
+            const uid = document.createElement('input');
+            uid.type = 'hidden';
+            uid.name = 'user_id';
+            uid.value = userId;
+            form.appendChild(uid);
+
+            const rsn = document.createElement('input');
+            rsn.type = 'hidden';
+            rsn.name = 'reason';
+            rsn.value = result.value;
+            form.appendChild(rsn);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
 }
 
 function fillBlockReason(userId, val) {

@@ -888,6 +888,52 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 
+    <!-- Banner SLA 1 x 24 Jam Verifikasi Dokumen KTP / STR -->
+    <?php if (empty($provider['is_verified']) && (!empty($provider['id_card_image']) || !empty($provider['certificate_url']))): ?>
+        <?php
+            $subTime = !empty($provider['verification_submitted_at']) ? strtotime($provider['verification_submitted_at']) : strtotime($provider['updated_at']);
+            $elapsedHours = round((time() - $subTime) / 3600, 1);
+            $remHours = max(0, ceil(24 - $elapsedHours));
+            $isOverdue = ($elapsedHours >= 24);
+        ?>
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-3 p-3 bg-white border-start border-4 border-warning d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="rounded-circle bg-warning bg-opacity-20 text-warning d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-hourglass-half fs-5"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-0.5">
+                        <strong class="text-dark small">Berkas KTP / Sertifikat Sedang Ditinjau Admin</strong>
+                        <span class="badge <?= $isOverdue ? 'bg-danger text-white' : 'bg-warning text-dark' ?> font-monospace" style="font-size: 0.68rem;">
+                            <?= $isOverdue ? 'Prioritas Antrean (Lewat 24 Jam)' : "Target Selesai: ~{$remHours} Jam Lagi" ?>
+                        </span>
+                    </div>
+                    <div class="text-muted small" style="font-size: 0.72rem;">
+                        Diajukan: <?= date('d M Y, H:i', $subTime) ?> WIB &bull; Maksimal proses 1 x 24 jam kerja. Hasil verifikasi otomatis dikabari via WhatsApp.
+                    </div>
+                </div>
+            </div>
+            <a href="<?= BASE_URL ?>/provider/profile.php" class="btn btn-sm btn-outline-warning text-dark fw-bold px-3 py-1 rounded-pill" style="font-size: 0.75rem;">
+                Cek Berkas &rarr;
+            </a>
+        </div>
+    <?php elseif (!empty($provider['verification_notes']) && empty($provider['is_verified'])): ?>
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-3 p-3 bg-white border-start border-4 border-danger d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                </div>
+                <div>
+                    <strong class="text-danger small d-block">Verifikasi Dokumen Memerlukan Perbaikan:</strong>
+                    <div class="small text-dark fw-medium">"<?= htmlspecialchars($provider['verification_notes']) ?>"</div>
+                </div>
+            </div>
+            <a href="<?= BASE_URL ?>/provider/profile.php" class="btn btn-sm btn-danger text-white fw-bold px-3 py-1 rounded-pill shadow-xs" style="font-size: 0.75rem;">
+                Unggah Ulang &rarr;
+            </a>
+        </div>
+    <?php endif; ?>
+
     <!-- 1. Compact Modern Partner Header (Ultra-Sleek Glassmorphism - Opsi 1) -->
     <div class="provider-hero-card p-3 p-md-4 mb-3 text-white">
         <!-- Baris 1: Identitas Profil Ringkas & Link Toko Publik (Tanpa Garis Pembatas Kaku) -->
@@ -903,10 +949,14 @@ require_once __DIR__ . '/../includes/header.php';
                             <span class="badge bg-emerald-500 text-white fw-bold px-2 py-0.5 rounded-pill shadow-xs" style="background-color: #10b981; font-size: 0.68rem;">
                                 <i class="fa-solid fa-circle-check"></i> Terverifikasi
                             </span>
+                        <?php elseif (!empty($provider['id_card_image']) || !empty($provider['certificate_url'])): ?>
+                            <a href="<?= BASE_URL ?>/provider/profile.php" class="badge bg-warning text-dark fw-bold px-2 py-0.5 rounded-pill text-decoration-none shadow-xs" style="font-size: 0.68rem;" title="Maksimal 1 x 24 Jam Kerja">
+                                <i class="fa-solid fa-hourglass-half me-0.5"></i> Review 1x24 Jam
+                            </a>
                         <?php else: ?>
-                            <span class="badge bg-warning text-dark fw-bold px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">
-                                <i class="fa-solid fa-clock-rotate-left"></i> Review
-                            </span>
+                            <a href="<?= BASE_URL ?>/provider/profile.php" class="badge bg-white bg-opacity-25 text-white fw-semibold px-2 py-0.5 rounded-pill text-decoration-none" style="font-size: 0.68rem;">
+                                <i class="fa-solid fa-upload me-0.5"></i> Verif KTP (1x24j)
+                            </a>
                         <?php endif; ?>
                     </div>
                     <div class="text-white-50 small mt-0.5">

@@ -48,11 +48,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 1. Toggle Verifikasi KTP / Pelajar
     if ($action === 'toggle_verif') {
         $new_status = (int)($_POST['new_status'] ?? 0);
-        $stmt = $db->prepare("UPDATE service_providers SET is_verified = ?, updated_at = NOW() WHERE id = ?");
+        $stmt = $db->prepare("UPDATE service_providers SET is_verified = ?, verification_notes = NULL, updated_at = NOW() WHERE id = ?");
         $stmt->execute([$new_status, $provider_id]);
 
-        $msg = ($new_status === 1) ? 'Status berkas mitra berhasil disetujui & diverifikasi resmi.' : 'Status verifikasi berkas mitra berhasil dibatalkan.';
+        $stmtP = $db->prepare("SELECT sp.id, sp.business_name, sp.id_card_type, u.name, u.phone FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
+        $stmtP->execute([$provider_id]);
+        $pData = $stmtP->fetch();
+        $isPelajar = ($pData && ($pData['id_card_type'] ?? '') === 'pelajar');
+        $docName = $isPelajar ? 'Kartu Pelajar' : 'KTP';
+
+        if ($new_status === 1 && !empty($pData['phone'])) {
+            $waMsg = "Halo Kak *{$pData['name']}* (*{$pData['business_name']}*), salam hangat dari Tim Verifikasi JASA INHU 🙏✨\n\n"
+                   . "Kabar gembira! Dokumen {$docName} / Sertifikat usaha Anda *telah disetujui resmi oleh Admin JASA INHU* ✅\n\n"
+                   . "Toko Anda sekarang resmi memiliki lencana *Centang Hijau (Terverifikasi)* dan diprioritaskan di hasil pencarian warga se-Kabupaten Indragiri Hulu.\n\n"
+                   . "Buka profil toko resmi Anda:\n"
+                   . "👉 " . BASE_URL . "/provider_detail.php?id={$pData['id']}\n\n"
+                   . "Terima kasih banyak atas kerja samanya. Semoga usaha Kakak berkah dan makin laris! 💪😊\n\n"
+                   . "— *Admin Verifikasi JASA INHU*";
+            send_wa_notification($pData['phone'], $waMsg, 'ktp_verified_approved', null, $pData['name']);
+        }
+
+        $msg = ($new_status === 1) ? 'Status berkas mitra berhasil disetujui & diverifikasi resmi dan notifikasi WhatsApp telah dikirimkan ke mitra.' : 'Status verifikasi berkas mitra berhasil dibatalkan.';
         set_flash('success', $msg);
+        redirect("/admin/provider_detail.php?id={$provider_id}");
+    }
+
+    // 1.b Tolak Dokumen Verifikasi dengan Alasan (Kirim WA Otomatis)
+    if ($action === 'reject_verif') {
+        $reason = trim($_POST['reason'] ?? 'Foto dokumen tidak jelas / buram. Silakan foto ulang dengan jelas.');
+        $stmt = $db->prepare("UPDATE service_providers SET is_verified = 0, verification_notes = ?, updated_at = NOW() WHERE id = ?");
+        $stmt->execute([$reason, $provider_id]);
+
+        $stmtP = $db->prepare("SELECT sp.id, sp.business_name, u.name, u.phone FROM service_providers sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
+        $stmtP->execute([$provider_id]);
+        $pData = $stmtP->fetch();
+
+        if (!empty($pData['phone'])) {
+            $waMsg = "Halo Kak *{$pData['name']}* (*{$pData['business_name']}*), salam dari Tim Verifikasi JASA INHU 🙏\n\n"
+                   . "Terkait pengajuan verifikasi KTP / Sertifikat Anda di portal JASA INHU, mohon maaf berkas *belum dapat kami setujui* saat ini.\n\n"
+                   . "📌 *Catatan Admin:* \"{$reason}\"\n\n"
+                   . "Silakan login ke portal dan unggah ulang foto yang jelas di menu Kelola Profil:\n"
+                   . "👉 " . BASE_URL . "/provider/profile.php\n\n"
+                   . "Jika ada pertanyaan, Kakak bisa langsung balas pesan WhatsApp ini ya Kak. Terima kasih! 🙏\n\n"
+                   . "— *Admin Verifikasi JASA INHU*";
+            send_wa_notification($pData['phone'], $waMsg, 'ktp_verified_rejected', null, $pData['name']);
+        }
+
+        set_flash('warning', "Pengajuan verifikasi ditolak dengan catatan: \"{$reason}\". Notifikasi WhatsApp telah otomatis dikirim ke nomor mitra.");
         redirect("/admin/provider_detail.php?id={$provider_id}");
     }
 
@@ -368,6 +410,11 @@ require_once __DIR__ . '/includes/header.php';
                             <i class="fa-solid fa-circle-check me-1"></i> Setujui Verifikasi KTP
                         </button>
                     </form>
+                    <?php if ($has_ktp || $has_cert): ?>
+                        <button type="button" class="btn btn-outline-danger btn-sm text-white border-white-50 shadow-sm" data-bs-toggle="modal" data-bs-target="#rejectVerifModal">
+                            <i class="fa-solid fa-circle-xmark me-1"></i> Tolak Berkas
+                        </button>
+                    <?php endif; ?>
                 <?php else: ?>
                     <form method="POST" action="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $p['id'] ?>" class="d-inline" onsubmit="return confirm('Batalkan status verifikasi mitra ini?')">
                         <?= csrf_field() ?>
@@ -609,6 +656,74 @@ require_once __DIR__ . '/includes/header.php';
                 </span>
             </div>
             <div class="card-body">
+                <?php
+                $verif_submitted = $p['verification_submitted_at'] ?? $p['updated_at'];
+                $hours_passed = 0;
+                $hours_left = 24;
+                $is_overdue = false;
+                if (!empty($verif_submitted)) {
+                    $hours_passed = (time() - strtotime($verif_submitted)) / 3600;
+                    $hours_left = max(0, 24 - $hours_passed);
+                    $is_overdue = ($hours_passed >= 24);
+                }
+                ?>
+
+                <?php if (!empty($p['is_verified'])): ?>
+                    <div class="alert alert-success border-0 rounded-3 mb-3 d-flex align-items-center gap-2 py-2">
+                        <i class="fa-solid fa-circle-check text-success fs-5"></i>
+                        <div class="small">
+                            <strong class="text-success">Dokumen Resmi Terverifikasi</strong>
+                            <div class="text-muted" style="font-size: 0.72rem;">Mitra telah lolos proses verifikasi identitas resmi JASA INHU.</div>
+                        </div>
+                    </div>
+                <?php elseif ($has_ktp || $has_cert): ?>
+                    <div class="alert <?= $is_overdue ? 'alert-danger border-danger' : 'alert-warning border-warning' ?> border rounded-3 mb-3 p-3">
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="fa-solid <?= $is_overdue ? 'fa-triangle-exclamation text-danger' : 'fa-clock text-warning' ?> fs-4 mt-0.5"></i>
+                                <div>
+                                    <strong class="<?= $is_overdue ? 'text-danger' : 'text-dark' ?>">
+                                        <?= $is_overdue ? '⚠️ Batas Waktu SLA 1x24 Jam Terlampaui!' : '⏳ Menunggu Review Verifikasi (SLA 1x24 Jam)' ?>
+                                    </strong>
+                                    <div class="small text-muted mt-0.5">
+                                        Diajukan: <strong><?= !empty($verif_submitted) ? date('d M Y, H:i', strtotime($verif_submitted)) : 'Saat registrasi' ?> WIB</strong>
+                                        <br>
+                                        <?php if ($is_overdue): ?>
+                                            <span class="text-danger fw-bold"><i class="fa-solid fa-clock-rotate-left me-1"></i> Terlambat <?= floor($hours_passed - 24) ?> jam dari target 1x24 jam (Prioritas Review)</span>
+                                        <?php else: ?>
+                                            <span class="text-warning-emphasis fw-bold"><i class="fa-solid fa-stopwatch me-1"></i> Target Review: Sisa <?= floor($hours_left) ?> jam <?= floor(fmod($hours_left, 1) * 60) ?> menit</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="badge <?= $is_overdue ? 'bg-danger text-white' : 'bg-warning text-dark' ?>">
+                                <?= $is_overdue ? 'Overdue' : 'Pending SLA' ?>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mt-3 pt-2 border-top">
+                            <form method="POST" action="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $p['id'] ?>" class="d-inline" onsubmit="return confirm('Setujui berkas identitas & sertifikat mitra ini? Notifikasi WhatsApp akan otomatis dikirim.')">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="toggle_verif">
+                                <input type="hidden" name="new_status" value="1">
+                                <button type="submit" class="btn btn-sm btn-success fw-bold px-3 shadow-xs">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Setujui (Kirim WA)
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger px-3 shadow-xs" data-bs-toggle="modal" data-bs-target="#rejectVerifModal">
+                                <i class="fa-solid fa-circle-xmark me-1"></i> Tolak Berkas
+                            </button>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($p['verification_notes']) && empty($p['is_verified'])): ?>
+                    <div class="alert alert-danger border-0 rounded-3 mb-3 p-3 small">
+                        <div class="fw-bold text-danger mb-1"><i class="fa-solid fa-circle-exclamation me-1"></i> Catatan Penolakan Terakhir Admin:</div>
+                        <div class="text-dark bg-white p-2 rounded border">"<?= e($p['verification_notes']) ?>"</div>
+                        <div class="text-muted mt-1" style="font-size: 0.7rem;">Menunggu mitra mengunggah ulang dokumen perbaikan melalui portal mitranya.</div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="mb-3">
                     <div class="dossier-label">Jenis Tanda Pengenal</div>
                     <div class="dossier-value">
@@ -925,6 +1040,44 @@ require_once __DIR__ . '/includes/header.php';
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-danger btn-sm fw-bold">
                         <i class="fa-solid fa-ban me-1"></i> Konfirmasi Blokir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TOLAK VERIFIKASI DOKUMEN MITRA (Screen Only) -->
+<div class="modal fade no-print" id="rejectVerifModal" tabindex="-1" aria-labelledby="rejectVerifModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="POST" action="<?= BASE_URL ?>/admin/provider_detail.php?id=<?= $p['id'] ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="reject_verif">
+                <div class="modal-header bg-danger text-white border-0 py-3">
+                    <h6 class="modal-title fw-bold" id="rejectVerifModalLabel">
+                        <i class="fa-solid fa-circle-xmark me-1.5"></i> Tolak Pengajuan Verifikasi Berkas
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">
+                        Tentukan alasan penolakan berkas identitas / sertifikat untuk mitra <strong><?= e($p['business_name']) ?></strong>. Catatan ini akan tampil di dashboard mitra dan <strong>dikirimkan otomatis via WhatsApp</strong> ke nomor <strong><?= e($p['owner_phone']) ?></strong>.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Alasan Penolakan <span class="text-danger">*</span></label>
+                        <textarea name="reason" id="rejectReasonInput" class="form-control" rows="3" placeholder="Contoh: Foto KTP buram / terpotong. Silakan foto ulang dengan pencahayaan jelas." required>Foto dokumen KTP / Sertifikat kurang jelas atau buram. Mohon unggah ulang foto asli yang terbaca dengan jelas.</textarea>
+                    </div>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" onclick="document.getElementById('rejectReasonInput').value='Foto KTP buram atau tidak terbaca jelas. Mohon foto ulang dengan pencahayaan cukup.'">Foto Buram</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" onclick="document.getElementById('rejectReasonInput').value='Nama pada KTP berbeda dengan nama akun mitra. Mohon unggah KTP pemilik yang sesuai.'">Nama Tidak Sesuai</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" onclick="document.getElementById('rejectReasonInput').value='Foto sertifikat/lisensi terpotong atau masa berlaku telah habis. Mohon lampirkan berkas aktif.'">Sertifikat Kadaluarsa</button>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 px-4 border-top">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger btn-sm fw-bold">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Tolak & Kirim Notifikasi WA
                     </button>
                 </div>
             </form>

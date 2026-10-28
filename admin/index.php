@@ -61,6 +61,14 @@ $total_providers = (int)$db->query("SELECT COUNT(*) FROM users WHERE role_id = 3
 $total_categories = (int)$db->query("SELECT COUNT(*) FROM service_categories")->fetchColumn();
 $total_requests = (int)$db->query("SELECT COUNT(*) FROM service_requests")->fetchColumn();
 $total_unverified = (int)$db->query("SELECT COUNT(*) FROM users WHERE email_verified_at IS NULL")->fetchColumn();
+$total_pending_verif = (int)$db->query("
+    SELECT COUNT(*) FROM service_providers sp 
+    JOIN users u ON sp.user_id = u.id 
+    WHERE (sp.is_verified = 0 OR sp.is_verified IS NULL) 
+      AND ((sp.id_card_image IS NOT NULL AND LENGTH(sp.id_card_image) > 50) 
+        OR (sp.certificate_url IS NOT NULL AND LENGTH(sp.certificate_url) > 50)) 
+      AND u.email_verified_at IS NOT NULL
+")->fetchColumn();
 
 // 2. Daftar mitra penyedia jasa terbaru (yang sudah terverifikasi OTP)
 $stmtProviders = $db->query("
@@ -108,6 +116,21 @@ require_once __DIR__ . '/includes/header.php';
         </span>
     </div>
 </div>
+
+<?php if ($total_pending_verif > 0): ?>
+    <div class="alert alert-warning border-0 shadow-xs mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #fffbeb; border-left: 5px solid #f59e0b !important;">
+        <div class="d-flex align-items-center gap-2.5">
+            <span class="fs-4">⏳</span>
+            <div>
+                <strong class="text-dark">Ada <?= $total_pending_verif ?> Mitra Menunggu Verifikasi Dokumen KTP / Sertifikat (Target SLA 1 x 24 Jam)!</strong>
+                <div class="small text-muted">Mitra yang mengunggah berkas membutuhkan persetujuan Anda agar mendapatkan lencana centang hijau resmi.</div>
+            </div>
+        </div>
+        <a href="<?= BASE_URL ?>/admin/users.php?verif=pending" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1.5 rounded-pill shadow-xs">
+            Review Dokumen Sekarang &rarr;
+        </a>
+    </div>
+<?php endif; ?>
 
 <?php if ($total_unverified > 0): ?>
     <div class="alert alert-warning border-0 shadow-xs mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
