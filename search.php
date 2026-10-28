@@ -488,6 +488,41 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- Banner Pancingan Elegan: Buka Peluang Promosi / Pasang Banner untuk Pemilik Usaha Lokal -->
+    <div class="mt-4 pt-1 mb-2">
+        <div class="card border-0 rounded-4 shadow-sm overflow-hidden" style="background: linear-gradient(135deg, #042f2e 0%, #0d9488 55%, #0f766e 100%);">
+            <div class="card-body p-3 p-md-4 text-white position-relative">
+                <div class="row align-items-center g-3">
+                    <div class="col-12 col-md-8">
+                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-warning text-dark fw-bold px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">
+                                <i class="fa-solid fa-bullhorn me-1"></i> RUANG PROMOSI BISNIS
+                            </span>
+                            <span class="badge bg-white bg-opacity-20 text-white px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">
+                                Inhu Marketplace
+                            </span>
+                        </div>
+                        <h5 class="fw-bold mb-1 text-white">
+                            Punya Usaha Jasa di Inhu? Ingin Toko Anda Tampil di Urutan Teratas?
+                        </h5>
+                        <p class="text-white-50 small mb-0" style="font-size: 0.8rem; line-height: 1.45;">
+                            Pasang banner promosi atau posisikan toko Anda di rekomendasi utama warga se-Kabupaten Inhu. Hubungi Admin untuk konsultasi penempatan iklan.
+                        </p>
+                    </div>
+                    <div class="col-12 col-md-4 text-md-end">
+                        <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik tanya info pemasangan banner / promosi toko di website Jasa Inhu. Boleh minta info penempatannya?") ?>" 
+                           target="_blank" 
+                           class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-2 text-nowrap"
+                           style="font-size: 0.82rem;">
+                            <i class="fa-brands fa-whatsapp fs-5 text-dark"></i>
+                            <span>Tanya Info Promosi &rarr;</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Bottom Sheet: Filter Lengkap (Mobile Drawer ala Shopee / Airbnb & Modal di Desktop) -->
