@@ -98,18 +98,17 @@ foreach ($providers as $idx => $p) {
     $phone = trim($p['phone']);
     $storeUrl = "{$appUrl}/provider_detail.php?id={$p['id']}";
 
-    $message = "Selamat pagi Kak/Pak/Bu *{$ownerName}* (*{$provName}*), salam hangat dari Tim JASA INHU 🙏✨\n\n"
-             . "Kabar gembira! Toko jasa Anda kini sudah aktif dan siap dilihat oleh ribuan warga di Kab. Indragiri Hulu melalui portal resmi:\n"
+    $message = "Selamat pagi Kak/Pak/Bu *{$ownerName}* (*{$provName}*), salam hormat dari saya selaku pengelola JASA-INHU 🙏✨\n\n"
+             . "Pertama-tama, dari lubuk hati yang paling dalam, saya ingin menyampaikan *permohonan maaf* jika di awal perjalanan ini orderan belum merata atau belum sebanyak yang Bapak/Ibu harapkan.\n\n"
+             . "Alhamdulillah, saat ini sudah ada *45+ mitra penyedia jasa hebat* se-Indragiri Hulu yang bergabung bersama kita di JASA-INHU. Ini adalah amanah dan tanggung jawab yang sangat besar bagi saya pribadi.\n\n"
+             . "Saya ingin menyampaikan satu hal: *Saya di sini tidak tinggal diam dan terus berjuang.* Siang dan malam saya terus berusaha mengenalkan wadah ini ke warga Inhu dan menghubungi berbagai pihak agar jasa Bapak/Ibu semakin dikenal luas.\n\n"
+             . "Perjalanan ini memang tidak mudah dan kita memulainya dari bawah, tapi saya percaya niat baik kita untuk memajukan rezeki keluarga dan UMKM lokal Inhu pasti ada jalannya.\n\n"
+             . "Mohon bantuan doa dan dukungannya ya Bapak/Ibu... Jika ada waktu luang pagi ini, yuk bantu pasang link profil toko Bapak/Ibu di Status WhatsApp masing-masing:\n"
              . "👉 {$storeUrl}\n\n"
-             . "Agar toko Anda semakin ramai dan dipercaya calon pelanggan, kami dari Tim Jasa Inhu ingin bantu gratis:\n\n"
-             . "1. 📸 *Lengkapi Foto Portofolio / Hasil Kerja:*\n"
-             . "Boleh kirimkan 2-3 foto hasil kerja/layanan Anda, nanti bisa langsung diunggah ke toko agar pelanggan makin yakin.\n\n"
-             . "2. 📲 *Bagikan Toko Anda ke WhatsApp:*\n"
-             . "Buka profil toko Anda di link atas, klik tombol *\"Bagikan\"*, dan jadikan status WA atau kirim ke grup warga. Foto toko Anda akan otomatis muncul keren di WhatsApp!\n\n"
-             . "3. 🛡️ *Verifikasi Resmi KTP:*\n"
-             . "Lengkapi verifikasi KTP di menu profil untuk mendapatkan *Centang Hijau Resmi* agar masuk rekomendasi teratas.\n\n"
-             . "Jika ada yang bingung atau butuh bantuan seputar aplikasi, balas pesan ini ya Kak. Kami siap bantu! Selamat beraktivitas dan semoga rezekinya berkah & lancar hari ini 💪😊\n\n"
-             . "— *Tim Komunitas JASA INHU*";
+             . "Satu langkah kecil dari kita semua untuk saling bantu share, insyaAllah akan membuka pintu rezeki bagi kita bersama.\n\n"
+             . "Terima kasih banyak atas kesabaran dan kepercayaannya. Selamat beraktivitas di hari Minggu ini, semoga Allah melancarkan rezeki dan memberikan kesehatan untuk Bapak/Ibu sekeluarga hari ini 💪😊\n\n"
+             . "Hormat saya,\n"
+             . "— *Founder JASA-INHU*";
 
     echo "[{$num}/{$total}] Mengirim ke {$provName} ({$phone})... ";
 

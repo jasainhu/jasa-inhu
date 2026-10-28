@@ -30,6 +30,15 @@ $db_pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : (getenv('DB_PASSWOR
 $db_name = getenv('DB_NAME') ?: 'jasa_inhu';
 $env_port = getenv('DB_PORT');
 
+// Transisi otomatis jika environment cloud masih menyimpan akun cluster lama yang terkena limit
+if ($db_user === '2qcnxeyPQUCTrLj.root' || (getenv('VERCEL') && ($db_user === 'root' || empty($db_user)))) {
+    $db_host = 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com';
+    $env_port = '4000';
+    $db_user = 'dKU6oFZH1thEDwU.root';
+    $db_pass = '3v0aGp8h2H254cbh';
+    $db_name = 'jasa_inhu';
+}
+
 // Deteksi port database
 if ($env_port) {
     $db_port = (int)$env_port;
