@@ -24,18 +24,18 @@ if (file_exists($envFile)) {
     }
 }
 
-$db_host = getenv('DB_HOST') ?: '127.0.0.1';
-$db_user = getenv('DB_USER') ?: 'root';
-$db_pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : (getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : '');
+$db_host = getenv('DB_HOST') ?: 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com';
+$db_user = getenv('DB_USER') ?: '2qcnxeyPQUCTrLj.root';
+$db_pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : (getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : 'hwnmNfvo7mWuDGiU');
 $db_name = getenv('DB_NAME') ?: 'jasa_inhu';
-$env_port = getenv('DB_PORT');
+$env_port = getenv('DB_PORT') ?: '4000';
 
-// Transisi otomatis jika environment cloud masih menyimpan akun cluster lama yang terkena limit
-if ($db_user === '2qcnxeyPQUCTrLj.root' || (getenv('VERCEL') && ($db_user === 'root' || empty($db_user)))) {
+// Konfigurasi resmi klaster JASA INHU (jasainhusg) di akun resmi organisasi
+if (getenv('VERCEL') || empty($db_user) || $db_user === 'root' || $db_user === 'dKU6oFZH1thEDwU.root') {
     $db_host = 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com';
     $env_port = '4000';
-    $db_user = 'dKU6oFZH1thEDwU.root';
-    $db_pass = '3v0aGp8h2H254cbh';
+    $db_user = '2qcnxeyPQUCTrLj.root';
+    $db_pass = 'hwnmNfvo7mWuDGiU';
     $db_name = 'jasa_inhu';
 }
 
