@@ -474,39 +474,18 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- Banner Pancingan Elegan: Buka Peluang Promosi / Pasang Banner untuk Pemilik Usaha Lokal -->
-<div class="container my-3 my-md-4">
-    <div class="card border-0 rounded-4 shadow-sm overflow-hidden" style="background: linear-gradient(135deg, #042f2e 0%, #0d9488 55%, #0f766e 100%);">
-        <div class="card-body p-3 p-md-4 text-white position-relative">
-            <div class="row align-items-center g-3">
-                <div class="col-12 col-md-8">
-                    <div class="d-flex align-items-center gap-2 mb-1.5 flex-wrap">
-                        <span class="badge bg-warning text-dark fw-bold px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
-                            <i class="fa-solid fa-bullhorn me-1"></i> RUANG PROMOSI BISNIS
-                        </span>
-                        <span class="badge bg-white bg-opacity-20 text-white px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">
-                            Kabupaten Indragiri Hulu
-                        </span>
-                    </div>
-                    <h4 class="fw-bold mb-1 fs-5 fs-md-4 text-white">
-                        Punya Toko atau Usaha di Inhu? Ingin Tampil di Urutan Teratas?
-                    </h4>
-                    <p class="text-white-50 small mb-0" style="line-height: 1.5; font-size: 0.82rem;">
-                        Tampilkan banner promosi usaha Anda atau posisikan toko Anda di urutan teratas pencarian warga se-Kabupaten Indragiri Hulu. Hubungi Admin untuk konsultasi penempatan iklan.
-                    </p>
-                </div>
-                <div class="col-12 col-md-4 text-md-end">
-                    <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik tanya info pemasangan banner / promosi toko di website Jasa Inhu. Boleh minta info penempatannya?") ?>" 
-                       target="_blank" 
-                       class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-2 text-nowrap"
-                       style="font-size: 0.82rem;">
-                        <i class="fa-brands fa-whatsapp fs-5 text-dark"></i>
-                        <span>Tanya Info Promosi &rarr;</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Banner Promosi Usaha Lokal (Desain Grafis Penuh Ala Marketplace Modern) -->
+<div class="container my-2.5 my-md-3">
+    <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik tanya info pemasangan banner / promosi toko di website Jasa Inhu. Boleh minta info penempatannya?") ?>" 
+       target="_blank" 
+       class="d-block text-decoration-none rounded-3 rounded-md-4 overflow-hidden shadow-sm transition-hover position-relative" 
+       title="Pasang Iklan & Promosi Toko di JASA INHU">
+        <img src="<?= BASE_URL ?>/uploads/banners/banner_promo_ads_v2.jpg" 
+             alt="Pasang Iklan & Promosi Toko di JASA INHU" 
+             class="img-fluid w-100 d-block shadow-xs" 
+             style="border-radius: inherit; object-fit: cover; max-height: 210px; width: 100%;" 
+             loading="lazy">
+    </a>
 </div>
 
 <!-- 4. Penyedia Jasa Terdekat & Terpercaya (With District Pill Bar) -->
@@ -826,41 +805,6 @@ require_once __DIR__ . '/includes/header.php';
                 </nav>
             </div>
         <?php endif; ?>
-
-        <!-- Banner Pancingan Elegan: Buka Peluang Promosi / Pasang Banner untuk Pemilik Usaha Lokal -->
-        <div class="mt-4 pt-2">
-            <div class="card border-0 rounded-4 shadow-sm overflow-hidden" style="background: linear-gradient(135deg, #042f2e 0%, #0d9488 55%, #0f766e 100%);">
-                <div class="card-body p-3 p-md-4 text-white position-relative">
-                    <div class="row align-items-center g-3">
-                        <div class="col-12 col-md-8">
-                            <div class="d-flex align-items-center gap-2 mb-1.5 flex-wrap">
-                                <span class="badge bg-warning text-dark fw-bold px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
-                                    <i class="fa-solid fa-bullhorn me-1"></i> RUANG PROMOSI BISNIS
-                                </span>
-                                <span class="badge bg-white bg-opacity-20 text-white px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">
-                                    Kabupaten Indragiri Hulu
-                                </span>
-                            </div>
-                            <h4 class="fw-bold mb-1 fs-5 fs-md-4 text-white">
-                                Punya Toko atau Usaha di Inhu? Ingin Tampil di Urutan Teratas?
-                            </h4>
-                            <p class="text-white-50 small mb-0" style="line-height: 1.5; font-size: 0.82rem;">
-                                Tampilkan banner promosi usaha Anda atau posisikan toko Anda di urutan teratas pencarian warga se-Kabupaten Indragiri Hulu. Hubungi Admin untuk konsultasi penempatan iklan.
-                            </p>
-                        </div>
-                        <div class="col-12 col-md-4 text-md-end">
-                            <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik tanya info pemasangan banner / promosi toko di website Jasa Inhu. Boleh minta info penempatannya?") ?>" 
-                               target="_blank" 
-                               class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-2 text-nowrap"
-                               style="font-size: 0.82rem;">
-                                <i class="fa-brands fa-whatsapp fs-5 text-dark"></i>
-                                <span>Tanya Info Promosi &rarr;</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </section>
 

@@ -14,6 +14,8 @@ if (php_sapi_name() !== 'cli') {
 }
 
 date_default_timezone_set('Asia/Jakarta');
+set_time_limit(0);
+ini_set('memory_limit', '256M');
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -98,17 +100,21 @@ foreach ($providers as $idx => $p) {
     $phone = trim($p['phone']);
     $storeUrl = "{$appUrl}/provider_detail.php?id={$p['id']}";
 
-    $message = "Selamat pagi Kak/Pak/Bu *{$ownerName}* (*{$provName}*), salam hormat dari saya selaku pengelola JASA-INHU 🙏✨\n\n"
-             . "Pertama-tama, dari lubuk hati yang paling dalam, saya ingin menyampaikan *permohonan maaf* jika di awal perjalanan ini orderan belum merata atau belum sebanyak yang Bapak/Ibu harapkan.\n\n"
-             . "Alhamdulillah, saat ini sudah ada *45+ mitra penyedia jasa hebat* se-Indragiri Hulu yang bergabung bersama kita di JASA-INHU. Ini adalah amanah dan tanggung jawab yang sangat besar bagi saya pribadi.\n\n"
-             . "Saya ingin menyampaikan satu hal: *Saya di sini tidak tinggal diam dan terus berjuang.* Siang dan malam saya terus berusaha mengenalkan wadah ini ke warga Inhu dan menghubungi berbagai pihak agar jasa Bapak/Ibu semakin dikenal luas.\n\n"
-             . "Perjalanan ini memang tidak mudah dan kita memulainya dari bawah, tapi saya percaya niat baik kita untuk memajukan rezeki keluarga dan UMKM lokal Inhu pasti ada jalannya.\n\n"
-             . "Mohon bantuan doa dan dukungannya ya Bapak/Ibu... Jika ada waktu luang pagi ini, yuk bantu pasang link profil toko Bapak/Ibu di Status WhatsApp masing-masing:\n"
+    $igUrl = "https://www.instagram.com/reel/DemkadQywIY/";
+
+    $message = "Selamat siang Kak/Pak/Bu *{$ownerName}* (*{$provName}*), salam hormat dari saya selaku pengelola JASA INHU 🙏✨\n\n"
+             . "Pertama-tama, saya ingin menyampaikan rasa terima kasih dan apresiasi yang sebesar-besarnya atas kepercayaannya bergabung bersama kami di platform JASA INHU.\n\n"
+             . "Alhamdulillah, saat ini sudah ada *50 mitra penyedia jasa hebat* se-Indragiri Hulu yang resmi terdaftar. Ini adalah amanah yang sangat berharga bagi saya pribadi.\n\n"
+             . "Saya ingin menyampaikan bahwa *kami terus berjuang setiap hari* untuk mengenalkan wadah ini ke warga se-Inhu agar keahlian dan usaha Bapak/Ibu semakin dikenal luas dan mudah dipanggil pelanggan.\n\n"
+             . "Berikut adalah link profil toko resmi usaha Bapak/Ibu:\n"
              . "👉 {$storeUrl}\n\n"
-             . "Satu langkah kecil dari kita semua untuk saling bantu share, insyaAllah akan membuka pintu rezeki bagi kita bersama.\n\n"
-             . "Terima kasih banyak atas kesabaran dan kepercayaannya. Selamat beraktivitas di hari Minggu ini, semoga Allah melancarkan rezeki dan memberikan kesehatan untuk Bapak/Ibu sekeluarga hari ini 💪😊\n\n"
+             . "💡 *Saran untuk Bapak/Ibu:* Silakan pasang link toko resmi ini di *Status WhatsApp* masing-masing agar pelanggan setia maupun kenalan baru bisa melihat portofolio dan nomor kontak usaha Bapak/Ibu secara profesional.\n\n"
+             . "🎬 *Tonton Video Pengenalan JASA INHU:*\n"
+             . "Bagi Bapak/Ibu yang aktif di Instagram, yuk tonton dan bantu Like/Share video Reels terbaru kita di sini ya:\n"
+             . "👉 {$igUrl}\n\n"
+             . "Mohon simpan nomor WhatsApp Admin ini ya Pak/Bu. Selamat istirahat siang, semoga Allah melancarkan rezeki dan memberikan kesehatan untuk Bapak/Ibu sekeluarga hari ini 💪😊\n\n"
              . "Hormat saya,\n"
-             . "— *Founder JASA-INHU*";
+             . "— *Admin / Founder JASA INHU*";
 
     echo "[{$num}/{$total}] Mengirim ke {$provName} ({$phone})... ";
 
