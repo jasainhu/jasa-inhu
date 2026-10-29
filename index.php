@@ -504,43 +504,6 @@ require_once __DIR__ . '/includes/header.php';
              style="border-radius: inherit; width: 100%; height: auto; display: block;" 
              loading="lazy">
     </a>
-
-    <!-- Footer Pancingan Iklan Halus: Mengajak Pebisnis Lain Pasang Iklan (Slim Panoramic Ribbon Banner) -->
-    <div class="showcase-promo-ribbon mt-2.5 mt-md-3 p-2.5 px-md-3.5 py-md-3 rounded-3 rounded-md-4 position-relative overflow-hidden shadow-sm">
-        <!-- Subtle Glow Effects -->
-        <div class="promo-ribbon-glow-1"></div>
-        <div class="promo-ribbon-glow-2"></div>
-
-        <div class="position-relative z-1 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2.5 gap-md-3">
-            <div class="d-flex align-items-center gap-2.5 gap-md-3 w-100 w-sm-auto text-start">
-                <div class="promo-ribbon-icon-box flex-shrink-0 d-flex align-items-center justify-content-center">
-                    <i class="fa-solid fa-bullhorn text-warning"></i>
-                </div>
-                <div class="promo-ribbon-text min-w-0">
-                    <div class="d-flex align-items-center gap-1.5 mb-0.5">
-                        <span class="badge bg-warning text-dark fw-bold px-2 py-0.5 rounded-pill shadow-xs" style="font-size: 0.65rem; letter-spacing: 0.3px;">
-                            <i class="fa-solid fa-bolt me-1"></i> IKLAN BISNIS
-                        </span>
-                        <span class="text-white-50 small d-none d-md-inline" style="font-size: 0.72rem;">Slot Terbatas Se-Inhu</span>
-                    </div>
-                    <div class="text-white fw-bold promo-ribbon-title">
-                        Punya Usaha atau Toko? Ingin Tampil Seperti NARA CELL?
-                    </div>
-                    <div class="text-light opacity-90 promo-ribbon-subtitle small d-none d-sm-block">
-                        Jangkau ribuan calon pelanggan lokal di seluruh Indragiri Hulu setiap hari.
-                    </div>
-                </div>
-            </div>
-            
-            <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik pasang banner promosi toko di website Jasa Inhu seperti NARA CELL. Boleh minta info penempatannya?") ?>" 
-               target="_blank" 
-               class="promo-ribbon-btn btn btn-warning fw-bold text-dark rounded-pill px-3 py-1.5 d-inline-flex align-items-center justify-content-center gap-2 text-nowrap flex-shrink-0 shadow-sm"
-               title="Hubungi Admin untuk Pasang Banner">
-                <i class="fa-brands fa-whatsapp text-success fs-5"></i>
-                <span>Tanya Pasang Banner &rarr;</span>
-            </a>
-        </div>
-    </div>
 </div>
 
 <!-- 4. Penyedia Jasa Terdekat & Terpercaya (With District Pill Bar) -->
