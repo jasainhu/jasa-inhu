@@ -497,12 +497,12 @@ $current_sort_name = $sort_labels[$sort_mode] ?? 'Urutkan';
            style="background: linear-gradient(135deg, #042f2e 0%, #0d9488 100%);" 
            title="Pasang Iklan & Promosi Toko di JASA INHU">
             <picture>
-                <source media="(max-width: 767.98px)" srcset="<?= BASE_URL ?>/uploads/banners/banner_promo_ads_v2.jpg">
-                <source media="(min-width: 768px)" srcset="<?= BASE_URL ?>/uploads/banners/banner_promo_desktop.jpg">
-                <img src="<?= BASE_URL ?>/uploads/banners/banner_promo_desktop.jpg" 
+                <source media="(max-width: 767.98px)" srcset="<?= BASE_URL ?>/uploads/banners/banner_promo_mobile_v3.jpg">
+                <source media="(min-width: 768px)" srcset="<?= BASE_URL ?>/uploads/banners/banner_promo_desktop_panoramic.jpg">
+                <img src="<?= BASE_URL ?>/uploads/banners/banner_promo_desktop_panoramic.jpg" 
                      alt="Pasang Iklan & Promosi Toko di JASA INHU" 
-                     class="img-fluid w-100 d-block shadow-xs" 
-                     style="border-radius: inherit; width: 100%; height: auto; max-height: 280px; object-fit: contain; margin: 0 auto; display: block;" 
+                     class="w-100 d-block shadow-xs" 
+                     style="border-radius: inherit; width: 100%; height: auto; display: block;" 
                      loading="lazy">
             </picture>
         </a>
