@@ -2890,7 +2890,25 @@ body.modal-open .mobile-bottom-nav {
 
 @media (max-width: 767.98px) {
     .hero-carousel-inner {
-        height: 180px !important;
+        aspect-ratio: 2.83 / 1 !important;
+        height: auto !important;
+        border-radius: 12px !important;
+    }
+    .shopee-side-banners-col {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+    .shopee-side-banner {
+        flex: 1 1 0 !important;
+        width: 50% !important;
+        aspect-ratio: 2.57 / 1 !important;
+        height: auto !important;
+        min-height: 70px !important;
+        border-radius: 10px !important;
+        padding: 0.45rem 0.6rem !important;
     }
     .banner-slide-card, .banner-slide-overlay {
         padding: 1rem !important;

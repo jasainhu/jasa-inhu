@@ -268,8 +268,8 @@ require_once __DIR__ . '/includes/header.php';
 <section class="shopee-hero-section">
     <div class="container">
         <div class="row g-1.5 g-md-2 g-lg-3 align-items-stretch">
-            <!-- Kolom Kiri: Banner Carousel Utama (Selalu Berdampingan di Kiri) -->
-            <div class="col-8 pe-1">
+            <!-- Kolom Kiri: Banner Carousel Utama (Full di HP, 8 Kolom di Desktop/Tablet) -->
+            <div class="col-12 col-md-8 mb-2 mb-md-0 pe-md-1">
                 <?php if (!empty($banners)): ?>
                     <div id="heroBannerCarousel" class="carousel slide carousel-dark h-100" data-bs-ride="carousel" data-bs-interval="5000">
                         <?php if (count($banners) > 1): ?>
@@ -337,8 +337,8 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endif; ?>
             </div>
 
-            <!-- Kolom Kanan: 2 Mini Side Banner Iklan (Selalu di Sebelah Kanan Carousel: Desktop & HP) -->
-            <div class="col-4 ps-1">
+            <!-- Kolom Kanan: 2 Mini Side Banner Iklan (Berdampingan di HP, Bertumpuk di Desktop/Tablet) -->
+            <div class="col-12 col-md-4 ps-md-1">
                 <div class="shopee-side-banners-col">
                     <!-- Mini Banner 1 (Kanan Atas) -->
                     <?php if (!empty($side_top_banner)): ?>
