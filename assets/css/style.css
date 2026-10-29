@@ -2086,7 +2086,7 @@ body.modal-open .mobile-bottom-nav {
     border-radius: 14px;
     overflow: hidden;
     width: 100%;
-    aspect-ratio: 2.7 / 1;
+    aspect-ratio: 2.833 / 1;
     background: #f1f5f9;
 }
 
@@ -2095,17 +2095,20 @@ body.modal-open .mobile-bottom-nav {
     height: 100%;
 }
 
-.banner-slide-wrapper {
-    width: 100%;
-    height: 100%;
+.hero-carousel-inner .banner-slide-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
     position: relative;
+    border-radius: inherit;
+    overflow: hidden;
 }
 
-.banner-img-responsive {
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-    display: block;
+.hero-carousel-inner .banner-img-responsive {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: fill !important;
+    display: block !important;
 }
 
 .shopee-side-banners-col {
@@ -2161,10 +2164,6 @@ body.modal-open .mobile-bottom-nav {
 
 /* Mobile & Tablet sizing (Berdampingan Presisi & Teks Sangat Jelas) */
 @media (max-width: 991.98px) {
-    .hero-carousel-inner {
-        aspect-ratio: 2.15 / 1;
-        border-radius: 10px;
-    }
     .shopee-side-banners-col {
         gap: 6px;
     }
@@ -2175,10 +2174,6 @@ body.modal-open .mobile-bottom-nav {
 }
 
 @media (max-width: 575.98px) {
-    .hero-carousel-inner {
-        aspect-ratio: 2.05 / 1;
-        border-radius: 8px;
-    }
     .shopee-side-banners-col {
         gap: 5px;
     }
@@ -2883,16 +2878,56 @@ body.modal-open .mobile-bottom-nav {
    MOBILE FIRST OPTIMIZATIONS (HP & TABLET UX)
    ========================================================= */
 
-/* Hero Banner Carousel Responsive Height */
+/* Hero Banner Carousel Responsive Height & Mobile Precision */
 .hero-carousel-inner {
     height: 275px;
+    aspect-ratio: 2.833 / 1;
 }
 
 @media (max-width: 767.98px) {
     .hero-carousel-inner {
-        aspect-ratio: 2.83 / 1 !important;
+        aspect-ratio: 2.833 / 1 !important;
         height: auto !important;
         border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+    .hero-carousel-inner .banner-slide-wrapper,
+    .hero-carousel-inner .banner-slide-card {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+    .hero-carousel-inner .banner-img-responsive {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: fill !important;
+        display: block !important;
+    }
+    /* Move indicator dots neatly below the slide on mobile so they never block text/buttons */
+    #heroBannerCarousel .carousel-indicators {
+        position: static !important;
+        margin: 7px 0 2px 0 !important;
+        padding: 0 !important;
+        justify-content: center !important;
+        display: flex !important;
+        z-index: 5 !important;
+    }
+    #heroBannerCarousel .carousel-indicators [data-bs-target] {
+        width: 6px !important;
+        height: 6px !important;
+        border-radius: 50% !important;
+        margin: 0 3px !important;
+        background-color: #94a3b8 !important;
+        border: none !important;
+        opacity: 0.6 !important;
+        box-shadow: none !important;
+        transition: all 0.25s ease !important;
+    }
+    #heroBannerCarousel .carousel-indicators .active {
+        width: 20px !important;
+        border-radius: 4px !important;
+        background-color: #0d9488 !important;
+        opacity: 1 !important;
     }
     .shopee-side-banners-col {
         display: flex !important;

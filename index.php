@@ -271,20 +271,12 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Kolom Kiri: Banner Carousel Utama (Full di HP, 8 Kolom di Desktop/Tablet) -->
             <div class="col-12 col-md-8 mb-2 mb-md-0 pe-md-1">
                 <?php if (!empty($banners)): ?>
-                    <div id="heroBannerCarousel" class="carousel slide carousel-dark h-100" data-bs-ride="carousel" data-bs-interval="5000">
-                        <?php if (count($banners) > 1): ?>
-                            <div class="carousel-indicators mb-1 mb-md-2">
-                                <?php foreach ($banners as $idx => $b): ?>
-                                    <button type="button" data-bs-target="#heroBannerCarousel" data-bs-slide-to="<?= $idx ?>" class="<?= $idx === 0 ? 'active' : '' ?>" aria-label="Slide <?= $idx + 1 ?>"></button>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="carousel-inner rounded-3 rounded-md-4 shadow-sm overflow-hidden hero-carousel-inner h-100">
+                    <div id="heroBannerCarousel" class="carousel slide carousel-dark h-md-100" data-bs-ride="carousel" data-bs-interval="5000">
+                        <div class="carousel-inner rounded-3 rounded-md-4 shadow-sm overflow-hidden hero-carousel-inner h-md-100">
                             <?php foreach ($banners as $idx => $b): ?>
-                                <div class="carousel-item h-100 <?= $idx === 0 ? 'active' : '' ?>">
+                                <div class="carousel-item h-md-100 <?= $idx === 0 ? 'active' : '' ?>">
                                     <?php if (has_media($b['image_url'] ?? '')): ?>
-                                        <div class="banner-slide-wrapper position-relative h-100 w-100 overflow-hidden">
+                                        <div class="banner-slide-wrapper position-relative h-md-100 w-100 overflow-hidden">
                                             <?php if (!empty($b['link_url'])): ?>
                                                 <a href="<?= e($b['link_url']) ?>" target="_blank" class="d-block w-100 h-100 text-decoration-none">
                                                     <img src="<?= e(get_media_url($b['image_url'])) ?>" class="d-block w-100 h-100 banner-img-responsive" alt="<?= e($b['title'] ?: 'Banner Promo') ?>">
@@ -308,7 +300,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <?php endif; ?>
                                         </div>
                                     <?php else: ?>
-                                        <div class="banner-slide-card p-2 p-md-4 d-flex flex-column justify-content-center h-100" style="background: linear-gradient(135deg, <?= e($b['badge_color'] ?: '#0d9488') ?> 0%, #0f172a 100%);">
+                                        <div class="banner-slide-card p-2 p-md-4 d-flex flex-column justify-content-center h-md-100" style="background: linear-gradient(135deg, <?= e($b['badge_color'] ?: '#0d9488') ?> 0%, #0f172a 100%);">
                                             <span class="badge py-1 px-2 fw-bold mb-1 align-self-start" style="background: rgba(255,255,255,0.25); font-size: 0.65rem;">
                                                 <i class="fa-solid fa-bullhorn me-1"></i> <?= e($b['badge_text'] ?: 'INFO RESMI') ?>
                                             </span>
@@ -326,6 +318,11 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
 
                         <?php if (count($banners) > 1): ?>
+                            <div class="carousel-indicators hero-carousel-indicators mb-0 mb-md-2">
+                                <?php foreach ($banners as $idx => $b): ?>
+                                    <button type="button" data-bs-target="#heroBannerCarousel" data-bs-slide-to="<?= $idx ?>" class="<?= $idx === 0 ? 'active' : '' ?>" aria-label="Slide <?= $idx + 1 ?>"></button>
+                                <?php endforeach; ?>
+                            </div>
                             <button class="carousel-control-prev d-none d-md-flex" type="button" data-bs-target="#heroBannerCarousel" data-bs-slide="prev" aria-label="Sebelumnya">
                                 <span class="carousel-nav-btn"><i class="fa-solid fa-chevron-left"></i></span>
                             </button>
