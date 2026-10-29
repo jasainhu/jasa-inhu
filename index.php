@@ -474,17 +474,22 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- Banner Promosi Usaha Lokal (Desain Grafis Penuh Ala Marketplace Modern) -->
+<!-- Banner Promosi Usaha Lokal (Desain Grafis Penuh - Responsif Mobile & Desktop) -->
 <div class="container my-2.5 my-md-3">
     <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik tanya info pemasangan banner / promosi toko di website Jasa Inhu. Boleh minta info penempatannya?") ?>" 
        target="_blank" 
        class="d-block text-decoration-none rounded-3 rounded-md-4 overflow-hidden shadow-sm transition-hover position-relative" 
+       style="background: linear-gradient(135deg, #042f2e 0%, #0d9488 100%);" 
        title="Pasang Iklan & Promosi Toko di JASA INHU">
-        <img src="<?= BASE_URL ?>/uploads/banners/banner_promo_ads_v2.jpg" 
-             alt="Pasang Iklan & Promosi Toko di JASA INHU" 
-             class="img-fluid w-100 d-block shadow-xs" 
-             style="border-radius: inherit; object-fit: cover; max-height: 210px; width: 100%;" 
-             loading="lazy">
+        <picture>
+            <source media="(max-width: 767.98px)" srcset="<?= BASE_URL ?>/uploads/banners/banner_promo_ads_v2.jpg">
+            <source media="(min-width: 768px)" srcset="<?= BASE_URL ?>/uploads/banners/banner_promo_desktop.jpg">
+            <img src="<?= BASE_URL ?>/uploads/banners/banner_promo_desktop.jpg" 
+                 alt="Pasang Iklan & Promosi Toko di JASA INHU" 
+                 class="img-fluid w-100 d-block shadow-xs" 
+                 style="border-radius: inherit; width: 100%; height: auto; max-height: 280px; object-fit: contain; margin: 0 auto; display: block;" 
+                 loading="lazy">
+        </picture>
     </a>
 </div>
 
