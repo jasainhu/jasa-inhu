@@ -473,37 +473,39 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- Showcase Sponsor & Promosi Usaha Lokal (NARA CELL & OLSHOP + Call To Action Pasang Iklan) -->
 <div class="container my-2.5 my-md-3">
-    <!-- Header Showcase: Badge Toko Pilihan & Tautan Pasang Iklan -->
-    <div class="d-flex align-items-center justify-content-between mb-1.5 px-1">
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge text-white px-2.5 py-1 rounded-pill fw-semibold shadow-xs" style="background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%); font-size: 0.72rem; letter-spacing: 0.3px;">
-                <i class="fa-solid fa-crown text-warning me-1"></i> TOKO PILIHAN INHU
-            </span>
-            <span class="text-muted small d-none d-sm-inline" style="font-size: 0.75rem;">
-                <i class="fa-solid fa-location-dot text-danger me-1"></i> Simpang Bom, Air Molek
-            </span>
+    <div class="showcase-sponsor-container mx-auto">
+        <!-- Header Showcase: Badge Toko Pilihan & Tautan Pasang Iklan -->
+        <div class="d-flex align-items-center justify-content-between mb-1.5 px-1">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge text-white px-2.5 py-1 rounded-pill fw-semibold shadow-xs" style="background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%); font-size: 0.72rem; letter-spacing: 0.3px;">
+                    <i class="fa-solid fa-crown text-warning me-1"></i> TOKO PILIHAN INHU
+                </span>
+                <span class="text-muted small d-none d-sm-inline" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-location-dot text-danger me-1"></i> Simpang Bom, Air Molek
+                </span>
+            </div>
+            <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik pasang banner promosi toko di website Jasa Inhu seperti NARA CELL. Boleh minta info penempatannya?") ?>" 
+               target="_blank" 
+               class="text-decoration-none small fw-semibold text-primary d-inline-flex align-items-center gap-1 transition-hover" 
+               style="font-size: 0.75rem;">
+                <span>Pasang Iklan Usaha Anda</span>
+                <i class="fa-solid fa-arrow-right fs-xs"></i>
+            </a>
         </div>
-        <a href="https://wa.me/<?= get_setting('admin_wa', ADMIN_PHONE_WA) ?>?text=<?= urlencode("Halo Admin JASA INHU 🙏 Saya tertarik pasang banner promosi toko di website Jasa Inhu seperti NARA CELL. Boleh minta info penempatannya?") ?>" 
+
+        <!-- Banner Utama NARA CELL: Klik Langsung Chat WA Toko -->
+        <a href="https://wa.me/6285126241679?text=<?= urlencode("Halo NARA CELL & OLSHOP Simpang Bom Air Molek 🙏 Saya melihat toko Anda di website Jasa Inhu. Boleh tanya info layanan / belanja?") ?>" 
            target="_blank" 
-           class="text-decoration-none small fw-semibold text-primary d-inline-flex align-items-center gap-1 transition-hover" 
-           style="font-size: 0.75rem;">
-            <span>Pasang Iklan Usaha Anda</span>
-            <i class="fa-solid fa-arrow-right fs-xs"></i>
+           class="d-block text-decoration-none rounded-3 rounded-md-4 overflow-hidden shadow-sm transition-hover border position-relative" 
+           style="background: #ffffff;" 
+           title="Kunjungi NARA CELL & OLSHOP - Simpang Bom, Air Molek">
+            <img src="<?= BASE_URL ?>/uploads/banners/banner_nara_cell_hires.png" 
+                 alt="NARA CELL & OLSHOP - Solusi Belanja & Kebutuhan Digital di Air Molek Inhu" 
+                 class="w-100 d-block" 
+                 style="border-radius: inherit; width: 100%; height: auto; display: block;" 
+                 loading="lazy">
         </a>
     </div>
-
-    <!-- Banner Utama NARA CELL: Klik Langsung Chat WA Toko -->
-    <a href="https://wa.me/6285126241679?text=<?= urlencode("Halo NARA CELL & OLSHOP Simpang Bom Air Molek 🙏 Saya melihat toko Anda di website Jasa Inhu. Boleh tanya info layanan / belanja?") ?>" 
-       target="_blank" 
-       class="d-block text-decoration-none rounded-3 rounded-md-4 overflow-hidden shadow-sm transition-hover border position-relative" 
-       style="background: #ffffff;" 
-       title="Kunjungi NARA CELL & OLSHOP - Simpang Bom, Air Molek">
-        <img src="<?= BASE_URL ?>/uploads/banners/banner_nara_cell_hires.png" 
-             alt="NARA CELL & OLSHOP - Solusi Belanja & Kebutuhan Digital di Air Molek Inhu" 
-             class="w-100 d-block" 
-             style="border-radius: inherit; width: 100%; height: auto; display: block;" 
-             loading="lazy">
-    </a>
 </div>
 
 <!-- 4. Penyedia Jasa Terdekat & Terpercaya (With District Pill Bar) -->

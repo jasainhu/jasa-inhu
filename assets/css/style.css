@@ -2183,6 +2183,22 @@ body.modal-open .mobile-bottom-nav {
     }
 }
 
+/* =========================================================
+   SHOWCASE SPONSOR (Toko Pilihan Inhu Responsive Sizing)
+   ========================================================= */
+.showcase-sponsor-container {
+    width: 100%;
+    max-width: 680px; /* Di HP 100% pas, di Laptop/Desktop ringkas & proporsional (~270px tinggi) */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 767.98px) {
+    .showcase-sponsor-container {
+        max-width: 100%;
+    }
+}
+
 /* 10-Icon Shortcut Hub */
 .shopee-hub-card {
     background: #ffffff;
