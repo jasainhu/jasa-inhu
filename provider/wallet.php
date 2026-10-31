@@ -133,6 +133,7 @@ $refundMsg = "Halo Admin JASA INHU,\n" .
              "Mohon bantuannya. Terima kasih!";
 $refundWaUrl = format_wa_url($adminPhone, $refundMsg);
 
+$hide_ai_widget = true;
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

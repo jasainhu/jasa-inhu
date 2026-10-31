@@ -3,8 +3,31 @@
  * Global Widget: "Kak Inhu" AI Agent & Virtual Concierge
  * JASA INHU - Marketplace Jasa Lokal Kabupaten Indragiri Hulu
  */
-if (get_setting('ai_agent_enabled', '1') === '0') {
-    return; // AI Agent dinonaktifkan di admin
+$currentUri = $_SERVER['REQUEST_URI'] ?? '';
+$currentScript = $_SERVER['SCRIPT_NAME'] ?? '';
+$currentPhpSelf = $_SERVER['PHP_SELF'] ?? '';
+
+$isRestrictedAi = (
+    !empty($hide_ai_widget)
+    || str_contains($currentUri, '/provider/')
+    || str_contains($currentUri, '/admin/')
+    || str_contains($currentUri, 'chat.php')
+    || str_contains($currentUri, 'login.php')
+    || str_contains($currentUri, 'register.php')
+    || str_contains($currentUri, 'register_provider.php')
+    || str_contains($currentUri, 'verify.php')
+    || str_contains($currentUri, 'reset_password.php')
+    || str_contains($currentUri, 'forgot_password.php')
+    || str_contains($currentScript, '/provider/')
+    || str_contains($currentScript, '/admin/')
+    || str_contains($currentScript, 'chat.php')
+    || str_contains($currentPhpSelf, '/provider/')
+    || str_contains($currentPhpSelf, '/admin/')
+    || str_contains($currentPhpSelf, 'chat.php')
+);
+
+if ($isRestrictedAi || get_setting('ai_agent_enabled', '1') === '0') {
+    return; // AI Agent dinonaktifkan di halaman internal/mitra/admin/chat atau via pengaturan
 }
 
 $agentName = get_setting('ai_agent_name', 'Kak Inhu');

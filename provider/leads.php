@@ -56,6 +56,7 @@ $leads = $stmt->fetchAll();
 $categories = get_active_categories();
 $districts = get_all_districts();
 
+$hide_ai_widget = true;
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

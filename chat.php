@@ -23,13 +23,13 @@ $active_conv_id = !empty($_GET['c']) ? (int)$_GET['c'] : 0;
 $target_provider_id = !empty($_GET['provider_id']) ? (int)$_GET['provider_id'] : 0;
 $target_user_id = !empty($_GET['to_user']) ? (int)$_GET['to_user'] : (!empty($_GET['user_id']) ? (int)$_GET['user_id'] : 0);
 $is_explicit_chat = !empty($_GET['c']) || !empty($_GET['provider_id']) || !empty($_GET['to_user']) || !empty($_GET['user_id']);
+$hide_ai_widget = true; // Jangan tampilkan AI Kak Inhu di seluruh halaman obrolan
 
 // Konfigurasi tampilan mobile saat membuka ruang chat aktif
 if ($is_explicit_chat) {
     $hide_footer = true;
     $hide_mobile_bottom_nav = true;
     $hide_floating_wa = true;
-    $hide_ai_widget = true;
     $hide_mobile_header = true;
 }
 

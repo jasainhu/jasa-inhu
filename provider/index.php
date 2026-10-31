@@ -630,6 +630,7 @@ if (!empty($wa_prompt_type) && $wa_prompt_req_id > 0) {
     }
 }
 
+$hide_ai_widget = true; // Sembunyikan asisten AI Kak Inhu di dashboard mitra
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

@@ -26,6 +26,7 @@ $admin_wa_phone = defined('ADMIN_PHONE_WA') ? ADMIN_PHONE_WA : '6285126241679';
 $admin_sos_message = "Halo Admin JASA INHU, saya " . ($provider['business_name'] ?? $user['name']) . " (Mitra #" . ($provider['id'] ?? $user['id']) . ") butuh bantuan darurat / mediasi terkait pelanggan di lapangan. Mohon arahannya.";
 $admin_sos_url = "https://wa.me/" . $admin_wa_phone . "?text=" . urlencode($admin_sos_message);
 
+$hide_ai_widget = true;
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

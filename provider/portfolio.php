@@ -122,6 +122,7 @@ $stmtList = $db->prepare("SELECT * FROM provider_portfolios WHERE provider_id = 
 $stmtList->execute([$provider['id']]);
 $portfolios = $stmtList->fetchAll();
 
+$hide_ai_widget = true;
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

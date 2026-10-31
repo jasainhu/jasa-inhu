@@ -180,8 +180,23 @@ if (empty($hide_footer)): ?>
 <!-- Global Smart Mobile App Banner & Modal (Tokopedia/Shopee Style) -->
 <?php require_once __DIR__ . '/app_modal.php'; ?>
 
-<!-- Global AI Agent Concierge: Kak Inhu -->
-<?php if (empty($hide_ai_widget)): ?>
+<!-- Global AI Agent Concierge: Kak Inhu (Hanya tampil di halaman publik untuk pelanggan) -->
+<?php 
+$footerUri = $_SERVER['REQUEST_URI'] ?? '';
+$isAiSuppressed = (
+    !empty($hide_ai_widget)
+    || str_contains($footerUri, '/provider/')
+    || str_contains($footerUri, '/admin/')
+    || str_contains($footerUri, 'chat.php')
+    || str_contains($footerUri, 'login.php')
+    || str_contains($footerUri, 'register.php')
+    || str_contains($footerUri, 'register_provider.php')
+    || str_contains($footerUri, 'verify.php')
+    || str_contains($footerUri, 'reset_password.php')
+    || str_contains($footerUri, 'forgot_password.php')
+);
+if (!$isAiSuppressed): 
+?>
     <?php require_once __DIR__ . '/ai_widget.php'; ?>
 <?php endif; ?>
 

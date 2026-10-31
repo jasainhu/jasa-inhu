@@ -91,6 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $experience = (int)($_POST['experience_years'] ?? 1);
             $rate_min = (float)($_POST['hourly_rate_min'] ?? 0);
             $rate_max = (float)($_POST['hourly_rate_max'] ?? 0);
+            // Otomatis koreksi jika pengguna memasukkan angka singkatan (misal: 20 -> 20.000, 300 -> 300.000)
+            if ($rate_min > 0 && $rate_min < 1000) {
+                $rate_min *= 1000;
+            }
+            if ($rate_max > 0 && $rate_max < 1000) {
+                $rate_max *= 1000;
+            }
             $phone = trim($_POST['phone'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $image_url = $provider['image_url'] ?? '';
@@ -289,20 +296,26 @@ $lead_fee_amount = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
 $current_balance = (float)($provider['wallet_balance'] ?? 0.00);
 $est_orders = $lead_fee_amount > 0 ? floor($current_balance / $lead_fee_amount) : 'Tak Terbatas';
 
+$hide_ai_widget = true; // Sembunyikan asisten AI Kak Inhu di dashboard/profil mitra
+
+// Formatting rate tarif mitra
+$display_rate_min = (float)($provider['hourly_rate_min'] ?? 0);
+$display_rate_max = (float)($provider['hourly_rate_max'] ?? 0);
+if ($display_rate_min > 0 && $display_rate_min < 1000) $display_rate_min *= 1000;
+if ($display_rate_max > 0 && $display_rate_max < 1000) $display_rate_max *= 1000;
+
+if ($display_rate_min > 0 && $display_rate_max > 0) {
+    $rate_badge_text = 'Tarif Rp ' . number_format($display_rate_min, 0, ',', '.') . ' - ' . number_format($display_rate_max, 0, ',', '.');
+} elseif ($display_rate_min > 0) {
+    $rate_badge_text = 'Mulai Rp ' . number_format($display_rate_min, 0, ',', '.');
+} else {
+    $rate_badge_text = 'Tarif Fleksibel';
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="container py-3 py-md-4" style="max-width: 680px;">
-
-    <!-- Top Navigation Header -->
-    <div class="d-flex align-items-center justify-content-between mb-3 px-1">
-        <a href="<?= BASE_URL ?>/provider/index.php" class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-2xs">
-            <i class="fa-solid fa-arrow-left me-1"></i> Dashboard Order
-        </a>
-        <span class="badge bg-teal-subtle text-teal fw-bold rounded-pill px-3 py-1.5 border border-teal-subtle" style="font-size: 0.75rem;">
-            <i class="fa-solid fa-store me-1"></i> Pusat Akun Mitra
-        </span>
-    </div>
 
     <!-- Alert Notifikasi / Pesan Error -->
     <?php if (!empty($error)): ?>
@@ -313,65 +326,65 @@ require_once __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 
     <!-- 1. KARTU IDENTITAS MITRA UTAMA (Sleek Tokopedia Seller Hero Card) -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 text-white" style="background: linear-gradient(135deg, #0d9488 0%, #064e3b 100%);">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 text-white" style="background: linear-gradient(135deg, #0f766e 0%, #064e3b 100%);">
         <div class="card-body p-3.5 p-md-4">
             <div class="d-flex align-items-center gap-3">
                 <!-- Foto Profil / Usaha (Bisa Diklik Langsung untuk Ganti Foto) -->
                 <div class="position-relative flex-shrink-0 cursor-pointer" role="button" data-bs-toggle="modal" data-bs-target="#modalEditJasa" title="Ketuk untuk upload foto toko">
-                    <div class="rounded-circle overflow-hidden border border-2 border-white shadow-xs position-relative" style="width: 72px; height: 72px; background: #e2e8f0;">
+                    <div class="rounded-circle overflow-hidden border border-2 border-white shadow-xs position-relative" style="width: 68px; height: 68px; background: #e2e8f0;">
                         <?php if (has_media($provider['image_url'] ?? '')): ?>
                             <img src="<?= e(get_media_url($provider['image_url'])) ?>" alt="Foto Usaha" class="w-100 h-100 object-fit-cover">
                         <?php else: ?>
                             <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-25 text-white">
-                                <i class="fa-solid fa-store fs-3"></i>
+                                <i class="fa-solid fa-store fs-4"></i>
                             </div>
                         <?php endif; ?>
                     </div>
-                    <span class="position-absolute bottom-0 end-0 bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs border border-white" style="width: 24px; height: 24px; font-size: 0.7rem;" title="Ganti Foto">
+                    <span class="position-absolute bottom-0 end-0 bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-xs border border-white" style="width: 22px; height: 22px; font-size: 0.65rem;" title="Ganti Foto">
                         <i class="fa-solid fa-camera"></i>
                     </span>
                 </div>
 
                 <!-- Informasi Nama & Lencana Usaha -->
                 <div class="flex-grow-1 min-w-0">
-                    <h5 class="fw-bold text-white mb-1 text-truncate fs-6">
+                    <h5 class="fw-bold text-white mb-1.5 text-truncate" style="font-size: 1.05rem;">
                         <?= e($provider['business_name'] ?: $user['name']) ?>
                     </h5>
 
-                    <div class="d-flex align-items-center gap-1.5 flex-wrap mb-2">
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap mb-2.5">
                         <?php if (!empty($provider['is_verified'])): ?>
                             <?php if (($provider['id_card_type'] ?? '') === 'pelajar'): ?>
-                                <span class="badge bg-purple text-white rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
+                                <span class="badge bg-white text-purple rounded-pill px-2.5 py-1 fw-bold shadow-2xs" style="font-size: 0.65rem;">
                                     <i class="fa-solid fa-graduation-cap me-1"></i> Pelajar Terverifikasi
                                 </span>
                             <?php else: ?>
-                                <span class="badge bg-white text-teal rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
+                                <span class="badge bg-white text-teal rounded-pill px-2.5 py-1 fw-bold shadow-2xs" style="font-size: 0.65rem;">
                                     <i class="fa-solid fa-circle-check text-success me-1"></i> Terverifikasi KTP
                                 </span>
                             <?php endif; ?>
                         <?php elseif (!empty($provider['id_card_image'])): ?>
-                            <span class="badge bg-warning text-dark rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
+                            <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 fw-bold shadow-2xs" style="font-size: 0.65rem;">
                                 <i class="fa-solid fa-clock me-1"></i> <?= (($provider['id_card_type'] ?? '') === 'pelajar') ? 'Kartu Pelajar Divalidasi' : 'KTP Sedang Divalidasi' ?>
                             </span>
                         <?php else: ?>
-                            <span class="badge bg-black bg-opacity-30 text-white-50 border border-white border-opacity-20 rounded-pill px-2 py-0.5" style="font-size: 0.65rem;">
+                            <span class="badge bg-black bg-opacity-30 text-white-50 border border-white border-opacity-20 rounded-pill px-2.5 py-1" style="font-size: 0.65rem;">
                                 <i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Belum Verifikasi Identitas
                             </span>
                         <?php endif; ?>
 
                         <?php if (has_media($provider['certificate_url'] ?? '') || !empty($provider['credential_title'])): ?>
-                            <span class="badge bg-white text-teal rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.65rem;">
+                            <span class="badge bg-white bg-opacity-90 text-teal rounded-pill px-2.5 py-1 fw-bold shadow-2xs" style="font-size: 0.65rem;">
                                 <i class="fa-solid fa-user-doctor text-teal me-1"></i> <?= !empty($provider['credential_title']) ? e($provider['credential_title']) : 'STR Medis' ?>
                             </span>
                         <?php endif; ?>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-xs btn-white fw-bold rounded-pill px-2.5 py-1 shadow-xs bg-white text-teal text-decoration-none" style="font-size: 0.72rem;">
-                            <i class="fa-solid fa-eye me-1 text-teal"></i> Lihat Toko ↗
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $provider['id'] ?>" target="_blank" class="btn btn-sm rounded-pill fw-semibold text-white px-2.5 py-1 text-decoration-none d-inline-flex align-items-center shadow-2xs" style="font-size: 0.72rem; background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.35); backdrop-filter: blur(4px);">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1.5" style="font-size: 0.68rem;"></i> Lihat Toko
                         </a>
-                        <button type="button" class="btn btn-xs btn-warning fw-bold rounded-pill px-2.5 py-1 shadow-xs text-dark" onclick="triggerCardModal()" style="font-size: 0.72rem;">
-                            <i class="fa-solid fa-id-card me-1"></i> Kartu Jasa Digital
+                        <button type="button" class="btn btn-sm rounded-pill fw-bold text-dark px-3 py-1 shadow-2xs d-inline-flex align-items-center" onclick="triggerCardModal()" style="font-size: 0.72rem; background: #fbbf24; border: 1px solid #f59e0b;">
+                            <i class="fa-solid fa-id-card me-1.5 text-dark" style="font-size: 0.75rem;"></i> Kartu Jasa Digital
                         </button>
                     </div>
                 </div>
@@ -379,26 +392,26 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Mini Stats Bar 3-Kolom -->
-        <div class="bg-black bg-opacity-20 px-3 py-2.5 border-top border-white border-opacity-10">
-            <div class="row g-2 text-center align-items-center">
+        <div class="bg-black bg-opacity-25 px-2 py-2.5 border-top border-white border-opacity-10">
+            <div class="row g-1 text-center align-items-center">
                 <div class="col-4 border-end border-white border-opacity-15" role="button" data-bs-toggle="modal" data-bs-target="#modalDompetInfo" style="cursor: pointer;" title="Ketuk untuk isi saldo / info kuota">
-                    <div class="text-white-50" style="font-size: 0.68rem;">Saldo Kuota</div>
-                    <div class="fw-bold text-white small d-flex align-items-center gap-1 justify-content-center">
+                    <div class="text-white-50" style="font-size: 0.66rem; margin-bottom: 2px;">Saldo Kuota</div>
+                    <div class="fw-bold text-white small d-flex align-items-center justify-content-center gap-1">
                         <span>Rp <?= number_format($provider['wallet_balance'] ?? 0, 0, ',', '.') ?></span>
-                        <span class="badge bg-warning text-dark rounded-pill fw-bold" style="font-size: 0.6rem;">+Topup</span>
+                        <span class="badge bg-warning text-dark rounded-pill fw-bold" style="font-size: 0.58rem; padding: 2px 5px;">+Topup</span>
                     </div>
                 </div>
                 <div class="col-4 border-end border-white border-opacity-15">
-                    <div class="text-white-50" style="font-size: 0.68rem;">Rating & Ulasan</div>
+                    <div class="text-white-50" style="font-size: 0.66rem; margin-bottom: 2px;">Rating & Ulasan</div>
                     <div class="fw-bold text-white small">
-                        <i class="fa-solid fa-star text-warning me-0.5"></i> <?= number_format($provider['rating_avg'] ?? 5.0, 1) ?>
-                        <span class="text-white-50" style="font-size: 0.68rem;">(<?= (int)($provider['total_reviews'] ?? 0) ?>)</span>
+                        <i class="fa-solid fa-star text-warning me-0.5"></i> <?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?>
+                        <span class="text-white-50" style="font-size: 0.66rem;">(<?= (int)($provider['total_reviews'] ?? 0) ?>)</span>
                     </div>
                 </div>
                 <div class="col-4">
-                    <div class="text-white-50" style="font-size: 0.68rem;">Pesanan Selesai</div>
+                    <div class="text-white-50" style="font-size: 0.66rem; margin-bottom: 2px;">Pesanan Selesai</div>
                     <div class="fw-bold text-white small">
-                        <i class="fa-solid fa-circle-check text-white me-0.5"></i> <?= $total_completed ?> Order
+                        <i class="fa-solid fa-circle-check text-success-subtle me-0.5"></i> <?= $total_completed ?> Order
                     </div>
                 </div>
             </div>
@@ -419,7 +432,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="d-flex align-items-center gap-1.5 flex-wrap mt-0.5">
                         <?= render_provider_service_type_badge($provider, 'xs') ?>
                         <span class="text-muted small" style="font-size: 0.72rem;">
-                            <?= e($provider['category_name'] ?? 'Penyedia Jasa') ?> &bull; Tarif Rp <?= number_format($provider['hourly_rate_min'], 0, ',', '.') ?> - <?= number_format($provider['hourly_rate_max'], 0, ',', '.') ?>
+                            <?= e($provider['category_name'] ?? 'Penyedia Jasa') ?> &bull; <?= $rate_badge_text ?>
                         </span>
                     </div>
                 </div>
@@ -705,11 +718,11 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="row g-2 mb-3">
                     <div class="col-6">
                         <label class="form-label mb-1 small fw-bold text-dark">Biaya Mulai Dari (Rp)</label>
-                        <input type="number" name="hourly_rate_min" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($provider['hourly_rate_min'] ?? 0) ?>" placeholder="Contoh: 35000">
+                        <input type="number" name="hourly_rate_min" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($display_rate_min ?? 0) ?>" placeholder="Contoh: 35000">
                     </div>
                     <div class="col-6">
                         <label class="form-label mb-1 small fw-bold text-dark">Hingga Sekitar (Rp)</label>
-                        <input type="number" name="hourly_rate_max" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($provider['hourly_rate_max'] ?? 0) ?>" placeholder="Contoh: 150000">
+                        <input type="number" name="hourly_rate_max" class="form-control form-control-sm rounded-3 py-2 px-2.5" value="<?= (float)($display_rate_max ?? 0) ?>" placeholder="Contoh: 150000">
                     </div>
                     <div class="col-12">
                         <span class="text-muted" style="font-size: 0.68rem;">Boleh diisi 0 jika biaya disepakati setelah cek lokasi pengerjaan.</span>
