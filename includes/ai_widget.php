@@ -16,7 +16,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     <div id="kakInhuLauncher" class="kakinhu-launcher shadow-lg" role="button" aria-label="Tanya <?= e($agentName) ?> Asisten AI">
         <div class="kakinhu-avatar-wrapper">
             <div class="kakinhu-avatar">
-                <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu Melayu">
+                <img src="<?= asset_url('images/tanjak-icon.svg') ?>" alt="Tanjak Melayu">
             </div>
             <span class="kakinhu-online-dot" title="Online 24 Jam"></span>
         </div>
@@ -30,7 +30,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     <div id="kakInhuTooltip" class="kakinhu-tooltip shadow-sm animate__animated animate__fadeInUp">
         <button type="button" class="kakinhu-tooltip-close" id="kakInhuTooltipClose" aria-label="Tutup tooltip">&times;</button>
         <div class="d-flex align-items-center gap-2">
-            <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu" class="rounded-circle shadow-xs" style="width: 34px; height: 34px; object-fit: cover; border: 1.5px solid #0d9488; flex-shrink: 0;">
+            <img src="<?= asset_url('images/tanjak-icon.svg') ?>" alt="Tanjak Melayu" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;">
             <div class="small">
                 <strong>Butuh jasa apa di Inhu?</strong><br>
                 Tanya Kak Inhu, langsung dicarikan mitra terdekat!
@@ -44,7 +44,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
         <div class="kakinhu-header">
             <div class="kakinhu-header-info">
                 <div class="kakinhu-header-avatar">
-                    <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu">
+                    <img src="<?= asset_url('images/tanjak-icon.svg') ?>" alt="Kak Inhu">
                     <span class="kakinhu-header-ping"></span>
                 </div>
                 <div>
@@ -69,7 +69,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
             <!-- Pesan Pembuka Default -->
             <div class="kakinhu-msg-row bot">
                 <div class="kakinhu-msg-avatar">
-                    <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu">
+                    <img src="<?= asset_url('images/tanjak-icon.svg') ?>" alt="Kak Inhu">
                 </div>
                 <div class="kakinhu-bubble bot">
                     <p class="mb-1 fw-semibold text-teal" style="font-size: 0.82rem;">
@@ -92,7 +92,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
         <!-- Typing Indicator (Hidden by default) -->
         <div id="kakInhuTyping" class="kakinhu-typing-row d-none">
             <div class="kakinhu-msg-avatar">
-                <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu">
+                <img src="<?= asset_url('images/tanjak-icon.svg') ?>" alt="Kak Inhu">
             </div>
             <div class="kakinhu-bubble bot kakinhu-typing-bubble">
                 <span class="kakinhu-dot"></span>
@@ -165,16 +165,15 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.35rem;
-    color: #ffffff;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.35);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
+    padding: 7px;
+    box-sizing: border-box;
 }
 
 .kakinhu-avatar img,
@@ -182,8 +181,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
 .kakinhu-msg-avatar img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
+    object-fit: contain;
     display: block;
 }
 
@@ -322,6 +320,8 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     font-size: 1.15rem;
     border: 1.5px solid rgba(255, 255, 255, 0.4);
     position: relative;
+    padding: 6px;
+    box-sizing: border-box;
 }
 
 .kakinhu-header-ping {
@@ -413,6 +413,8 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     font-size: 0.8rem;
     flex-shrink: 0;
     margin-top: 2px;
+    padding: 4px;
+    box-sizing: border-box;
 }
 
 .kakinhu-bubble {
@@ -714,6 +716,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     .kakinhu-avatar {
         width: 36px;
         height: 36px;
+        padding: 5px;
         font-size: 1.1rem;
     }
     .kakinhu-btn-title {
@@ -762,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let chatHistory = [];
     let isWaitingResponse = false;
-    const kakInhuAvatarUrl = '<?= asset_url('images/kakinhu-avatar.png') ?>';
+    const kakInhuAvatarUrl = '<?= asset_url('images/tanjak-icon.svg') ?>';
 
     // 1. Tooltip logic (tampil lembut jika belum pernah ditutup)
     if (tooltip && !sessionStorage.getItem('kakInhuTooltipDismissed')) {
