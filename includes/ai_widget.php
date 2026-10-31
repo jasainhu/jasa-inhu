@@ -11,6 +11,7 @@ $isRestrictedAi = (
     !empty($hide_ai_widget)
     || str_contains($currentUri, '/provider/')
     || str_contains($currentUri, '/admin/')
+    || str_contains($currentUri, '/user/')
     || str_contains($currentUri, 'chat.php')
     || str_contains($currentUri, 'login.php')
     || str_contains($currentUri, 'register.php')
@@ -20,9 +21,11 @@ $isRestrictedAi = (
     || str_contains($currentUri, 'forgot_password.php')
     || str_contains($currentScript, '/provider/')
     || str_contains($currentScript, '/admin/')
+    || str_contains($currentScript, '/user/')
     || str_contains($currentScript, 'chat.php')
     || str_contains($currentPhpSelf, '/provider/')
     || str_contains($currentPhpSelf, '/admin/')
+    || str_contains($currentPhpSelf, '/user/')
     || str_contains($currentPhpSelf, 'chat.php')
 );
 

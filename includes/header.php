@@ -608,39 +608,52 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
 ?>
 <?php if (empty($hide_mobile_header)): ?>
 <header class="gojek-mobile-header d-lg-none sticky-top">
-    <!-- Baris 1: Logo Resmi JASA INHU di Kiri, Aksi (Lonceng & Akun) di Kanan -->
-    <div class="gojek-header-top">
-        <div class="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 me-2">
-            <?php if (!$is_site_homepage): ?>
-                <!-- Tombol Panah Kembali (Hanya Tampil di Luar Beranda) -->
-                <a href="<?= BASE_URL ?>/" onclick="if (document.referrer && document.referrer.includes(window.location.host)) { window.history.back(); } else { window.location.href = '<?= BASE_URL ?>/'; } return false;" class="gojek-back-btn" title="Kembali" aria-label="Kembali">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-            <?php endif; ?>
-
-            <!-- Logo Resmi JASA INHU (Icon Asli + Tipografi Tebal Putih Bersih) -->
-            <a href="<?= BASE_URL ?>/" class="gojek-brand-combo text-decoration-none d-inline-flex align-items-center gap-1.5 flex-shrink-0" title="JASA INHU">
-                <img src="<?= asset_url('images/favicon.png') ?>" alt="JASA INHU" class="gojek-brand-symbol">
-                <span class="gojek-brand-text">JASA INHU</span>
+    <!-- Baris Tunggal Terpadu (Single Unified Bar): Back/Logo + Kapsul Pencarian Fleksibel + Lonceng Notifikasi -->
+    <div class="gojek-header-unified-bar">
+        <?php if (!$is_site_homepage): ?>
+            <!-- Tombol Panah Kembali (Hanya Tampil di Luar Beranda) -->
+            <a href="<?= BASE_URL ?>/" onclick="if (document.referrer && document.referrer.includes(window.location.host)) { window.history.back(); } else { window.location.href = '<?= BASE_URL ?>/'; } return false;" class="gojek-back-btn flex-shrink-0" title="Kembali" aria-label="Kembali">
+                <i class="fa-solid fa-arrow-left"></i>
             </a>
+        <?php else: ?>
+            <!-- Logo Ikon Resmi JASA INHU di Beranda -->
+            <a href="<?= BASE_URL ?>/" class="gojek-brand-combo text-decoration-none d-inline-flex align-items-center flex-shrink-0" title="JASA INHU">
+                <img src="<?= asset_url('images/favicon.png') ?>" alt="JASA INHU" class="gojek-brand-symbol" style="width: 28px; height: 28px;">
+            </a>
+        <?php endif; ?>
 
-            <?php if ($is_site_homepage || str_contains($_SERVER['REQUEST_URI'] ?? '', 'search.php')): ?>
-                <!-- Chip Lokasi Ringkas di Samping Logo (Hemat Ruang Vertikal HP) -->
-                <button type="button" class="gojek-location-chip text-truncate ms-auto" data-bs-toggle="modal" data-bs-target="#districtSelectModal" style="max-width: 140px; padding: 3px 8px; font-size: 0.70rem; margin: 0;">
-                    <i class="fa-solid fa-location-dot location-dot-icon me-1"></i>
+        <?php if (empty($hide_mobile_search)): ?>
+            <!-- Kapsul Pencarian Fleksibel Terpadu dengan Pemilih Lokasi di Dalamnya -->
+            <form action="<?= BASE_URL ?>/search.php" method="GET" class="gojek-unified-search-capsule flex-grow-1 min-w-0 mb-0">
+                <button type="button" class="unified-search-loc-btn flex-shrink-0" data-bs-toggle="modal" data-bs-target="#districtSelectModal" title="Pilih Kecamatan">
+                    <i class="fa-solid fa-location-dot location-dot-icon"></i>
                     <span class="location-name text-truncate">
-                        <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Seluruh Inhu' ?>
+                        <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Inhu' ?>
                     </span>
-                    <i class="fa-solid fa-chevron-down location-arrow-icon ms-0.5" style="font-size: 0.58rem;"></i>
+                    <i class="fa-solid fa-chevron-down location-arrow-icon"></i>
                 </button>
-            <?php endif; ?>
-        </div>
 
-        <!-- Aksi Kanan (Lonceng Notifikasi) -->
-        <div class="gojek-header-actions">
+                <span class="unified-search-divider"></span>
+
+                <i class="fa-solid fa-magnifying-glass search-icon flex-shrink-0"></i>
+                <input type="text" name="q" class="search-input text-truncate" placeholder="Cari jasa: AC, montir..." value="<?= e($header_q) ?>" autocomplete="off">
+                <?php if ($header_dist): ?>
+                    <input type="hidden" name="kecamatan" value="<?= $header_dist ?>">
+                <?php endif; ?>
+                <button type="button" class="unified-search-filter-btn flex-shrink-0" data-bs-toggle="modal" data-bs-target="#smartSearchFilterModal" title="Filter Pencarian">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+            </form>
+        <?php else: ?>
+            <div class="flex-grow-1 text-center text-white fw-bold text-truncate px-2" style="font-size: 0.95rem;">
+                <?= e($page_title ?? 'JASA INHU') ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Aksi Kanan (Lonceng Notifikasi atau Masuk) -->
+        <div class="gojek-header-actions flex-shrink-0">
             <?php if (is_logged_in() && $current_user): ?>
-
-                <!-- 2. Ikon Lonceng Pemberitahuan / Notifikasi -->
+                <!-- Ikon Lonceng Pemberitahuan / Notifikasi -->
                 <div class="dropdown">
                     <button class="gojek-action-btn btn p-0 border-0 bg-transparent" type="button" id="mobileNotifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Pemberitahuan">
                         <i class="fa-regular fa-bell"></i>
@@ -719,36 +732,13 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                     </div>
                 </div>
             <?php else: ?>
-                <!-- Belum Masuk Akun: Tombol Masuk & Daftar Elegan -->
-                <button type="button" class="gojek-login-btn" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <!-- Belum Masuk Akun: Tombol Masuk Ringkas -->
+                <button type="button" class="btn btn-sm fw-bold rounded-pill px-2.5 py-1 shadow-2xs" style="font-size: 0.74rem; background: #ffffff; color: #0d9488 !important;" data-bs-toggle="modal" data-bs-target="#loginModal">
                     Masuk
                 </button>
-                <a href="<?= BASE_URL ?>/register.php" class="gojek-register-btn">
-                    Daftar
-                </a>
             <?php endif; ?>
         </div>
     </div>
-
-    <!-- Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab (Khusus Pengguna, Sembunyikan di Panel Mitra) -->
-    <?php 
-    $is_provider_panel = str_contains($_SERVER['REQUEST_URI'] ?? '', '/provider/') || str_contains($_SERVER['REQUEST_URI'] ?? '', '/admin/');
-    if (empty($hide_mobile_search) && !$is_provider_panel): 
-    ?>
-    <div class="gojek-header-search-row">
-        <form action="<?= BASE_URL ?>/search.php" method="GET" class="gojek-search-capsule">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" name="q" class="search-input" placeholder="Cari jasa: Servis AC, Montir, Tukang..." value="<?= e($header_q) ?>" autocomplete="off">
-            <?php if ($header_dist): ?>
-                <input type="hidden" name="kecamatan" value="<?= $header_dist ?>">
-            <?php endif; ?>
-            <button type="button" class="gojek-search-btn" data-bs-toggle="modal" data-bs-target="#smartSearchFilterModal" title="Buka Filter Pencarian Lengkap">
-                <i class="fa-solid fa-sliders"></i>
-                <span>Filter</span>
-            </button>
-        </form>
-    </div>
-    <?php endif; ?>
 </header>
 <?php endif; ?>
 

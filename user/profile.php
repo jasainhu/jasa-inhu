@@ -347,7 +347,6 @@ $unread_chats = (int)$stmtChats->fetchColumn();
 $districts = get_all_districts();
 $categories = get_active_categories();
 
-$hide_mobile_header = true; // Sembunyikan bar atas mobile di halaman profil pengguna
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -356,9 +355,9 @@ require_once __DIR__ . '/../includes/header.php';
      ============================================================== -->
 <div class="shopee-mobile-hub d-lg-none">
     <!-- 1. Profile Hero Banner Atas -->
-    <div class="shopee-profile-hero">
-        <!-- Action bar atas (Ikon Pengaturan Akun) -->
-        <div class="shopee-hero-actions">
+    <div class="shopee-profile-hero position-relative">
+        <!-- Action bar atas (Ikon Pengaturan Akun di Pojok Kanan Atas) -->
+        <div class="shopee-hero-actions position-absolute top-0 end-0 m-3 mb-0" style="z-index: 2;">
             <button type="button" class="shopee-hero-icon-btn" data-bs-toggle="offcanvas" data-bs-target="#settingsOffcanvas" title="Pengaturan Akun">
                 <i class="fa-solid fa-gear"></i>
             </button>

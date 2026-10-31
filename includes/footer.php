@@ -187,6 +187,7 @@ $isAiSuppressed = (
     !empty($hide_ai_widget)
     || str_contains($footerUri, '/provider/')
     || str_contains($footerUri, '/admin/')
+    || str_contains($footerUri, '/user/')
     || str_contains($footerUri, 'chat.php')
     || str_contains($footerUri, 'login.php')
     || str_contains($footerUri, 'register.php')

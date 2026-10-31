@@ -4,7 +4,6 @@
  */
 
 $page_title = 'Profil & Pengaturan Usaha';
-$hide_mobile_search = true; // Sembunyikan kolom pencarian pelanggan di panel mitra
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/database.php';
@@ -297,7 +296,6 @@ $current_balance = (float)($provider['wallet_balance'] ?? 0.00);
 $est_orders = $lead_fee_amount > 0 ? floor($current_balance / $lead_fee_amount) : 'Tak Terbatas';
 
 $hide_ai_widget = true; // Sembunyikan asisten AI Kak Inhu di dashboard/profil mitra
-$hide_mobile_header = true; // Sembunyikan bar atas mobile agar tidak ada dua bar dan hemat ruang layar HP
 
 // Formatting rate tarif mitra
 $display_rate_min = (float)($provider['hourly_rate_min'] ?? 0);
