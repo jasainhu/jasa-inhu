@@ -3471,7 +3471,7 @@ button, a, input, select {
 .shopee-profile-hero {
     background: linear-gradient(135deg, #0f766e 0%, #0d9488 45%, #14b8a6 100%);
     color: #ffffff;
-    padding: 1.25rem 1rem 2rem 1rem;
+    padding: 1.15rem 1rem 1.6rem 1rem;
     position: relative;
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;

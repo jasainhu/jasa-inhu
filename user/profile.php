@@ -355,14 +355,7 @@ require_once __DIR__ . '/../includes/header.php';
      ============================================================== -->
 <div class="shopee-mobile-hub d-lg-none">
     <!-- 1. Profile Hero Banner Atas -->
-    <div class="shopee-profile-hero position-relative">
-        <!-- Action bar atas (Ikon Pengaturan Akun di Pojok Kanan Atas) -->
-        <div class="shopee-hero-actions position-absolute top-0 end-0 m-3 mb-0" style="z-index: 2;">
-            <button type="button" class="shopee-hero-icon-btn" data-bs-toggle="offcanvas" data-bs-target="#settingsOffcanvas" title="Pengaturan Akun">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-        </div>
-
+    <div class="shopee-profile-hero">
         <!-- Baris Identitas Pengguna -->
         <div class="shopee-profile-user-row">
             <div class="shopee-avatar-wrapper position-relative" onclick="document.getElementById('directAvatarInput').click()" style="cursor: pointer;" title="Ketuk untuk ganti foto profil">

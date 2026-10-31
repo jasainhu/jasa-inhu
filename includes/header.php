@@ -731,6 +731,24 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
                         </div>
                     </div>
                 </div>
+
+                <?php 
+                $hdr_uri = $_SERVER['REQUEST_URI'] ?? '';
+                $hdr_script = $_SERVER['SCRIPT_NAME'] ?? '';
+                $is_user_profile_page = str_contains($hdr_uri, '/user/profile.php') || str_contains($hdr_script, '/user/profile.php');
+                $is_provider_profile_page = str_contains($hdr_uri, '/provider/profile.php') || str_contains($hdr_script, '/provider/profile.php');
+                ?>
+                <?php if ($is_user_profile_page): ?>
+                    <!-- Ikon Pengaturan Akun di Bar Atas (Khusus Halaman Profil Pelanggan) -->
+                    <button type="button" class="gojek-action-btn btn p-0 border-0 bg-transparent ms-0.5" data-bs-toggle="offcanvas" data-bs-target="#settingsOffcanvas" title="Pengaturan Akun" aria-label="Pengaturan Akun">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                <?php elseif ($is_provider_profile_page): ?>
+                    <!-- Ikon Pengaturan di Bar Atas (Khusus Halaman Profil Mitra) -->
+                    <button type="button" class="gojek-action-btn btn p-0 border-0 bg-transparent ms-0.5" data-bs-toggle="modal" data-bs-target="#modalSoundSettings" title="Pengaturan Suara & Dering" aria-label="Pengaturan">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                <?php endif; ?>
             <?php else: ?>
                 <!-- Belum Masuk Akun: Tombol Masuk Ringkas -->
                 <button type="button" class="btn btn-sm fw-bold rounded-pill px-2.5 py-1 shadow-2xs" style="font-size: 0.74rem; background: #ffffff; color: #0d9488 !important;" data-bs-toggle="modal" data-bs-target="#loginModal">
