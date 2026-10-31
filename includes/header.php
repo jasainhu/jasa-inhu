@@ -1053,7 +1053,9 @@ function resetSmartFilter(e) {
 }
 </script>
 
-<!-- Global Flash Messages -->
+<!-- Global Flash Messages (Hanya Muncul Jika Ada Pesan Flash Aktif) -->
+<?php if (!empty($_SESSION['flash'])): ?>
 <div class="container mt-3">
     <?php render_flash(); ?>
 </div>
+<?php endif; ?>

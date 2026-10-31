@@ -385,21 +385,21 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="d-flex align-items-center gap-1.5 flex-wrap">
                     <span class="shopee-badge-pill">
-                        <i class="fa-solid fa-id-badge text-teal"></i>
+                        <i class="fa-solid fa-id-badge" style="color: #5eead4;"></i>
                         <span>ID: <?= format_user_id($user['id']) ?></span>
                     </span>
                     <?php if (!empty($user['email_verified_at'])): ?>
-                        <span class="shopee-badge-pill" style="background: rgba(16, 185, 129, 0.15); color: #047857; border-color: rgba(16, 185, 129, 0.3);">
-                            <i class="fa-solid fa-shield-check text-success"></i>
+                        <span class="badge bg-white rounded-pill px-2.5 py-1 fw-bold shadow-2xs d-inline-flex align-items-center gap-1" style="font-size: 0.68rem; color: #064e3b !important; border: 1px solid rgba(255, 255, 255, 0.9);">
+                            <i class="fa-solid fa-circle-check text-success"></i>
                             <span>Pelanggan Terverifikasi</span>
                         </span>
                     <?php else: ?>
-                        <a href="<?= BASE_URL ?>/verify.php" class="shopee-badge-pill text-decoration-none" style="background: rgba(245, 158, 11, 0.15); color: #b45309; border-color: rgba(245, 158, 11, 0.35);" title="Klik untuk verifikasi via WhatsApp / Gmail">
-                            <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+                        <a href="<?= BASE_URL ?>/verify.php" class="badge bg-warning text-dark rounded-pill px-2.5 py-1 fw-bold shadow-2xs text-decoration-none d-inline-flex align-items-center gap-1" style="font-size: 0.68rem;" title="Klik untuk verifikasi via WhatsApp / Gmail">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
                             <span>Belum Verifikasi &rsaquo;</span>
                         </a>
                     <?php endif; ?>
-                    <button type="button" class="btn btn-xs py-0 px-2 rounded-pill bg-white text-teal fw-bold" style="font-size: 0.68rem;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill bg-white fw-bold shadow-2xs" style="font-size: 0.68rem; color: #0d9488 !important;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                         Ubah Profil &rsaquo;
                     </button>
                 </div>
