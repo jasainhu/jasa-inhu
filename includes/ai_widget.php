@@ -16,7 +16,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     <div id="kakInhuLauncher" class="kakinhu-launcher shadow-lg" role="button" aria-label="Tanya <?= e($agentName) ?> Asisten AI">
         <div class="kakinhu-avatar-wrapper">
             <div class="kakinhu-avatar">
-                <i class="fa-solid fa-robot"></i>
+                <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu Melayu">
             </div>
             <span class="kakinhu-online-dot" title="Online 24 Jam"></span>
         </div>
@@ -30,7 +30,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     <div id="kakInhuTooltip" class="kakinhu-tooltip shadow-sm animate__animated animate__fadeInUp">
         <button type="button" class="kakinhu-tooltip-close" id="kakInhuTooltipClose" aria-label="Tutup tooltip">&times;</button>
         <div class="d-flex align-items-center gap-2">
-            <span class="fs-5">🤖</span>
+            <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu" class="rounded-circle shadow-xs" style="width: 34px; height: 34px; object-fit: cover; border: 1.5px solid #0d9488; flex-shrink: 0;">
             <div class="small">
                 <strong>Butuh jasa apa di Inhu?</strong><br>
                 Tanya Kak Inhu, langsung dicarikan mitra terdekat!
@@ -44,7 +44,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
         <div class="kakinhu-header">
             <div class="kakinhu-header-info">
                 <div class="kakinhu-header-avatar">
-                    <i class="fa-solid fa-robot"></i>
+                    <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu">
                     <span class="kakinhu-header-ping"></span>
                 </div>
                 <div>
@@ -69,11 +69,11 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
             <!-- Pesan Pembuka Default -->
             <div class="kakinhu-msg-row bot">
                 <div class="kakinhu-msg-avatar">
-                    <i class="fa-solid fa-robot"></i>
+                    <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu">
                 </div>
                 <div class="kakinhu-bubble bot">
                     <p class="mb-1 fw-semibold text-teal" style="font-size: 0.82rem;">
-                        <i class="fa-solid fa-sparkles me-1 text-warning"></i> Halo! Saya <?= e($agentName) ?> 🤖
+                        <i class="fa-solid fa-sparkles me-1 text-warning"></i> Halo! Saya <?= e($agentName) ?> 🙋‍♂️
                     </p>
                     <p class="mb-2 small">
                         Asisten pintar platform <strong>Jasa Inhu</strong>. Lagi butuh tukang, bengkel, servis AC, atau jasa apa hari ini di Indragiri Hulu? Ceritakan keluhan Anda, saya carikan mitra terdekat sekarang!
@@ -92,7 +92,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
         <!-- Typing Indicator (Hidden by default) -->
         <div id="kakInhuTyping" class="kakinhu-typing-row d-none">
             <div class="kakinhu-msg-avatar">
-                <i class="fa-solid fa-robot"></i>
+                <img src="<?= asset_url('images/kakinhu-avatar.png') ?>" alt="Kak Inhu">
             </div>
             <div class="kakinhu-bubble bot kakinhu-typing-bubble">
                 <span class="kakinhu-dot"></span>
@@ -174,6 +174,17 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     color: #ffffff;
     border: 2px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.kakinhu-avatar img,
+.kakinhu-header-avatar img,
+.kakinhu-msg-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
 }
 
 .kakinhu-online-dot {
@@ -751,6 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let chatHistory = [];
     let isWaitingResponse = false;
+    const kakInhuAvatarUrl = '<?= asset_url('images/kakinhu-avatar.png') ?>';
 
     // 1. Tooltip logic (tampil lembut jika belum pernah ditutup)
     if (tooltip && !sessionStorage.getItem('kakInhuTooltipDismissed')) {
@@ -794,11 +806,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const defaultGreeting = `
                 <div class="kakinhu-msg-row bot">
                     <div class="kakinhu-msg-avatar">
-                        <i class="fa-solid fa-robot"></i>
+                        <img src="${kakInhuAvatarUrl}" alt="Kak Inhu">
                     </div>
                     <div class="kakinhu-bubble bot">
                         <p class="mb-1 fw-semibold text-teal" style="font-size: 0.82rem;">
-                            <i class="fa-solid fa-sparkles me-1 text-warning"></i> Halo kembali! Saya Kak Inhu 🤖
+                            <i class="fa-solid fa-sparkles me-1 text-warning"></i> Halo kembali! Saya Kak Inhu 🙋‍♂️
                         </p>
                         <p class="mb-2 small">
                             Ada keluhan atau butuh bantuan tukang apa hari ini di Indragiri Hulu? Ceritakan saja, saya carikan mitranya!
@@ -915,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         row.innerHTML = `
             <div class="kakinhu-msg-avatar">
-                <i class="fa-solid fa-robot"></i>
+                <img src="${kakInhuAvatarUrl}" alt="Kak Inhu">
             </div>
             <div class="kakinhu-bubble bot">
                 ${formattedText}
