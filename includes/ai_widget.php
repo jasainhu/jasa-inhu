@@ -128,10 +128,10 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
     z-index: 999990;
 }
 
-/* 1. Floating Launcher Button (Bottom-Right, Tepat di Atas WhatsApp CS) */
+/* 1. Floating Launcher Button (Bottom-Right) */
 .kakinhu-launcher {
     position: fixed;
-    bottom: 84px;
+    bottom: 24px;
     right: 24px;
     z-index: 999995;
     background: linear-gradient(135deg, #0d9488 0%, #1e40af 100%);
@@ -187,8 +187,8 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
 
 .kakinhu-online-dot {
     position: absolute;
-    bottom: 1px;
-    right: 1px;
+    bottom: -1px;
+    right: -1px;
     width: 12px;
     height: 12px;
     background-color: #22c55e;
@@ -225,7 +225,7 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
 /* Tooltip Popup */
 .kakinhu-tooltip {
     position: fixed;
-    bottom: 144px;
+    bottom: 84px;
     right: 24px;
     z-index: 999994;
     background: #ffffff;
@@ -703,10 +703,10 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
    ========================================================= */
 @media (max-width: 991.98px) {
     .kakinhu-launcher {
-        bottom: 136px; /* Tepat di atas tombol WhatsApp CS di HP */
+        bottom: 78px; /* Rapi tepat di atas mobile bottom navigation bar */
         right: 14px;
         left: auto;
-        padding: 6px 12px;
+        padding: 6px 14px 6px 8px;
         gap: 8px;
     }
     .kakinhu-avatar-wrapper {
@@ -720,10 +720,10 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
         font-size: 1.1rem;
     }
     .kakinhu-btn-title {
-        font-size: 0.82rem;
+        font-size: 0.84rem;
     }
     .kakinhu-tooltip {
-        bottom: 196px;
+        bottom: 134px;
         right: 14px;
         left: auto;
         max-width: 240px;
