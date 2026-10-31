@@ -499,6 +499,60 @@ require_once __DIR__ . '/includes/header.php';
     cursor: not-allowed;
 }
 
+/* Attachment Button (Camera / Photo) */
+.btn-chat-attach {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background: #f8fafc;
+    color: #0d9488;
+    border: 1.5px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.btn-chat-attach:hover {
+    background: #e6fffa;
+    color: #0f766e;
+    border-color: #99f6e4;
+    transform: scale(1.05);
+}
+.btn-chat-attach:active {
+    transform: scale(0.95);
+}
+
+/* Chat Photo Attachments */
+.chat-photo-attachment {
+    max-width: 260px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.03);
+}
+.chat-img-clickable {
+    display: block;
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.chat-photo-attachment:hover .chat-img-clickable {
+    opacity: 0.94;
+    transform: scale(1.01);
+}
+.bubble-me .chat-photo-attachment {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.bubble-partner .chat-photo-attachment {
+    border: 1px solid rgba(226, 232, 240, 0.95);
+}
+
 /* =================================================== */
 /* RESPONSIVE LAYOUT & MOBILE FULLSCREEN EXPERIENCE   */
 /* =================================================== */
@@ -842,7 +896,18 @@ require_once __DIR__ . '/includes/header.php';
                                         </div>
                                     <?php else: ?>
                                         <div class="<?= $isMe ? 'bubble-me' : 'bubble-partner' ?>">
-                                            <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;"><?= e($msg['message']) ?></p>
+                                            <?php if (!empty($msg['attachment_url'])): ?>
+                                                <div class="chat-photo-attachment mb-1">
+                                                    <img src="<?= e(get_media_url($msg['attachment_url'])) ?>" 
+                                                         alt="Lampiran Foto" 
+                                                         class="img-fluid rounded-3 chat-img-clickable" 
+                                                         loading="lazy"
+                                                         onclick="openChatImageViewer(this.src)">
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if (!empty($msg['message']) && $msg['message'] !== '📷 Foto Lampiran'): ?>
+                                                <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;"><?= e($msg['message']) ?></p>
+                                            <?php endif; ?>
                                             <div class="bubble-meta <?= $isMe ? 'text-white-50' : 'text-muted' ?>">
                                                 <span><?= date('H:i', strtotime($msg['created_at'])) ?></span>
                                                 <?php if ($isMe): ?>
@@ -870,6 +935,9 @@ require_once __DIR__ . '/includes/header.php';
                             <button type="button" class="quick-chip-btn highlight" onclick="openOrderModalFromChat()">
                                 🤝 Deal Pesanan Resmi
                             </button>
+                            <button type="button" class="quick-chip-btn" onclick="document.getElementById('chatPhotoInput').click()">
+                                📷 Kirim Foto Kondisi
+                            </button>
                             <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Halo, apakah layanan jasa ini bisa dipanggil hari ini?')">
                                 ⚡ Bisa hari ini?
                             </button>
@@ -888,6 +956,9 @@ require_once __DIR__ . '/includes/header.php';
                         <?php else: ?>
                             <button type="button" class="quick-chip-btn highlight" onclick="insertQuickChat('Halo kak, bisa jelaskan detail keluhan atau kirim foto kondisinya?')">
                                 🔍 Tanya detail kendala
+                            </button>
+                            <button type="button" class="quick-chip-btn" onclick="document.getElementById('chatPhotoInput').click()">
+                                📷 Kirim Foto Contoh
                             </button>
                             <button type="button" class="quick-chip-btn" onclick="insertQuickChat('Bisa kirimkan alamat lengkap atau patokan lokasi untuk survei?')">
                                 📍 Minta alamat lokasi
@@ -910,9 +981,15 @@ require_once __DIR__ . '/includes/header.php';
                             <input type="hidden" id="chatConvId" value="<?= $active_conv_id ?>">
                             <input type="hidden" id="chatReceiverId" value="<?= $active_partner['id'] ?>">
 
+                            <!-- Tombol Lampiran Foto / Kamera -->
+                            <input type="file" id="chatPhotoInput" accept="image/*" class="d-none" data-no-auto-compress="true" onchange="handleChatPhotoSelected(this)">
+                            <button type="button" class="btn-chat-attach" onclick="document.getElementById('chatPhotoInput').click()" title="Lampirkan Foto Kondisi / Barang">
+                                <i class="fa-solid fa-camera"></i>
+                            </button>
+
                             <div class="flex-grow-1 chat-input-pill">
                                 <i class="fa-regular fa-comment-dots text-muted small"></i>
-                                <input type="text" id="chatMessageInput" class="chat-input-field" placeholder="Ketik pesan untuk <?= e($active_partner['name']) ?>..." autocomplete="off" required>
+                                <input type="text" id="chatMessageInput" class="chat-input-field" placeholder="Ketik pesan untuk <?= e($active_partner['name']) ?>..." autocomplete="off">
                             </div>
 
                             <button type="submit" id="btnSendChat" class="btn-send-gradient" title="Kirim Pesan (Enter)">
@@ -1062,6 +1139,79 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 <?php endif; ?>
+
+<!-- Modal Preview Foto Sebelum Kirim Ala WhatsApp -->
+<div class="modal fade" id="chatPhotoUploadModal" tabindex="-1" aria-labelledby="chatPhotoUploadModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header px-4 py-3 bg-light border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-teal text-white p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 0.88rem;">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold text-dark mb-0" id="chatPhotoUploadModalLabel">Kirim Lampiran Foto</h6>
+                        <small class="text-muted" style="font-size: 0.72rem;">Kirim ke <?= e($active_partner['name'] ?? 'Penerima') ?></small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Batal" onclick="cancelChatPhotoUpload()"></button>
+            </div>
+            <div class="modal-body p-3 text-center bg-black bg-opacity-5">
+                <div class="position-relative d-inline-block w-100 text-center" style="max-height: 360px;">
+                    <img id="chatPhotoUploadPreview" src="" alt="Pratinjau Foto" class="img-fluid rounded-3 shadow-xs" style="max-height: 340px; object-fit: contain;">
+                </div>
+                <div class="mt-2 text-muted small text-start px-2 d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+                    <span id="chatPhotoUploadSize"><i class="fa-regular fa-image me-1"></i> Foto Siap Dikirim</span>
+                    <button type="button" class="btn btn-link btn-sm text-decoration-none text-teal p-0 fw-semibold" onclick="document.getElementById('chatPhotoInput').click()" style="font-size: 0.75rem;">
+                        <i class="fa-solid fa-rotate me-1"></i> Ganti Foto
+                    </button>
+                </div>
+                <div class="mt-3 px-1">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3 text-muted">
+                            <i class="fa-regular fa-comment-dots"></i>
+                        </span>
+                        <input type="text" id="chatPhotoCaptionInput" class="form-control border-start-0 rounded-end-pill py-2 text-dark" placeholder="Tambah keterangan foto (opsional)..." maxlength="500">
+                    </div>
+                </div>
+                <div id="chatPhotoUploadProgress" class="mt-2 d-none text-start px-2">
+                    <div class="d-flex align-items-center gap-2 text-teal fw-semibold small" style="font-size: 0.8rem;">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span id="chatPhotoUploadProgressText">Mengompresi & mengunggah foto...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer px-3 py-2 bg-light border-top d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal" onclick="cancelChatPhotoUpload()">
+                    Batal
+                </button>
+                <button type="button" id="btnConfirmSendPhoto" class="btn btn-teal btn-sm rounded-pill px-4 fw-bold shadow-xs" onclick="submitChatPhotoUpload()">
+                    <i class="fa-solid fa-paper-plane me-1.5"></i> Kirim Foto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Zoom / Lightbox Foto Chat -->
+<div class="modal fade" id="chatPhotoViewerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark bg-opacity-95 text-white border-0 rounded-4 overflow-hidden shadow-2xl">
+            <div class="modal-header border-0 py-2 px-3 d-flex justify-content-between align-items-center" style="background: rgba(0,0,0,0.5);">
+                <span class="small text-white-50"><i class="fa-solid fa-image me-1 text-teal"></i> Foto Lampiran</span>
+                <div class="d-flex align-items-center gap-2">
+                    <a id="chatPhotoViewerDownload" href="#" download="foto-chat-jasainhu.jpg" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-2.5 py-1" title="Unduh Foto">
+                        <i class="fa-solid fa-download me-1"></i> Unduh
+                    </a>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body p-0 text-center bg-black d-flex align-items-center justify-content-center" style="min-height: 280px; max-height: 82vh;">
+                <img id="chatPhotoViewerImg" src="" alt="Detail Foto" class="img-fluid" style="max-height: 82vh; max-width: 100%; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 window.CSRF_TOKEN = '<?= csrf_token() ?>';
@@ -1316,8 +1466,8 @@ function submitInChatOrder(e) {
     });
 }
 
-function formatBubbleHtml(msgText, isMe, time, isRead) {
-    if (msgText.includes('[PESANAN RESMI DIBUAT]')) {
+function formatBubbleHtml(msgText, isMe, time, isRead, attachmentUrl = null) {
+    if (msgText && msgText.includes('[PESANAN RESMI DIBUAT]')) {
         return `
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-1 text-start" style="max-width: 380px; background: #ffffff; border: 1.5px solid #0d9488 !important;">
                 <div class="px-3 py-2 text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
@@ -1343,10 +1493,22 @@ function formatBubbleHtml(msgText, isMe, time, isRead) {
         `;
     }
 
+    const photoHtml = attachmentUrl ? `
+        <div class="chat-photo-attachment mb-1">
+            <img src="${escapeHtml(attachmentUrl)}" alt="Lampiran Foto" class="img-fluid rounded-3 chat-img-clickable" loading="lazy" onclick="openChatImageViewer('${escapeHtml(attachmentUrl)}')">
+        </div>
+    ` : '';
+
+    const hasCaption = msgText && msgText !== '📷 Foto Lampiran';
+    const textHtml = hasCaption ? `
+        <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(msgText)}</p>
+    ` : '';
+
     if (isMe) {
         return `
             <div class="bubble-me">
-                <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(msgText)}</p>
+                ${photoHtml}
+                ${textHtml}
                 <div class="bubble-meta text-white-50">
                     <span>${time}</span>
                     <i class="fa-solid ${isRead ? 'fa-check-double text-warning' : 'fa-check'}"></i>
@@ -1356,13 +1518,161 @@ function formatBubbleHtml(msgText, isMe, time, isRead) {
     } else {
         return `
             <div class="bubble-partner">
-                <p class="mb-0 small" style="white-space: pre-line; font-size: 0.88rem; line-height: 1.45;">${escapeHtml(msgText)}</p>
+                ${photoHtml}
+                ${textHtml}
                 <div class="bubble-meta text-muted">
                     <span>${time}</span>
                 </div>
             </div>
         `;
     }
+}
+
+// ==========================================
+// Lampiran Foto Obrolan (WhatsApp-Style Upload)
+// ==========================================
+let pendingChatPhotoFile = null;
+
+function handleChatPhotoSelected(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    
+    // Validasi tipe berkas
+    if (!file.type.startsWith('image/')) {
+        alert('Mohon pilih berkas gambar/foto (JPG, PNG, WEBP).');
+        input.value = '';
+        return;
+    }
+
+    pendingChatPhotoFile = file;
+
+    // Baca pratinjau foto
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewImg = document.getElementById('chatPhotoUploadPreview');
+        const sizeEl = document.getElementById('chatPhotoUploadSize');
+        if (previewImg) previewImg.src = e.target.result;
+        if (sizeEl) {
+            const kb = Math.round(file.size / 1024);
+            sizeEl.innerHTML = `<i class="fa-regular fa-image me-1"></i> Ukuran foto: ${kb > 1024 ? (kb/1024).toFixed(1) + ' MB' : kb + ' KB'}`;
+        }
+        
+        const modalEl = document.getElementById('chatPhotoUploadModal');
+        if (modalEl) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function cancelChatPhotoUpload() {
+    pendingChatPhotoFile = null;
+    const input = document.getElementById('chatPhotoInput');
+    if (input) input.value = '';
+    const caption = document.getElementById('chatPhotoCaptionInput');
+    if (caption) caption.value = '';
+    const progress = document.getElementById('chatPhotoUploadProgress');
+    if (progress) progress.classList.add('d-none');
+    const btn = document.getElementById('btnConfirmSendPhoto');
+    if (btn) btn.disabled = false;
+}
+
+async function submitChatPhotoUpload() {
+    if (!pendingChatPhotoFile) return;
+
+    const btn = document.getElementById('btnConfirmSendPhoto');
+    const progress = document.getElementById('chatPhotoUploadProgress');
+    const progressText = document.getElementById('chatPhotoUploadProgressText');
+    const captionInput = document.getElementById('chatPhotoCaptionInput');
+    const caption = captionInput ? captionInput.value.trim() : '';
+
+    const convId = document.getElementById('chatConvId').value;
+    const receiverId = document.getElementById('chatReceiverId').value;
+
+    btn.disabled = true;
+    if (progress) {
+        progress.classList.remove('d-none');
+        if (progressText) progressText.innerText = 'Mengoptimalkan foto...';
+    }
+
+    try {
+        let fileToSend = pendingChatPhotoFile;
+        // Kompresi foto secara cerdas di browser (kamera HP 15MB -> ~250KB instan)
+        if (typeof window.compressImageFile === 'function') {
+            try {
+                fileToSend = await window.compressImageFile(pendingChatPhotoFile, {
+                    maxWidth: 1400,
+                    maxHeight: 1400,
+                    quality: 0.82
+                });
+            } catch (cmpErr) {
+                console.warn('Kompresi browser dilewati:', cmpErr);
+            }
+        }
+
+        if (progressText) progressText.innerText = 'Mengunggah foto ke obrolan...';
+
+        const formData = new FormData();
+        formData.append('csrf_token', window.CSRF_TOKEN);
+        formData.append('conversation_id', convId);
+        formData.append('receiver_id', receiverId);
+        formData.append('message', caption);
+        formData.append('photo', fileToSend, fileToSend.name || 'chat_photo.jpg');
+
+        const response = await fetch(window.BASE_URL + '/api/chat_send.php', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Tutup modal
+            const modalEl = document.getElementById('chatPhotoUploadModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+            cancelChatPhotoUpload();
+
+            // Sembunyikan placeholder kosong
+            const emptyEl = document.getElementById('noMessagesPlaceholder');
+            if (emptyEl) emptyEl.classList.add('d-none');
+
+            // Tambahkan bubble ke area chat
+            const area = document.getElementById('chatMessagesArea');
+            const d = data.data;
+
+            const bubbleWrap = document.createElement('div');
+            bubbleWrap.className = 'd-flex flex-column align-items-end msg-bubble-wrap';
+            bubbleWrap.id = 'msg-' + d.id;
+            bubbleWrap.setAttribute('data-id', d.id);
+            bubbleWrap.innerHTML = formatBubbleHtml(d.message, true, d.time, false, d.attachment_full_url);
+            area.appendChild(bubbleWrap);
+            scrollChatToBottom(true);
+        } else {
+            alert(data.message || 'Gagal mengirim foto.');
+            btn.disabled = false;
+            if (progress) progress.classList.add('d-none');
+        }
+    } catch (err) {
+        console.error('Upload Error:', err);
+        alert('Terjadi kesalahan jaringan saat mengunggah foto.');
+        btn.disabled = false;
+        if (progress) progress.classList.add('d-none');
+    }
+}
+
+function openChatImageViewer(imgUrl) {
+    if (!imgUrl) return;
+    const modalEl = document.getElementById('chatPhotoViewerModal');
+    if (!modalEl) return;
+    const imgEl = document.getElementById('chatPhotoViewerImg');
+    const dlEl = document.getElementById('chatPhotoViewerDownload');
+    if (imgEl) imgEl.src = imgUrl;
+    if (dlEl) dlEl.href = imgUrl;
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
 }
 
 function sendChatMessage(e) {
@@ -1407,7 +1717,7 @@ function sendChatMessage(e) {
             bubbleWrap.className = 'd-flex flex-column align-items-end msg-bubble-wrap';
             bubbleWrap.id = 'msg-' + d.id;
             bubbleWrap.setAttribute('data-id', d.id);
-            bubbleWrap.innerHTML = formatBubbleHtml(d.message, true, d.time, false);
+            bubbleWrap.innerHTML = formatBubbleHtml(d.message, true, d.time, false, d.attachment_full_url);
             area.appendChild(bubbleWrap);
             scrollChatToBottom(true);
         } else {
@@ -1480,7 +1790,7 @@ if (window.ACTIVE_CONV_ID > 0) {
                     bubbleWrap.className = 'd-flex flex-column ' + (m.is_me ? 'align-items-end' : 'align-items-start') + ' msg-bubble-wrap';
                     bubbleWrap.id = 'msg-' + m.id;
                     bubbleWrap.setAttribute('data-id', m.id);
-                    bubbleWrap.innerHTML = formatBubbleHtml(m.message, m.is_me, m.time, false);
+                    bubbleWrap.innerHTML = formatBubbleHtml(m.message, m.is_me, m.time, false, m.attachment_full_url);
 
                     area.appendChild(bubbleWrap);
                 });

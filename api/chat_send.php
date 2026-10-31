@@ -39,9 +39,28 @@ $receiver_id = !empty($_POST['receiver_id']) ? (int)$_POST['receiver_id'] : 0;
 $provider_id = !empty($_POST['provider_id']) ? (int)$_POST['provider_id'] : null;
 $message = trim($_POST['message'] ?? '');
 
-if (empty($message)) {
-    echo json_encode(['success' => false, 'message' => 'Pesan tidak boleh kosong.']);
+// Penanganan Unggah Lampiran Foto
+$attachment_url = null;
+$message_type = 'text';
+
+if (!empty($_FILES['photo']) && ($_FILES['photo']['error'] === UPLOAD_ERR_OK)) {
+    try {
+        $attachment_url = save_uploaded_media($_FILES['photo'], 'chat', 'chat', 1200, 80);
+        $message_type = 'image';
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Gagal mengunggah foto: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
+if (empty($message) && empty($attachment_url)) {
+    echo json_encode(['success' => false, 'message' => 'Pesan atau foto lampiran tidak boleh kosong.']);
     exit;
+}
+
+$displayLastMsg = $message;
+if (!empty($attachment_url)) {
+    $displayLastMsg = !empty($message) ? "📷 " . $message : "📷 [Foto Lampiran]";
 }
 
 try {
@@ -94,22 +113,22 @@ try {
                 INSERT INTO conversations (user_one_id, user_two_id, provider_id, last_message, last_message_at, created_at)
                 VALUES (?, ?, ?, ?, NOW(), NOW())
             ");
-            $stmtNew->execute([$u1, $u2, $provider_id, $message]);
+            $stmtNew->execute([$u1, $u2, $provider_id, $displayLastMsg]);
             $conversation_id = (int)$db->lastInsertId();
         }
     }
 
     // 2. Simpan Pesan Baru ke `chat_messages`
     $stmtMsg = $db->prepare("
-        INSERT INTO chat_messages (conversation_id, sender_id, receiver_id, message, is_read, created_at)
-        VALUES (?, ?, ?, ?, 0, NOW())
+        INSERT INTO chat_messages (conversation_id, sender_id, receiver_id, message, attachment_url, message_type, is_read, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 0, NOW())
     ");
-    $stmtMsg->execute([$conversation_id, $user['id'], $receiver_id, $message]);
+    $stmtMsg->execute([$conversation_id, $user['id'], $receiver_id, $message, $attachment_url, $message_type]);
     $message_id = (int)$db->lastInsertId();
 
     // 3. Perbarui `conversations.last_message` dan `last_message_at`
     $stmtUpd = $db->prepare("UPDATE conversations SET last_message = ?, last_message_at = NOW() WHERE id = ?");
-    $stmtUpd->execute([$message, $conversation_id]);
+    $stmtUpd->execute([$displayLastMsg, $conversation_id]);
 
     $db->commit();
 
@@ -172,7 +191,8 @@ try {
                 }
 
                 // Potong pesan jika terlalu panjang untuk WA preview
-                $waMsgContent = mb_strlen($message) > 250 ? mb_substr($message, 0, 247) . '...' : $message;
+                $waMsgRaw = !empty($attachment_url) ? "📷 [Foto Lampiran] " . $message : $message;
+                $waMsgContent = mb_strlen($waMsgRaw) > 250 ? mb_substr($waMsgRaw, 0, 247) . '...' : $waMsgRaw;
 
                 if ($isReceiverProvider) {
                     $waMsg = "🔔 *Pesan Masuk di JASA INHU*\n\n"
@@ -209,6 +229,9 @@ try {
             'sender_id' => (int)$user['id'],
             'receiver_id' => $receiver_id,
             'message' => $message,
+            'attachment_url' => $attachment_url,
+            'attachment_full_url' => !empty($attachment_url) ? get_media_url($attachment_url) : null,
+            'message_type' => $message_type,
             'time' => date('H:i'),
             'date' => date('d M Y'),
             'is_me' => true
