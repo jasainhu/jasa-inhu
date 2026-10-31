@@ -347,6 +347,7 @@ $unread_chats = (int)$stmtChats->fetchColumn();
 $districts = get_all_districts();
 $categories = get_active_categories();
 
+$hide_mobile_header = true; // Sembunyikan bar atas mobile di halaman profil pengguna
 require_once __DIR__ . '/../includes/header.php';
 ?>
 

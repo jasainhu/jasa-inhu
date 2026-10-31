@@ -619,13 +619,24 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
             <?php endif; ?>
 
             <!-- Logo Resmi JASA INHU (Icon Asli + Tipografi Tebal Putih Bersih) -->
-            <a href="<?= BASE_URL ?>/" class="gojek-brand-combo text-decoration-none d-inline-flex align-items-center gap-2" title="JASA INHU">
+            <a href="<?= BASE_URL ?>/" class="gojek-brand-combo text-decoration-none d-inline-flex align-items-center gap-1.5 flex-shrink-0" title="JASA INHU">
                 <img src="<?= asset_url('images/favicon.png') ?>" alt="JASA INHU" class="gojek-brand-symbol">
                 <span class="gojek-brand-text">JASA INHU</span>
             </a>
+
+            <?php if ($is_site_homepage || str_contains($_SERVER['REQUEST_URI'] ?? '', 'search.php')): ?>
+                <!-- Chip Lokasi Ringkas di Samping Logo (Hemat Ruang Vertikal HP) -->
+                <button type="button" class="gojek-location-chip text-truncate ms-auto" data-bs-toggle="modal" data-bs-target="#districtSelectModal" style="max-width: 140px; padding: 3px 8px; font-size: 0.70rem; margin: 0;">
+                    <i class="fa-solid fa-location-dot location-dot-icon me-1"></i>
+                    <span class="location-name text-truncate">
+                        <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Seluruh Inhu' ?>
+                    </span>
+                    <i class="fa-solid fa-chevron-down location-arrow-icon ms-0.5" style="font-size: 0.58rem;"></i>
+                </button>
+            <?php endif; ?>
         </div>
 
-        <!-- Aksi Kanan (Chat, Notifikasi, Akun) -->
+        <!-- Aksi Kanan (Lonceng Notifikasi) -->
         <div class="gojek-header-actions">
             <?php if (is_logged_in() && $current_user): ?>
 
@@ -719,18 +730,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
         </div>
     </div>
 
-    <!-- Baris 2: Chip Lokasi Glassmorphism (Sesuai Mockup Rencana) -->
-    <div class="gojek-header-location-row mb-2">
-        <button type="button" class="gojek-location-chip" data-bs-toggle="modal" data-bs-target="#districtSelectModal">
-            <i class="fa-solid fa-location-dot location-dot-icon"></i>
-            <span class="location-name text-truncate">
-                <?= $header_dist ? ('Kec. ' . e(array_column($header_districts, 'name', 'id')[$header_dist] ?? 'Pilihan')) : 'Seluruh Kab. Inhu' ?>
-            </span>
-            <i class="fa-solid fa-chevron-down location-arrow-icon"></i>
-        </button>
-    </div>
-
-    <!-- Baris 3: Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab (Khusus Pengguna, Sembunyikan di Panel Mitra) -->
+    <!-- Search Bar Kapsul Lebar 100% Penuh ala Gojek / Grab (Khusus Pengguna, Sembunyikan di Panel Mitra) -->
     <?php 
     $is_provider_panel = str_contains($_SERVER['REQUEST_URI'] ?? '', '/provider/') || str_contains($_SERVER['REQUEST_URI'] ?? '', '/admin/');
     if (empty($hide_mobile_search) && !$is_provider_panel): 
