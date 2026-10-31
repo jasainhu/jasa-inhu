@@ -395,23 +395,32 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="bg-black bg-opacity-25 px-2 py-2.5 border-top border-white border-opacity-10">
             <div class="row g-1 text-center align-items-center">
                 <div class="col-4 border-end border-white border-opacity-15" role="button" data-bs-toggle="modal" data-bs-target="#modalDompetInfo" style="cursor: pointer;" title="Ketuk untuk isi saldo / info kuota">
-                    <div class="text-white-50" style="font-size: 0.66rem; margin-bottom: 2px;">Saldo Kuota</div>
-                    <div class="fw-bold text-white small d-flex align-items-center justify-content-center gap-1">
-                        <span>Rp <?= number_format($provider['wallet_balance'] ?? 0, 0, ',', '.') ?></span>
-                        <span class="badge bg-warning text-dark rounded-pill fw-bold" style="font-size: 0.58rem; padding: 2px 5px;">+Topup</span>
+                    <div class="text-white-50" style="font-size: 0.65rem; margin-bottom: 1px;">Saldo Kuota</div>
+                    <div class="fw-bold text-white text-nowrap" style="font-size: 0.86rem; line-height: 1.2;">
+                        Rp&nbsp;<?= number_format($provider['wallet_balance'] ?? 0, 0, ',', '.') ?>
+                    </div>
+                    <div class="mt-1">
+                        <span class="badge bg-warning text-dark rounded-pill fw-bold shadow-2xs" style="font-size: 0.58rem; padding: 1px 7px;">
+                            <i class="fa-solid fa-plus-circle me-0.5"></i>Topup
+                        </span>
                     </div>
                 </div>
                 <div class="col-4 border-end border-white border-opacity-15">
-                    <div class="text-white-50" style="font-size: 0.66rem; margin-bottom: 2px;">Rating & Ulasan</div>
-                    <div class="fw-bold text-white small">
-                        <i class="fa-solid fa-star text-warning me-0.5"></i> <?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?>
-                        <span class="text-white-50" style="font-size: 0.66rem;">(<?= (int)($provider['total_reviews'] ?? 0) ?>)</span>
+                    <div class="text-white-50" style="font-size: 0.65rem; margin-bottom: 1px;">Rating & Ulasan</div>
+                    <div class="fw-bold text-white text-nowrap" style="font-size: 0.86rem; line-height: 1.2;">
+                        <i class="fa-solid fa-star text-warning me-0.5"></i><?= number_format((float)($provider['rating_avg'] ?? 5.0), 1) ?>
+                    </div>
+                    <div class="mt-1">
+                        <span class="text-white-50" style="font-size: 0.62rem;">(<?= (int)($provider['total_reviews'] ?? 0) ?> Ulasan)</span>
                     </div>
                 </div>
                 <div class="col-4">
-                    <div class="text-white-50" style="font-size: 0.66rem; margin-bottom: 2px;">Pesanan Selesai</div>
-                    <div class="fw-bold text-white small">
-                        <i class="fa-solid fa-circle-check text-success-subtle me-0.5"></i> <?= $total_completed ?> Order
+                    <div class="text-white-50" style="font-size: 0.65rem; margin-bottom: 1px;">Pesanan Selesai</div>
+                    <div class="fw-bold text-white text-nowrap" style="font-size: 0.86rem; line-height: 1.2;">
+                        <i class="fa-solid fa-circle-check text-success-subtle me-0.5"></i><?= $total_completed ?> Order
+                    </div>
+                    <div class="mt-1">
+                        <span class="text-white-50" style="font-size: 0.62rem;">Berhasil</span>
                     </div>
                 </div>
             </div>
@@ -425,19 +434,25 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="shopee-list-group">
         <!-- Menu 1: Info Jasa & Tarif -->
         <a href="javascript:void(0)" class="shopee-list-item" data-bs-toggle="modal" data-bs-target="#modalEditJasa">
-            <div class="shopee-list-item-left">
-                <i class="fa-solid fa-briefcase shopee-list-icon text-teal"></i>
-                <div>
-                    <span class="d-block fw-bold text-dark">Informasi Jasa & Tarif</span>
+            <div class="shopee-list-item-left min-w-0">
+                <i class="fa-solid fa-briefcase shopee-list-icon text-teal flex-shrink-0"></i>
+                <div class="min-w-0">
+                    <span class="d-block fw-bold text-dark text-truncate">Informasi Jasa & Tarif</span>
                     <div class="d-flex align-items-center gap-1.5 flex-wrap mt-0.5">
-                        <?= render_provider_service_type_badge($provider, 'xs') ?>
                         <span class="text-muted small" style="font-size: 0.72rem;">
-                            <?= e($provider['category_name'] ?? 'Penyedia Jasa') ?> &bull; <?= $rate_badge_text ?>
+                            <?= e($provider['category_name'] ?? 'Penyedia Jasa') ?>
                         </span>
+                        <span class="text-muted" style="font-size: 0.72rem;">&bull;</span>
+                        <?= render_provider_service_type_badge($provider, 'xs') ?>
                     </div>
                 </div>
             </div>
-            <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+            <div class="d-flex align-items-center gap-1.5 flex-shrink-0 ms-2">
+                <span class="badge bg-teal-subtle text-teal border border-teal-subtle py-1 px-2.5 rounded-pill fw-bold text-nowrap" style="font-size: 0.72rem;">
+                    <?= $rate_badge_text ?>
+                </span>
+                <i class="fa-solid fa-chevron-right shopee-list-chevron"></i>
+            </div>
         </a>
 
         <!-- Menu 2: Wilayah Jangkauan Layanan -->
