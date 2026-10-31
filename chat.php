@@ -29,6 +29,8 @@ if ($is_explicit_chat) {
     $hide_footer = true;
     $hide_mobile_bottom_nav = true;
     $hide_floating_wa = true;
+    $hide_ai_widget = true;
+    $hide_mobile_header = true;
 }
 
 // 1. Jika ada parameter provider_id, temukan user_id pemilik toko
@@ -514,12 +516,20 @@ require_once __DIR__ . '/includes/header.php';
 
 @media (max-width: 767.98px) {
     <?php if ($is_explicit_chat): ?>
-    /* Ruang Chat Fullscreen Native Mobile */
+    /* Ruang Chat Fullscreen Native Mobile (Ala WhatsApp / Shopee Chat) */
     body {
         overflow: hidden !important;
         position: fixed;
         width: 100%;
         height: 100%;
+    }
+    .gojek-mobile-header {
+        display: none !important;
+    }
+    #kakInhuWidgetRoot,
+    .floating-wa-btn,
+    .mobile-bottom-nav {
+        display: none !important;
     }
     .chat-breadcrumb-nav {
         display: none !important;
@@ -528,6 +538,8 @@ require_once __DIR__ . '/includes/header.php';
         padding: 0 !important;
         margin: 0 !important;
         max-width: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
     }
     .chat-app-wrapper {
         height: 100dvh !important;
@@ -536,15 +548,44 @@ require_once __DIR__ . '/includes/header.php';
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .chat-app-wrapper > .row {
+        height: 100% !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+    #chatRoomCol {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
     }
     .chat-room-header {
         position: sticky;
         top: 0;
         z-index: 20;
         padding: 9px 12px;
+        flex-shrink: 0 !important;
+    }
+    .chat-messages-viewport {
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    .quick-chips-bar {
+        flex-shrink: 0 !important;
     }
     .chat-input-bar {
-        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+        flex-shrink: 0 !important;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+        background: #ffffff !important;
+        position: relative !important;
+        z-index: 25 !important;
+        border-top: 1px solid #e2e8f0 !important;
     }
     <?php else: ?>
     /* Tampilan Kotak Masuk Mobile (Inbox) */
@@ -727,19 +768,11 @@ require_once __DIR__ . '/includes/header.php';
                                 </button>
                             <?php endif; ?>
 
-                            <!-- Direct WhatsApp Button -->
-                            <?php if (!empty($active_partner['wa_url'])): ?>
-                                <a href="<?= $active_partner['wa_url'] ?>" target="_blank" class="btn btn-success btn-sm fw-bold rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-2xs text-white" style="font-size: 0.75rem;" title="Hubungi via WhatsApp Resmi">
-                                    <i class="fa-brands fa-whatsapp fs-6"></i>
-                                    <span class="d-none d-md-inline">WhatsApp</span>
-                                </a>
-                            <?php endif; ?>
-
                             <!-- Provider Storefront Link -->
                             <?php if ($active_partner['is_provider'] && !empty($active_partner['provider'])): ?>
-                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" target="_blank" class="btn btn-light border btn-sm fw-semibold d-none d-sm-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill text-dark shadow-2xs" style="font-size: 0.75rem;" title="Lihat Profil & Portofolio Toko">
+                                <a href="<?= BASE_URL ?>/provider_detail.php?id=<?= $active_partner['provider']['id'] ?>" target="_blank" class="btn btn-light border btn-sm fw-semibold d-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill text-dark shadow-2xs" style="font-size: 0.75rem;" title="Lihat Profil & Portofolio Toko">
                                     <i class="fa-solid fa-store text-teal"></i>
-                                    <span>Toko ↗</span>
+                                    <span>Lihat Toko ↗</span>
                                 </a>
                             <?php endif; ?>
                         </div>

@@ -606,6 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
 $current_page_basename = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '') === 'home') || !empty($hide_back_btn);
 ?>
+<?php if (empty($hide_mobile_header)): ?>
 <header class="gojek-mobile-header d-lg-none sticky-top">
     <!-- Baris 1: Logo Resmi JASA INHU di Kiri, Aksi (Lonceng & Akun) di Kanan -->
     <div class="gojek-header-top">
@@ -940,6 +941,7 @@ $is_site_homepage = ($current_page_basename === 'index.php' && ($active_nav ?? '
     </div>
     <?php endif; ?>
 </header>
+<?php endif; ?>
 
 <!-- Modal Pilih Kecamatan (Shopee / Gojek Style Location Picker) -->
 <div class="modal fade" id="districtSelectModal" tabindex="-1" aria-labelledby="districtSelectModalLabel" aria-hidden="true">
