@@ -1,6 +1,6 @@
 <?php
 /**
- * Script Otomatis: Broadcast Semangat Pagi Minggu untuk Mitra JASA INHU
+ * Script Otomatis: Broadcast Semangat Pagi Minggu untuk Mitra & Pengguna JASA INHU
  * Dijalankan via CLI / Scheduler pada jam prima (07:35 WIB)
  */
 
@@ -14,15 +14,15 @@ require_once __DIR__ . '/../includes/functions.php';
 
 $startTime = microtime(true);
 echo "====================================================\n";
-echo " JASA INHU - AUTO BROADCAST PAGI MINGGU MITRA\n";
+echo " JASA INHU - AUTO BROADCAST PAGI MINGGU (GAMBAR + PESAN)\n";
 echo " Waktu Mulai: " . date('Y-m-d H:i:s') . " WIB\n";
 echo "====================================================\n\n";
 
 $db = get_db();
 
-// Ambil semua mitra aktif yang memiliki nomor WhatsApp valid
+// Ambil semua mitra dan pengguna aktif yang memiliki nomor WhatsApp valid
 $query = "
-    SELECT u.id, u.name, u.phone, sp.business_name, d.name as district_name
+    SELECT sp.id as sp_id, u.id, u.name, u.phone, sp.business_name, d.name as district_name
     FROM service_providers sp
     JOIN users u ON sp.user_id = u.id
     LEFT JOIN districts d ON sp.district_id = d.id
@@ -32,49 +32,61 @@ $query = "
     ORDER BY sp.id ASC
 ";
 $stmt = $db->query($query);
-$partners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$rawList = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$total = count($partners);
-echo "Ditemukan {$total} mitra aktif dengan nomor HP terdaftar.\n\n";
+$uniqueRecipients = [];
+$seenPhones = [];
 
-if ($total === 0) {
-    echo "Tidak ada mitra yang dapat dikirim pesan.\n";
-    exit(0);
-}
-
-$sentCount = 0;
-$failCount = 0;
-
-foreach ($partners as $idx => $p) {
-    $num = $idx + 1;
-    $rawPhone = $p['phone'];
+foreach ($rawList as $row) {
+    $rawPhone = $row['phone'];
     $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
-    
-    // Normalisasi awalan 08 / 62
     if (str_starts_with($cleanPhone, '0')) {
         $cleanPhone = '62' . substr($cleanPhone, 1);
     } elseif (str_starts_with($cleanPhone, '8')) {
         $cleanPhone = '62' . $cleanPhone;
     }
+    
+    if (!isset($seenPhones[$cleanPhone]) && strlen($cleanPhone) >= 10) {
+        $seenPhones[$cleanPhone] = true;
+        $row['clean_phone'] = $cleanPhone;
+        $uniqueRecipients[] = $row;
+    }
+}
 
-    $bizName = !empty($p['business_name']) ? trim($p['business_name']) : trim($p['name']);
-    $district = !empty($p['district_name']) ? 'Kec. ' . $p['district_name'] : 'Indragiri Hulu';
+$total = count($uniqueRecipients);
+echo "Ditemukan {$total} penerima unik aktif dengan nomor WA terdaftar.\n\n";
 
-    $message = "Halo Mitra *" . $bizName . "* di " . $district . ",\n\n"
-        . "Semangat Pagi Minggu! 💪⚡\n\n"
-        . "Hari Minggu biasanya permintaan jasa rumahan (AC, montir, ledeng, pertukangan, babat rumput & kebersihan) sedang ramai dari warga se-Inhu.\n\n"
-        . "💡 *Tips Siaga Hari Ini:*\n"
-        . "1. Pastikan nomor WhatsApp aktif & notifikasi HP bersuara nyaring.\n"
-        . "2. Balas chat dan panggilan warga dengan cepat & ramah.\n"
-        . "3. Berikan pelayanan terbaik agar toko Anda mendapat rating bintang 5!\n\n"
+if ($total === 0) {
+    echo "Tidak ada penerima yang dapat dikirim pesan.\n";
+    exit(0);
+}
+
+$sentCount = 0;
+$failCount = 0;
+$imageUrl = 'https://jasainhu.gafahrandi.my.id/assets/images/story_minggu_santai.jpg';
+
+foreach ($uniqueRecipients as $idx => $rec) {
+    $num = $idx + 1;
+    $cleanPhone = $rec['clean_phone'];
+    $bizName = !empty($rec['business_name']) ? trim($rec['business_name']) : trim($rec['name']);
+    $district = !empty($rec['district_name']) ? 'Kec. ' . $rec['district_name'] : 'Indragiri Hulu';
+
+    $message = "Halo *" . $bizName . "* di " . $district . ",\n\n"
+        . "Selamat Pagi Minggu & Selamat Berakhir Pekan! ☕🌿\n\n"
+        . "Hari Minggu biasanya permintaan jasa rumahan (servis AC, montir panggilan, pertukangan, ledeng/listrik, kebersihan & babat rumput) sedang ramai-ramainya dari warga se-Inhu.\n\n"
+        . "💡 *Tips Panen Order Hari Ini:*\n"
+        . "1. Pastikan nomor WhatsApp aktif & nada dering HP bersuara nyaring.\n"
+        . "2. Pasang gambar poster di atas ke *Status / Story WhatsApp* Anda agar tetangga & warga sekitar tahu Anda siap melayani hari ini!\n"
+        . "3. Balas panggilan order dengan cepat & ramah untuk dapat rating bintang 5.\n\n"
         . "Buka profil & pantau orderan Anda di:\n"
         . "👉 https://jasainhu.gafahrandi.my.id/provider/index.php\n\n"
-        . "_Semoga hari ini orderan lancar, berkah dan rezeki melimpah untuk usaha Anda!_ 🤲✨\n\n"
+        . "Butuh panggil jasa lain untuk urusan rumah Anda sendiri? Cek di:\n"
+        . "👉 https://jasainhu.gafahrandi.my.id\n\n"
+        . "_Semoga hari ini orderan lancar, berkah dan rezeki melimpah untuk Anda dan keluarga!_ 🤲✨\n\n"
         . "- *Admin JASA INHU*";
 
-    echo "[{$num}/{$total}] Mengirim ke {$bizName} ({$cleanPhone})... ";
+    echo "[{$num}/{$total}] Mengirim poster + caption ke {$bizName} ({$cleanPhone})... ";
 
-    $imageUrl = 'https://jasainhu.gafahrandi.my.id/assets/images/story_minggu_santai.jpg';
     $res = send_wa_notification($cleanPhone, $message, 'auto_broadcast_minggu', null, $bizName, $imageUrl);
     
     if (($res['status'] ?? '') === 'sent') {
@@ -96,4 +108,3 @@ echo " SELESAI DALAM {$elapsed} DETIK\n";
 echo " Berhasil Terkirim : {$sentCount}\n";
 echo " Gagal             : {$failCount}\n";
 echo "====================================================\n";
-
