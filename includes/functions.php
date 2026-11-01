@@ -639,7 +639,11 @@ function send_wa_notification(string $phone, string $message, string $event_type
                 'countryCode' => '62'
             ];
             if (!empty($media_url)) {
-                $postFields['url'] = $media_url;
+                if (file_exists($media_url)) {
+                    $postFields['file'] = new CURLFile($media_url);
+                } else {
+                    $postFields['url'] = $media_url;
+                }
             }
 
             $curl = curl_init();

@@ -63,7 +63,10 @@ if ($total === 0) {
 
 $sentCount = 0;
 $failCount = 0;
-$imageUrl = 'https://jasainhu.gafahrandi.my.id/assets/images/story_minggu_santai.jpg';
+$imagePath = __DIR__ . '/../assets/images/story_minggu_santai.jpg';
+if (!file_exists($imagePath)) {
+    $imagePath = 'https://jasainhu.gafahrandi.my.id/assets/images/story_minggu_santai.jpg';
+}
 
 foreach ($uniqueRecipients as $idx => $rec) {
     $num = $idx + 1;
@@ -87,7 +90,7 @@ foreach ($uniqueRecipients as $idx => $rec) {
 
     echo "[{$num}/{$total}] Mengirim poster + caption ke {$bizName} ({$cleanPhone})... ";
 
-    $res = send_wa_notification($cleanPhone, $message, 'auto_broadcast_minggu', null, $bizName, $imageUrl);
+    $res = send_wa_notification($cleanPhone, $message, 'auto_broadcast_minggu', null, $bizName, $imagePath);
     
     if (($res['status'] ?? '') === 'sent') {
         echo "BERHASIL ✅\n";
