@@ -285,27 +285,12 @@
             width: 170px;
             height: 190px;
             position: relative;
-            margin-top: -45px; /* Karakter menyembul keluar ke atas seperti foto referensi */
+            margin-top: -45px;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-        }
-
-        .mascot-guide-box {
-            width: 100%;
-            height: 100%;
-            border: 2px dashed rgba(56, 189, 248, 0.6);
-            border-radius: 20px;
-            background: rgba(14, 165, 233, 0.15);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 10px;
-            color: #7dd3fc;
-            font-size: 11px;
-            font-weight: 700;
+            background: transparent;
+            pointer-events: none;
         }
 
         /* Tombol Tengah: CEK KE PROFIL (Glowing Neon Button) */
@@ -559,12 +544,7 @@
     <!-- 5. BANNER REFERENSI STREAMER (BAWAH) -->
     <div class="bottom-reference-banner">
         <!-- Slot untuk Animasi Maskot Kak Inhu -->
-        <div class="banner-mascot-slot" id="mascotSlot">
-            <!-- Saat Abang taruh Media Source di OBS dengan Chroma Key, tempatkan di kotak ini! -->
-            <div class="mascot-guide-box">
-                <span>✌️ TARUH ANIMASI DI SINI</span>
-            </div>
-        </div>
+        <div class="banner-mascot-slot" id="mascotSlot"></div>
 
         <!-- Tombol Tengah: CEK KE PROFIL -->
         <div class="banner-center-cta">
@@ -600,12 +580,8 @@
         </div>
     </div>
 
-    <!-- 7. AREA KOMENTAR TIKTOK (ZONA AMAN) -->
-    <div class="bottom-chat-zone">
-        <div class="chat-zone-indicator" id="chatIndicator">
-            💬 Area Aliran Komentar & Gift TikTok Live
-        </div>
-    </div>
+    <!-- 7. AREA KOMENTAR TIKTOK (ZONA AMAN - Transparan Bersih) -->
+    <div class="bottom-chat-zone"></div>
 
 </body>
 </html>
