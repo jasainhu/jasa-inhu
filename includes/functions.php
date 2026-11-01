@@ -614,7 +614,7 @@ function build_order_wa_template(string $event, array $data): string {
 /**
  * Mengirim pesan notifikasi WhatsApp resmi via Fonnte Gateway (Otomatis & Real-Time)
  */
-function send_wa_notification(string $phone, string $message, string $event_type = 'general', ?int $request_id = null, ?string $recipient_name = null): array {
+function send_wa_notification(string $phone, string $message, string $event_type = 'general', ?int $request_id = null, ?string $recipient_name = null, ?string $media_url = null): array {
     $wa_url = format_wa_url($phone, $message);
     $status = 'simulated';
     $response_payload = null;
@@ -633,23 +633,28 @@ function send_wa_notification(string $phone, string $message, string $event_type
 
     if (!empty($fonnte_token) && $is_active && !empty($clean_phone)) {
         try {
+            $postFields = [
+                'target' => $clean_phone,
+                'message' => $message,
+                'countryCode' => '62'
+            ];
+            if (!empty($media_url)) {
+                $postFields['url'] = $media_url;
+            }
+
             $curl = curl_init();
             curl_setopt_array($curl, [
                 CURLOPT_URL => 'https://api.fonnte.com/send',
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 5,
-                CURLOPT_TIMEOUT => 15,
+                CURLOPT_TIMEOUT => 20,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
                 CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_POSTFIELDS => [
-                    'target' => $clean_phone,
-                    'message' => $message,
-                    'countryCode' => '62'
-                ],
+                CURLOPT_POSTFIELDS => $postFields,
                 CURLOPT_HTTPHEADER => [
                     'Authorization: ' . $fonnte_token
                 ],

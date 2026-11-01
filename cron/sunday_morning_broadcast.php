@@ -74,7 +74,8 @@ foreach ($partners as $idx => $p) {
 
     echo "[{$num}/{$total}] Mengirim ke {$bizName} ({$cleanPhone})... ";
 
-    $res = send_wa_notification($cleanPhone, $message, 'auto_broadcast_minggu');
+    $imageUrl = 'https://jasainhu.gafahrandi.my.id/assets/images/story_minggu_santai.jpg';
+    $res = send_wa_notification($cleanPhone, $message, 'auto_broadcast_minggu', null, $bizName, $imageUrl);
     
     if (($res['status'] ?? '') === 'sent') {
         echo "BERHASIL ✅\n";
