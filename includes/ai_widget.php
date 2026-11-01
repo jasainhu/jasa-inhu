@@ -734,6 +734,10 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
         left: auto;
         padding: 6px 14px 6px 8px;
         gap: 8px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    body.has-app-banner .kakinhu-launcher {
+        bottom: 130px !important; /* Terangkat otomatis saat ada banner install app agar tidak menabrak tombol Download */
     }
     .kakinhu-avatar-wrapper {
         width: 36px;
@@ -753,6 +757,10 @@ $agentName = get_setting('ai_agent_name', 'Kak Inhu');
         right: 14px;
         left: auto;
         max-width: 240px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    body.has-app-banner .kakinhu-tooltip {
+        bottom: 186px !important;
     }
     .kakinhu-tooltip::after {
         right: 24px;

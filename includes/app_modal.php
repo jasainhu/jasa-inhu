@@ -23,8 +23,8 @@ $is_provider_or_admin = str_contains($_SERVER['REQUEST_URI'] ?? '', '/provider/'
         </div>
 
         <!-- Action Button -->
-        <button type="button" class="btn btn-sm btn-teal text-white rounded-pill px-3 py-1.5 fw-bold flex-shrink-0" onclick="openInstallModal()" style="background-color: #0d9488; font-size: 0.78rem;">
-            Pasang
+        <button type="button" class="btn btn-sm btn-teal text-white rounded-pill px-3 py-1.5 fw-bold flex-shrink-0 shadow-xs" onclick="openInstallModal()" style="background-color: #0d9488; font-size: 0.78rem;">
+            <i class="fa-solid fa-download me-1"></i> Download
         </button>
     </div>
 </div>
@@ -112,24 +112,41 @@ $is_provider_or_admin = str_contains($_SERVER['REQUEST_URI'] ?? '', '/provider/'
     bottom: 64px; /* Tepat di atas mobile-bottom-nav */
     left: 10px;
     right: 10px;
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(13, 148, 136, 0.2);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(13, 148, 136, 0.25);
     border-radius: 16px;
     z-index: 1030;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 .btn-close-banner {
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 4px 6px;
-    font-size: 0.85rem;
+    padding: 6px 8px;
+    font-size: 0.9rem;
     line-height: 1;
     cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
 }
 .btn-close-banner:hover {
+    background: rgba(0, 0, 0, 0.06);
     color: #475569;
+}
+
+/* KETIKA BANNER TAMPIL DI HP: ANGKAT KAK INHU KE ATAS AGAR TIDAK MENABRAK / MENUTUPI TOMBOL DOWNLOAD! */
+@media (max-width: 991.98px) {
+    body.has-app-banner .kakinhu-launcher {
+        bottom: 130px !important;
+        transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    body.has-app-banner .kakinhu-tooltip {
+        bottom: 186px !important;
+        transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
 }
 </style>
 
@@ -156,6 +173,7 @@ function dismissSmartBanner() {
     if (banner) {
         banner.style.display = 'none';
         sessionStorage.setItem('dismissed_app_banner', 'true');
+        document.body.classList.remove('has-app-banner');
     }
 }
 
@@ -177,13 +195,18 @@ function triggerPwaPrompt() {
     }
 }
 
-// Cek apakah banner sudah pernah ditutup pada sesi ini
+// Cek apakah banner aktif saat load
 document.addEventListener('DOMContentLoaded', () => {
     // Sembunyikan banner jika dibuka di dalam aplikasi PWA/TWA standalone
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if (isStandalone || sessionStorage.getItem('dismissed_app_banner') === 'true') {
-        const banner = document.getElementById('smartAppBanner');
+    const isDismissed = sessionStorage.getItem('dismissed_app_banner') === 'true';
+    const banner = document.getElementById('smartAppBanner');
+    
+    if (isStandalone || isDismissed) {
         if (banner) banner.style.display = 'none';
+        document.body.classList.remove('has-app-banner');
+    } else if (banner) {
+        document.body.classList.add('has-app-banner');
     }
 });
 </script>
