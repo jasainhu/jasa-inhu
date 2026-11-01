@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1080, height=1920, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JASA INHU - OBS Live Overlay TikTok</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,14 +14,23 @@
             padding: 0;
         }
 
-        body {
-            width: 1080px;
-            height: 1920px;
+        html, body {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             background: transparent;
             font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
             color: #ffffff;
             position: relative;
+        }
+
+        #scaler {
+            width: 1080px;
+            height: 1920px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: top left;
         }
 
         /* ========================================================
@@ -428,82 +437,101 @@
     </style>
 </head>
 <body>
-
-    <!-- 1. HEADER ATAS (Live Tag & Judul) -->
-    <header class="top-header">
-        <div class="brand-box">
-            <img src="../images/logo-white.png" alt="Logo Jasa Inhu">
-        </div>
-        <div class="live-tag">
-            <div class="pulse-dot"></div>
-            <span>LIVE</span>
-        </div>
-    </header>
-
-    <!-- 2. BINGKAI WEBCAM (Slot Atas) -->
-    <div class="frame-webcam">
-        <div class="tag-host">
-            <span>🎙️</span> Host & Admin Jasa Inhu
-        </div>
-    </div>
-
-    <!-- 3. PEMBATAS TENGAH -->
-    <div class="middle-divider">
-        <div class="divider-title">
-            <span class="badge">LIVE Q&A</span>
-            <span>Tanya Seputar Tukang & Jasa di Inhu</span>
-        </div>
-        <div class="divider-cta">
-            Tanya di Komentar 👇
-        </div>
-    </div>
-
-    <!-- 4. PANEL SAMPING POLOS (MENUTUP HITAM TANPA EMBEL-EMBEL) -->
-    <div class="side-panel-left"></div>
-    <div class="frame-phone-center"></div>
-    <div class="side-panel-right"></div>
-
-    <!-- 5. BANNER REFERENSI STREAMER (BAWAH) -->
-    <div class="bottom-reference-banner">
-        <!-- Slot untuk Animasi Maskot Kak Inhu -->
-        <div class="banner-mascot-slot" id="mascotSlot"></div>
-
-        <!-- Tombol Tengah: CEK KE PROFIL -->
-        <div class="banner-center-cta">
-            <div class="cta-glowing-btn">
-                <h3>CEK KE PROFIL</h3>
-                <span class="arrow">➔</span>
+    <div id="scaler">
+        <!-- 1. HEADER ATAS (Live Tag & Judul) -->
+        <header class="top-header">
+            <div class="brand-box">
+                <img src="../images/logo-white.png" alt="Logo Jasa Inhu">
             </div>
-            <div class="cta-subtext">
-                🌐 Link Website Resmi Ada di Bio Akun!
+            <div class="live-tag">
+                <div class="pulse-dot"></div>
+                <span>LIVE</span>
+            </div>
+        </header>
+
+        <!-- 2. BINGKAI WEBCAM (Slot Atas) -->
+        <div class="frame-webcam">
+            <div class="tag-host">
+                <span>🎙️</span> Host & Admin Jasa Inhu
             </div>
         </div>
 
-        <!-- Brand Kanan: JASA INHU -->
-        <div class="banner-brand-right">
-            <img src="../images/logo-white.png" alt="Jasa Inhu">
-            <span>LAYANAN INHU</span>
+        <!-- 3. PEMBATAS TENGAH -->
+        <div class="middle-divider">
+            <div class="divider-title">
+                <span class="badge">LIVE Q&A</span>
+                <span>Tanya Seputar Tukang & Jasa di Inhu</span>
+            </div>
+            <div class="divider-cta">
+                Tanya di Komentar 👇
+            </div>
         </div>
+
+        <!-- 4. PANEL SAMPING POLOS (MENUTUP HITAM TANPA EMBEL-EMBEL) -->
+        <div class="side-panel-left"></div>
+        <div class="frame-phone-center"></div>
+        <div class="side-panel-right"></div>
+
+        <!-- 5. BANNER REFERENSI STREAMER (BAWAH) -->
+        <div class="bottom-reference-banner">
+            <!-- Slot untuk Animasi Maskot Kak Inhu -->
+            <div class="banner-mascot-slot" id="mascotSlot"></div>
+
+            <!-- Tombol Tengah: CEK KE PROFIL -->
+            <div class="banner-center-cta">
+                <div class="cta-glowing-btn">
+                    <h3>CEK KE PROFIL</h3>
+                    <span class="arrow">➔</span>
+                </div>
+                <div class="cta-subtext">
+                    🌐 Link Website Resmi Ada di Bio Akun!
+                </div>
+            </div>
+
+            <!-- Brand Kanan: JASA INHU -->
+            <div class="banner-brand-right">
+                <img src="../images/logo-white.png" alt="Jasa Inhu">
+                <span>LAYANAN INHU</span>
+            </div>
+        </div>
+
+        <!-- 6. TICKER RUNNING TEXT -->
+        <div class="ticker-bar">
+            <div class="ticker-label">INFO LIVE</div>
+            <div class="ticker-content">
+                <span class="ticker-item">💡 <strong>Mau Cari Jasa?</strong> Ketik di chat kebutuhan Anda se-Inhu!</span>
+                <span class="ticker-item">🛠️ <strong>Punya Keahlian / Usaha?</strong> Daftar Mitra GRATIS malam ini!</span>
+                <span class="ticker-item">🛵 <strong>Layanan:</strong> Servis AC, Montir, Bangunan, Babat Rumput, & Tukang Jahit!</span>
+                <span class="ticker-item">🌐 <strong>Website:</strong> jasainhu.gafahrandi.my.id</span>
+                <!-- Loop -->
+                <span class="ticker-item">💡 <strong>Mau Cari Jasa?</strong> Ketik di chat kebutuhan Anda se-Inhu!</span>
+                <span class="ticker-item">🛠️ <strong>Punya Keahlian / Usaha?</strong> Daftar Mitra GRATIS malam ini!</span>
+                <span class="ticker-item">🛵 <strong>Layanan:</strong> Servis AC, Montir, Bangunan, Babat Rumput, & Tukang Jahit!</span>
+                <span class="ticker-item">🌐 <strong>Website:</strong> jasainhu.gafahrandi.my.id</span>
+            </div>
+        </div>
+
+        <!-- 7. AREA KOMENTAR TIKTOK (ZONA AMAN - Transparan Bersih) -->
+        <div class="bottom-chat-zone"></div>
     </div>
 
-    <!-- 6. TICKER RUNNING TEXT -->
-    <div class="ticker-bar">
-        <div class="ticker-label">INFO LIVE</div>
-        <div class="ticker-content">
-            <span class="ticker-item">💡 <strong>Mau Cari Jasa?</strong> Ketik di chat kebutuhan Anda se-Inhu!</span>
-            <span class="ticker-item">🛠️ <strong>Punya Keahlian / Usaha?</strong> Daftar Mitra GRATIS malam ini!</span>
-            <span class="ticker-item">🛵 <strong>Layanan:</strong> Servis AC, Montir, Bangunan, Babat Rumput, & Tukang Jahit!</span>
-            <span class="ticker-item">🌐 <strong>Website:</strong> jasainhu.gafahrandi.my.id</span>
-            <!-- Loop -->
-            <span class="ticker-item">💡 <strong>Mau Cari Jasa?</strong> Ketik di chat kebutuhan Anda se-Inhu!</span>
-            <span class="ticker-item">🛠️ <strong>Punya Keahlian / Usaha?</strong> Daftar Mitra GRATIS malam ini!</span>
-            <span class="ticker-item">🛵 <strong>Layanan:</strong> Servis AC, Montir, Bangunan, Babat Rumput, & Tukang Jahit!</span>
-            <span class="ticker-item">🌐 <strong>Website:</strong> jasainhu.gafahrandi.my.id</span>
-        </div>
-    </div>
-
-    <!-- 7. AREA KOMENTAR TIKTOK (ZONA AMAN - Transparan Bersih) -->
-    <div class="bottom-chat-zone"></div>
-
+    <!-- RESPONSIVE AUTO-SCALER UNTUK RESOLUSI APAPUN DI TIKTOK STUDIO -->
+    <script>
+        function autoScale() {
+            var sw = window.innerWidth || document.documentElement.clientWidth;
+            var sh = window.innerHeight || document.documentElement.clientHeight;
+            if (sw <= 0 || sh <= 0) return;
+            var scaleX = sw / 1080;
+            var scaleY = sh / 1920;
+            var scaler = document.getElementById('scaler');
+            if (scaler) {
+                scaler.style.transform = 'scale(' + scaleX + ', ' + scaleY + ')';
+            }
+        }
+        window.addEventListener('resize', autoScale);
+        window.addEventListener('DOMContentLoaded', autoScale);
+        window.addEventListener('load', autoScale);
+        autoScale();
+    </script>
 </body>
 </html>
