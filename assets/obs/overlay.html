@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920, initial-scale=1.0">
+    <title>JASA INHU - OBS Live Overlay TikTok</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            overflow: hidden;
+            background: transparent;
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            color: #ffffff;
+            position: relative;
+        }
+
+        /* Ambient Glow & Vignette (Subtle) */
+        .ambient-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1080px;
+            height: 1920px;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at 50% 0%, rgba(13, 148, 136, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(6, 78, 59, 0.15) 0%, transparent 60%);
+            z-index: 1;
+        }
+
+        /* 1. TOP HEADER (Safe from TikTok Host Info) */
+        .top-header {
+            position: absolute;
+            top: 75px;
+            left: 50px;
+            right: 50px;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(6, 78, 59, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(45, 212, 191, 0.4);
+            border-radius: 45px;
+            padding: 0 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            z-index: 10;
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-box img {
+            height: 46px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .brand-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .brand-text span {
+            font-size: 13px;
+            font-weight: 600;
+            color: #a7f3d0;
+            letter-spacing: 0.2px;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ef4444;
+            color: white;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 8px 18px;
+            border-radius: 30px;
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.6);
+            animation: pulse-live 1.8s infinite;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ffffff;
+        }
+
+        @keyframes pulse-live {
+            0% { transform: scale(1); box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+            50% { transform: scale(1.04); box-shadow: 0 0 24px rgba(239, 68, 68, 0.85); }
+            100% { transform: scale(1); box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+        }
+
+        /* 2. WEBCAM / ANIMATION FRAME (SLOT ATAS) */
+        .frame-webcam {
+            position: absolute;
+            top: 180px;
+            left: 50px;
+            width: 980px;
+            height: 640px;
+            border: 3.5px solid #0d9488;
+            border-radius: 32px;
+            box-shadow: 0 0 25px rgba(13, 148, 136, 0.35), inset 0 0 15px rgba(13, 148, 136, 0.2);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .tag-host {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(45, 212, 191, 0.4);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #5eead4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 3. MIDDLE BANNER / HOOK TOPIK (PEMBATAS ELEGAN) */
+        .middle-hook {
+            position: absolute;
+            top: 840px;
+            left: 50px;
+            right: 50px;
+            height: 110px;
+            background: linear-gradient(135deg, #0d9488 0%, #064e43 100%);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-radius: 26px;
+            padding: 14px 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(13, 148, 136, 0.4);
+            z-index: 10;
+        }
+
+        .middle-hook .hook-badge {
+            background: #fef08a;
+            color: #854d0e;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 3px 14px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .middle-hook h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        .middle-hook p {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ccfbf1;
+            margin-top: 3px;
+        }
+
+        /* 4. WINDOW CAPTURE FRAME (SLOT BAWAH: TAMPILAN WEB) */
+        .frame-screen {
+            position: absolute;
+            top: 970px;
+            left: 50px;
+            width: 980px;
+            height: 610px;
+            border: 3.5px solid #14b8a6;
+            border-radius: 32px;
+            box-shadow: 0 0 25px rgba(20, 184, 166, 0.3), inset 0 0 15px rgba(20, 184, 166, 0.15);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .tag-web {
+            position: absolute;
+            bottom: 16px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(45, 212, 191, 0.5);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-web span.dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+        }
+
+        /* 5. RUNNING MARQUEE TICKER (Tepat di atas Safe Zone Komentar TikTok) */
+        .ticker-bar {
+            position: absolute;
+            top: 1600px;
+            left: 50px;
+            right: 50px;
+            height: 52px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1.5px solid rgba(45, 212, 191, 0.3);
+            border-radius: 26px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+
+        .ticker-label {
+            background: #0d9488;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 22px;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.25);
+            z-index: 2;
+        }
+
+        .ticker-content {
+            display: flex;
+            white-space: nowrap;
+            animation: marquee 26s linear infinite;
+            padding-left: 20px;
+            z-index: 1;
+        }
+
+        .ticker-item {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-right: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ticker-item strong {
+            color: #5eead4;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* 6. TIKTOK SAFE ZONE GUIDE (Bisa dinyalakan/dimatikan) */
+        .safe-zone-guide {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 1080px;
+            height: 250px;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(239, 68, 68, 0.08),
+                rgba(239, 68, 68, 0.08) 15px,
+                rgba(239, 68, 68, 0.16) 15px,
+                rgba(239, 68, 68, 0.16) 30px
+            );
+            border-top: 2px dashed rgba(239, 68, 68, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fca5a5;
+            font-size: 16px;
+            font-weight: 700;
+            pointer-events: none;
+            z-index: 20;
+            transition: opacity 0.3s;
+        }
+
+        .safe-zone-guide.hidden {
+            display: none;
+        }
+
+        /* Toggle Button untuk setting di Browser */
+        .toggle-guide-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            cursor: pointer;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <!-- 1. HEADER ATAS -->
+    <header class="top-header">
+        <div class="brand-box">
+            <img src="../images/logo-white.png" alt="Logo Jasa Inhu">
+            <div class="brand-text">
+                <h1>JASA INHU</h1>
+                <span>Pusat Layanan Terpadu Indragiri Hulu</span>
+            </div>
+        </div>
+        <div class="live-badge">
+            <div class="pulse-dot"></div>
+            <span>LIVE Q&A</span>
+        </div>
+    </header>
+
+    <!-- 2. BINGKAI WEBCAM / ANIMASI (HOST) -->
+    <div class="frame-webcam">
+        <div class="tag-host">
+            <span>🎙️</span> Host & Admin Jasa Inhu
+        </div>
+    </div>
+
+    <!-- 3. PEMBATAS TENGAH: HOOK UTAMA / CALL TO ACTION -->
+    <div class="middle-hook">
+        <span class="hook-badge">⚡ TANYA SEPUTAR JASA INHU</span>
+        <h2>Lagi Butuh Tukang / Jasa Apa Malam Ini?</h2>
+        <p>Tulis di komentar, langsung kita carikan & review di layar! 👇</p>
+    </div>
+
+    <!-- 4. BINGKAI LAYAR DEMO HP / WEBSITE -->
+    <div class="frame-screen">
+        <div class="tag-web">
+            <span class="dot"></span>
+            <span>jasainhu.gafahrandi.my.id</span>
+        </div>
+    </div>
+
+    <!-- 5. TICKER RUNNING TEXT -->
+    <div class="ticker-bar">
+        <div class="ticker-label">INFO LIVE</div>
+        <div class="ticker-content" id="tickerContent">
+            <span class="ticker-item">💡 <strong>Mau Cari Jasa?</strong> Ketik di komentar kebutuhan Anda se-Inhu!</span>
+            <span class="ticker-item">🛠️ <strong>Punya Usaha / Keahlian?</strong> Daftar Mitra GRATIS malam ini!</span>
+            <span class="ticker-item">🌐 <strong>Akses Cepat:</strong> Buka link di bio atau jasainhu.gafahrandi.my.id</span>
+            <span class="ticker-item">🛵 <strong>Lengkap:</strong> Servis AC, Montir, Listrik, Bangunan, Babat Rumput, & Penjahit!</span>
+            <!-- Duplikat untuk seamless loop -->
+            <span class="ticker-item">💡 <strong>Mau Cari Jasa?</strong> Ketik di komentar kebutuhan Anda se-Inhu!</span>
+            <span class="ticker-item">🛠️ <strong>Punya Usaha / Keahlian?</strong> Daftar Mitra GRATIS malam ini!</span>
+            <span class="ticker-item">🌐 <strong>Akses Cepat:</strong> Buka link di bio atau jasainhu.gafahrandi.my.id</span>
+            <span class="ticker-item">🛵 <strong>Lengkap:</strong> Servis AC, Montir, Listrik, Bangunan, Babat Rumput, & Penjahit!</span>
+        </div>
+    </div>
+
+    <!-- 6. PANDUAN SAFE ZONE KOMENTAR TIKTOK -->
+    <div class="safe-zone-guide" id="safeZoneGuide">
+        <p>🛑 AREA KOMENTAR & GIFT TIKTOK LIVE (ZONA AMAN)</p>
+        <span style="font-size: 13px; font-weight: 500; opacity: 0.85; margin-top: 4px;">Jangan letakkan tombol / tulisan penting di area berarsir merah ini agar tidak tertutup chat penonton.</span>
+    </div>
+
+    <button class="toggle-guide-btn" onclick="toggleGuide()">Toggle Guide</button>
+
+    <script>
+        // Cek URL params: jika ada ?guide=0 maka matikan guide
+        const urlParams = new URLSearchParams(window.location.search);
+        const guideEl = document.getElementById('safeZoneGuide');
+        
+        if (urlParams.get('guide') === '0') {
+            guideEl.classList.add('hidden');
+        }
+
+        function toggleGuide() {
+            guideEl.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
