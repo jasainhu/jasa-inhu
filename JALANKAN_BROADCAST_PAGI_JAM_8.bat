@@ -8,5 +8,5 @@ echo.
 echo Menjalankan penjadwalan otomatis jam 08:00 WIB...
 echo Pastikan laptop tetap hidup dan terkoneksi internet.
 echo.
-php "d:\JASA-INHU\scripts\broadcast_mitra_morning.php" --at=08:00
+php "d:\JASA-INHU\scripts\broadcast_mitra_morning.php" --at=07:00
 pause

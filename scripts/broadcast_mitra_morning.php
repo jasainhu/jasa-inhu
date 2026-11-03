@@ -100,19 +100,18 @@ foreach ($providers as $idx => $p) {
     $phone = trim($p['phone']);
     $storeUrl = "{$appUrl}/provider_detail.php?id={$p['id']}";
 
-    $igUrl = "https://www.instagram.com/reel/DemkadQywIY/";
-
-    $message = "Selamat siang Kak/Pak/Bu *{$ownerName}* (*{$provName}*), salam hormat dari saya selaku pengelola JASA INHU 🙏✨\n\n"
-             . "Pertama-tama, saya ingin menyampaikan rasa terima kasih dan apresiasi yang sebesar-besarnya atas kepercayaannya bergabung bersama kami di platform JASA INHU.\n\n"
-             . "Alhamdulillah, saat ini sudah ada *50 mitra penyedia jasa hebat* se-Indragiri Hulu yang resmi terdaftar. Ini adalah amanah yang sangat berharga bagi saya pribadi.\n\n"
-             . "Saya ingin menyampaikan bahwa *kami terus berjuang setiap hari* untuk mengenalkan wadah ini ke warga se-Inhu agar keahlian dan usaha Bapak/Ibu semakin dikenal luas dan mudah dipanggil pelanggan.\n\n"
-             . "Berikut adalah link profil toko resmi usaha Bapak/Ibu:\n"
+    $message = "Selamat pagi Kak/Pak/Bu *{$ownerName}* (*{$provName}*), salam hormat dari saya selaku pengelola JASA INHU 🙏✨\n\n"
+             . "Semangat menjemput rezeki di hari Rabu ini! Kami ingin mengabarkan perkembangan positif platform kita:\n\n"
+             . "Alhamdulillah, aktivitas pemesanan jasa dari warga Inhu sudah mulai aktif masuk ke platform kita (kemarin ada order servis mesin pom bensin mini yang berhasil masuk dan langsung ditangani mitra).\n\n"
+             . "💡 *KABAR BAIK UNTUK BAPAK/IBU (FITUR BARU):*\n"
+             . "Untuk mempermudah rekan-rekan mitra saat sibuk bekerja di lapangan, mulai hari ini jika ada pesanan masuk dari warga:\n"
+             . "✅ *TIDAK PERLU REPOT LOGIN / KETIK PASSWORD LAGI.*\n"
+             . "✅ Cukup klik link konfirmasi pesanan yang masuk ke WhatsApp Bapak/Ibu, nomor WhatsApp pelanggan akan *langsung terbuka otomatis*!\n\n"
+             . "📌 *TIPS SIAGA REZEKI:*\n"
+             . "Mohon nomor WhatsApp ini tetap aktif dan dipantau ya Pak/Bu. Jika ada notifikasi pesanan masuk, segera direspon agar orderannya tidak dialihkan ke mitra lain.\n\n"
+             . "Berikut link profil toko resmi usaha Bapak/Ibu:\n"
              . "👉 {$storeUrl}\n\n"
-             . "💡 *Saran untuk Bapak/Ibu:* Silakan pasang link toko resmi ini di *Status WhatsApp* masing-masing agar pelanggan setia maupun kenalan baru bisa melihat portofolio dan nomor kontak usaha Bapak/Ibu secara profesional.\n\n"
-             . "🎬 *Tonton Video Pengenalan JASA INHU:*\n"
-             . "Bagi Bapak/Ibu yang aktif di Instagram, yuk tonton dan bantu Like/Share video Reels terbaru kita di sini ya:\n"
-             . "👉 {$igUrl}\n\n"
-             . "Mohon simpan nomor WhatsApp Admin ini ya Pak/Bu. Selamat istirahat siang, semoga Allah melancarkan rezeki dan memberikan kesehatan untuk Bapak/Ibu sekeluarga hari ini 💪😊\n\n"
+             . "Semoga hari ini usaha Bapak/Ibu dibanjiri pelanggan baru, pekerjaan dilancarkan, dan berkah untuk keluarga di rumah. Amin! 🤲💪\n\n"
              . "Hormat saya,\n"
              . "— *Admin / Founder JASA INHU*";
 
