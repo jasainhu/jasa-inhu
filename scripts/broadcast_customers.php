@@ -51,18 +51,17 @@ foreach ($customers as $idx => $c) {
     $custName = trim($c['name']) ?: 'Kak';
     $phone = trim($c['phone']);
 
-    $message = "Halo Kak *{$custName}*, selamat siang! Salam hangat dari Tim JASA INHU 🙏✨\n\n"
-             . "Sekadar mengabarkan, alhamdulillah saat ini sudah ada *50 mitra penyedia jasa terpercaya* se-Indragiri Hulu yang siap melayani kebutuhan Kakak dan keluarga di rumah:\n\n"
-             . "❄️ *Servis AC, Kulkas & Mesin Cuci*\n"
-             . "🔧 *Bengkel Las, Bubut & Montir Panggilan*\n"
-             . "🌾 *Babat Rumput & Pembersihan Kebun*\n"
-             . "🚗 *Rental Mobil (Plus Supir / Lepas Kunci)*\n"
-             . "🔨 *Tukang Bangunan, Atap & Instalasi Listrik*\n"
-             . "📸 *Fotografi, Sablon & Desain*\n"
-             . "dan puluhan jasa profesional lainnya se-Inhu.\n\n"
-             . "Kakak bisa langsung melihat foto hasil pengerjaan asli, cek ulasan warga, dan *memesan langsung jasa teknisi terdekat* secara resmi melalui website kami:\n"
-             . "👉 {$appUrl}\n\n"
-             . "Simpan nomor WhatsApp Admin ini ya Kak, siapa tahu sewaktu-waktu Kakak atau tetangga butuh bantuan jasa mendadak di rumah. Terima kasih banyak! 😊🙏\n\n"
+    $profileUrl = "{$appUrl}/user/profile.php";
+
+    $message = "Halo Kak *{$custName}*, selamat pagi! Salam hangat dari Tim JASA INHU 🙏✨\n\n"
+             . "Sekadar mengabarkan, alhamdulillah saat ini sudah ada *54 mitra penyedia jasa terpercaya* se-Indragiri Hulu yang siap melayani kebutuhan Kakak dan keluarga di rumah (mulai dari Servis AC, Montir, Tukang Bangunan, Babat Rumput, hingga Servis Elektronik).\n\n"
+             . "💡 *PENTING: LENGKAPI PROFIL & ALAMAT RUMAH KAKAK*\n"
+             . "Agar saat Kakak sewaktu-waktu butuh bantuan jasa mendadak teknisi bisa *langsung meluncur cepat ke lokasi tanpa tersesat*, yuk pastikan data alamat dan patokan rumah Kakak sudah lengkap:\n\n"
+             . "👉 *Lengkapi Profil di Sini:*\n"
+             . "{$profileUrl}\n\n"
+             . "Kakak juga bisa langsung menjelajahi katalog jasa dan hasil kerja nyata mitra di:\n"
+             . "🌐 {$appUrl}\n\n"
+             . "Simpan nomor WhatsApp Admin ini ya Kak, jika ada kendala atau butuh rekomendasi tukang terdekat di Inhu, kami siap membantu 24 jam. Semoga hari Kakak menyenangkan! 😊🙏\n\n"
              . "— *Tim Layanan JASA INHU*";
 
     echo "[{$num}/{$total}] Mengirim ke {$custName} ({$phone})... ";
