@@ -1473,9 +1473,10 @@ function submitDirectQuickOrderFromDetail() {
             document.getElementById('quickOrderSuccessMsg').textContent = data.message;
             document.getElementById('quickOrderSuccessChatBtn').href = data.chat_url || (window.BASE_URL + '/chat.php?provider_id=' + provId);
             
-            if (data.wa_url) {
+            const targetWaUrl = data.wa_url || data.whatsapp_url;
+            if (targetWaUrl) {
                 const waBtn = document.getElementById('quickOrderSuccessWaBtn');
-                if (waBtn) waBtn.href = data.wa_url;
+                if (waBtn) waBtn.href = targetWaUrl;
             }
 
             document.getElementById('quickOrderProblem').value = '';

@@ -70,93 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         } elseif ($action === 'accept_direct_order') {
             $request_id = (int)$_POST['request_id'];
-            try {
-                // Pastikan pesanan langsung memang untuk mitra ini dan status masih 'open'
-                $stmtReq = $db->prepare("
-                    SELECT sr.*, u.name as customer_name, u.phone as customer_phone 
-                    FROM service_requests sr 
-                    JOIN users u ON sr.user_id = u.id 
-                    WHERE sr.id = ? AND sr.provider_id = ? AND sr.status = 'open' 
-                    LIMIT 1
-                ");
-                $stmtReq->execute([$request_id, $provider['id']]);
-                $req = $stmtReq->fetch();
+            $acceptResult = accept_direct_service_order($request_id, (int)$provider['id']);
 
-                if (!$req) {
-                    $error = 'Pesanan tidak ditemukan atau sudah diproses.';
-                } else {
-                    // Cek dan potong saldo deposit (Biaya Kontak / Lead Fee)
-                    $leadResult = deduct_provider_lead_fee(
-                        (int)$provider['id'],
-                        $request_id,
-                        $lead_fee_amount,
-                        "Biaya Kontak Pesanan Langsung #" . $request_id . " (" . $req['title'] . ")"
-                    );
-
-                    if (!$leadResult['success']) {
-                        $error = $leadResult['message'];
-                    } else {
-                        $db->beginTransaction();
-
-                        // Cek respon jika ada
-                        $stmtResp = $db->prepare("SELECT id FROM service_request_responses WHERE request_id = ? AND provider_id = ? LIMIT 1");
-                        $stmtResp->execute([$request_id, $provider['id']]);
-                        $existingResp = $stmtResp->fetch();
-
-                        if ($existingResp) {
-                            $stmtUpdResp = $db->prepare("UPDATE service_request_responses SET status = 'accepted' WHERE id = ?");
-                            $stmtUpdResp->execute([$existingResp['id']]);
-                        } else {
-                            $stmtInsResp = $db->prepare("
-                                INSERT INTO service_request_responses 
-                                (request_id, provider_id, offer_price, estimated_duration, message, status, created_at)
-                                VALUES (?, ?, ?, 'Sesuai kesepakatan langsung', 'Pesanan langsung disetujui mitra', 'accepted', NOW())
-                            ");
-                            $stmtInsResp->execute([$request_id, $provider['id'], $req['budget'] ?: 0]);
-                        }
-
-                        // Update status pesanan jadi in_progress dan progress_step accepted
-                        $stmtUpdReq = $db->prepare("UPDATE service_requests SET status = 'in_progress', progress_step = 'accepted' WHERE id = ?");
-                        $stmtUpdReq->execute([$request_id]);
-
-                        // Catat ke timeline pelacak aktivitas pesanan
-                        add_order_timeline_event(
-                            $request_id,
-                            'accepted',
-                            '🤝 Pesanan Diterima Mitra',
-                            'Mitra ' . ($provider['business_name'] ?? 'Penyedia Jasa') . ' menyetujui pesanan Anda dan siap memulai.',
-                            'provider'
-                        );
-
-                        // Kirim notifikasi ke pelanggan
-                        $notifTitle = "Pesanan Langsung Diterima Mitra!";
-                        $notifMsg = "Mitra " . ($provider['business_name'] ?? 'Penyedia Jasa') . " telah menyetujui pesanan Anda: \"" . $req['title'] . "\" dan mulai pengerjaan.";
-                        $stmtNotif = $db->prepare("INSERT INTO notifications (user_id, title, message, link, created_at) VALUES (?, ?, ?, ?, NOW())");
-                        $stmtNotif->execute([$req['user_id'], $notifTitle, $notifMsg, '/user/requests.php?id=' . $request_id]);
-
-                        // Kirim notifikasi WA otomatis
-                        if (!empty($req['customer_phone'])) {
-                            $waMsg = build_order_wa_template('order_accepted', [
-                                'title'         => $req['title'],
-                                'customer_name' => $req['customer_name'] ?? 'Pelanggan',
-                                'provider_name' => $provider['business_name'] ?? 'Mitra Jasa',
-                                'request_id'    => $request_id
-                            ]);
-                            send_wa_notification($req['customer_phone'], $waMsg, 'order_accepted', $request_id, $req['customer_name'] ?? null);
-                        }
-
-                        $db->commit();
-
-                        $feeDeductMsg = ($lead_fee_amount > 0) ? 'Biaya kontak Rp ' . number_format($lead_fee_amount, 0, ',', '.') . ' telah dipotong dari saldo deposit Anda.' : 'Biaya kontak GRATIS (Promo Rp 0)!';
-                        set_flash('success', 'Pesanan berhasil diterima! ' . $feeDeductMsg . ' Sisa saldo: Rp ' . number_format($leadResult['balance_after'], 0, ',', '.') . '. Silakan hubungi pelanggan.');
-                        redirect('/provider/index.php?wa_prompt=accepted&req_id=' . $request_id);
-                    }
-                }
-            } catch (Exception $e) {
-                if ($db->inTransaction()) {
-                    $db->rollBack();
-                }
-                $error = 'Gagal memproses pesanan: ' . $e->getMessage();
+            if ($acceptResult['success']) {
+                $lead_fee_deducted = $acceptResult['lead_fee_deducted'] ?? 0;
+                $feeDeductMsg = ($lead_fee_deducted > 0) ? 'Biaya kontak Rp ' . number_format($lead_fee_deducted, 0, ',', '.') . ' telah dipotong dari saldo deposit Anda.' : 'Biaya kontak GRATIS (Promo Rp 0)!';
+                set_flash('success', 'Pesanan berhasil diterima! ' . $feeDeductMsg . ' Sisa saldo: Rp ' . number_format($acceptResult['balance_after'], 0, ',', '.') . '. Silakan hubungi pelanggan.');
+                redirect('/provider/index.php?wa_prompt=accepted&req_id=' . $request_id);
+            } else {
+                $error = $acceptResult['message'];
             }
         } elseif ($action === 'reject_direct_order') {
             $request_id = (int)$_POST['request_id'];

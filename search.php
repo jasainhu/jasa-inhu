@@ -1329,8 +1329,9 @@ function submitDirectQuickOrder() {
             document.getElementById('quickOrderSuccessChatBtn').href = data.chat_url || (window.BASE_URL + '/chat.php?provider_id=' + provId);
             
             const waBtn = document.getElementById('quickOrderSuccessWaBtn');
-            if (waBtn && data.whatsapp_url) {
-                waBtn.href = data.whatsapp_url;
+            const targetWaUrl = data.wa_url || data.whatsapp_url;
+            if (waBtn && targetWaUrl) {
+                waBtn.href = targetWaUrl;
             }
 
             document.getElementById('quickOrderProblem').value = '';

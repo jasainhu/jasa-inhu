@@ -169,16 +169,35 @@ try {
 
     // Kirim notifikasi WhatsApp otomatis ke HP Mitra jika nomor tersedia & gateway aktif
     if (!empty($provider['provider_phone'])) {
+        $magicToken = generate_order_magic_token($request_id, (int)$provider['id']);
+        $magicUrl = BASE_URL . "/order_accept.php?id={$request_id}&p={$provider['id']}&t={$magicToken}";
+
         $autoWaMsg = "🔔 *PESANAN JASA BARU DARI WARGA!* (No: #{$request_id})\n\n" .
-                     "Halo *{$provider['business_name']}*, ada pesanan baru dari *{$user['name']}*:\n" .
+                     "Halo *{$provider['business_name']}*, ada pesanan baru dari warga:\n" .
                      "📌 *Layanan*: {$title}\n" .
                      ($budget ? "💰 *Biaya Disepakati*: " . format_rupiah($budget) . "\n" : "") .
                      "📍 *Lokasi*: " . ($address ?: 'Sesuai kesepakatan') . "\n" .
                      "⏰ *Waktu*: {$preferred_time}\n\n" .
-                     "👉 *Buka & Konfirmasi Pesanan*:\n" .
-                     BASE_URL . "/provider/index.php\n\n" .
+                     "👉 *Klik Sekali untuk Terima & Hubungi Pemesan*:\n" .
+                     "{$magicUrl}\n" .
+                     "_(Otomatis tanpa perlu ketik password)_\n\n" .
                      "— *Sistem Resmi JASA INHU*";
         send_wa_notification($provider['provider_phone'], $autoWaMsg, 'new_order', $request_id, $provider['business_name']);
+    }
+
+    // Kirim notifikasi WhatsApp siaga otomatis ke HP Admin (Owner) Jasa Inhu
+    $adminWa = get_setting('admin_whatsapp') ?: (get_setting('admin_phone') ?: '085126241679');
+    if (!empty($adminWa)) {
+        $adminAlertMsg = "🚨 *PESANAN JASA BARU MASUK!* (No: #{$request_id})\n\n" .
+                         "👤 *Pelanggan*: {$user['name']} ({$user['phone']})\n" .
+                         "🔧 *Mitra*: {$provider['business_name']} ({$provider['provider_phone']})\n" .
+                         "📌 *Kebutuhan*: {$title}\n" .
+                         "📍 *Lokasi*: " . ($address ?: 'Sesuai kesepakatan') . "\n" .
+                         "⏰ *Waktu*: {$preferred_time}\n\n" .
+                         "👉 *Pantau di Dashboard Admin*:\n" .
+                         BASE_URL . "/admin/orders.php?id={$request_id}\n\n" .
+                         "⚠️ *SOP Siaga*: Pantau respon mitra dalam 30 menit. Jika belum direspon, segera telepon mitra di {$provider['provider_phone']}.";
+        send_wa_notification($adminWa, $adminAlertMsg, 'admin_order_alert', $request_id, 'Admin Jasa Inhu');
     }
 
     $db->commit();
@@ -218,7 +237,8 @@ try {
         'provider_name' => $provider['business_name'],
         'chat_url'      => BASE_URL . "/chat.php?provider_id={$provider_id}",
         'track_url'     => BASE_URL . "/user/requests.php?id={$request_id}",
-        'wa_url'        => $waUrl
+        'wa_url'        => $waUrl,
+        'whatsapp_url'  => $waUrl
     ]);
 } catch (Exception $e) {
     if ($db->inTransaction()) {

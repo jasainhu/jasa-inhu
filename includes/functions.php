@@ -1195,3 +1195,156 @@ function format_portfolio_price(?string $raw_price): string {
     return 'Rp ' . $raw;
 }
 
+/**
+ * Membuat Token Magic Link Aman untuk Penerimaan Pesanan Langsung oleh Mitra via WhatsApp
+ */
+function generate_order_magic_token(int $request_id, int $provider_id): string {
+    $secret = get_setting('jwt_secret') ?: (defined('APP_KEY') ? APP_KEY : 'jasainhu_secure_order_token_key_2026');
+    $payload = "order:{$request_id}:prov:{$provider_id}";
+    return substr(hash_hmac('sha256', $payload, $secret), 0, 32);
+}
+
+/**
+ * Memvalidasi Token Magic Link Penerimaan Pesanan
+ */
+function verify_order_magic_token(int $request_id, int $provider_id, string $token): bool {
+    if (empty($token)) return false;
+    $expected = generate_order_magic_token($request_id, $provider_id);
+    return hash_equals($expected, $token);
+}
+
+/**
+ * Memproses Penerimaan Pesanan Langsung oleh Mitra (Potong Saldo Kuota, Update Status & Notifikasi)
+ * Dapat dipanggil baik dari Provider Dashboard maupun dari Magic Link WhatsApp
+ */
+function accept_direct_service_order(int $request_id, int $provider_id): array {
+    $db = get_db();
+    $lead_fee_amount = (float)get_setting('lead_fee_amount', DEFAULT_LEAD_FEE);
+
+    // Ambil data pesanan & pelanggan
+    $stmtReq = $db->prepare("
+        SELECT sr.*, u.name as customer_name, u.phone as customer_phone, d.name as district_name, v.name as village_name
+        FROM service_requests sr 
+        JOIN users u ON sr.user_id = u.id 
+        LEFT JOIN districts d ON sr.district_id = d.id
+        LEFT JOIN villages v ON sr.village_id = v.id
+        WHERE sr.id = ? AND sr.provider_id = ?
+        LIMIT 1
+    ");
+    $stmtReq->execute([$request_id, $provider_id]);
+    $req = $stmtReq->fetch();
+
+    if (!$req) {
+        return ['success' => false, 'message' => 'Pesanan tidak ditemukan atau bukan ditujukan untuk Anda.'];
+    }
+
+    if ($req['status'] !== 'open') {
+        return [
+            'success' => false, 
+            'already_processed' => true,
+            'status' => $req['status'],
+            'message' => 'Pesanan ini sudah diproses sebelumnya (Status: ' . $req['status'] . ').',
+            'order' => $req
+        ];
+    }
+
+    $stmtProv = $db->prepare("
+        SELECT sp.*, u.name as owner_name, u.phone as owner_phone, u.id as owner_user_id 
+        FROM service_providers sp 
+        JOIN users u ON sp.user_id = u.id 
+        WHERE sp.id = ?
+    ");
+    $stmtProv->execute([$provider_id]);
+    $provider = $stmtProv->fetch();
+
+    if (!$provider) {
+        return ['success' => false, 'message' => 'Profil mitra tidak ditemukan.'];
+    }
+
+    // Potong saldo deposit (Biaya Kontak / Lead Fee)
+    $leadResult = deduct_provider_lead_fee(
+        $provider_id,
+        $request_id,
+        $lead_fee_amount,
+        "Biaya Kontak Pesanan Langsung #" . $request_id . " (" . $req['title'] . ")"
+    );
+
+    if (!$leadResult['success']) {
+        return [
+            'success' => false,
+            'insufficient_balance' => true,
+            'message' => $leadResult['message'],
+            'balance' => $leadResult['balance_after'] ?? get_provider_wallet_balance($provider_id),
+            'required' => $lead_fee_amount,
+            'order' => $req,
+            'provider' => $provider
+        ];
+    }
+
+    $db->beginTransaction();
+    try {
+        // Cek respon mitra
+        $stmtResp = $db->prepare("SELECT id FROM service_request_responses WHERE request_id = ? AND provider_id = ? LIMIT 1");
+        $stmtResp->execute([$request_id, $provider_id]);
+        $existingResp = $stmtResp->fetch();
+
+        if ($existingResp) {
+            $stmtUpdResp = $db->prepare("UPDATE service_request_responses SET status = 'accepted' WHERE id = ?");
+            $stmtUpdResp->execute([$existingResp['id']]);
+        } else {
+            $stmtInsResp = $db->prepare("
+                INSERT INTO service_request_responses 
+                (request_id, provider_id, offer_price, estimated_duration, message, status, created_at)
+                VALUES (?, ?, ?, 'Sesuai kesepakatan langsung', 'Pesanan langsung disetujui mitra', 'accepted', NOW())
+            ");
+            $stmtInsResp->execute([$request_id, $provider_id, $req['budget'] ?: 0]);
+        }
+
+        // Update status pesanan jadi in_progress dan progress_step accepted
+        $stmtUpdReq = $db->prepare("UPDATE service_requests SET status = 'in_progress', progress_step = 'accepted', updated_at = NOW() WHERE id = ?");
+        $stmtUpdReq->execute([$request_id]);
+
+        // Catat ke timeline pelacak aktivitas pesanan
+        add_order_timeline_event(
+            $request_id,
+            'accepted',
+            '🤝 Pesanan Diterima Mitra',
+            'Mitra ' . ($provider['business_name'] ?? 'Penyedia Jasa') . ' menyetujui pesanan Anda dan siap memulai.',
+            'provider'
+        );
+
+        // Notifikasi ke Pelanggan di web
+        $notifTitle = "Pesanan Langsung Diterima Mitra!";
+        $notifMsg = "Mitra " . ($provider['business_name'] ?? 'Penyedia Jasa') . " telah menyetujui pesanan Anda: \"" . $req['title'] . "\" dan mulai pengerjaan.";
+        $stmtNotif = $db->prepare("INSERT INTO notifications (user_id, title, message, link, created_at) VALUES (?, ?, ?, ?, NOW())");
+        $stmtNotif->execute([$req['user_id'], $notifTitle, $notifMsg, '/user/requests.php?id=' . $request_id]);
+
+        // Kirim notifikasi WA otomatis ke Pelanggan
+        if (!empty($req['customer_phone'])) {
+            $waMsg = build_order_wa_template('order_accepted', [
+                'title'         => $req['title'],
+                'customer_name' => $req['customer_name'] ?? 'Pelanggan',
+                'provider_name' => $provider['business_name'] ?? 'Mitra Jasa',
+                'request_id'    => $request_id
+            ]);
+            send_wa_notification($req['customer_phone'], $waMsg, 'order_accepted', $request_id, $req['customer_name'] ?? null);
+        }
+
+        $db->commit();
+
+        return [
+            'success' => true,
+            'message' => 'Pesanan berhasil diterima!',
+            'lead_fee_deducted' => $lead_fee_amount,
+            'balance_after' => $leadResult['balance_after'],
+            'order' => $req,
+            'provider' => $provider
+        ];
+    } catch (Exception $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        return ['success' => false, 'message' => 'Gagal memperbarui status pesanan: ' . $e->getMessage()];
+    }
+}
+
