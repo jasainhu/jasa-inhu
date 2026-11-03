@@ -245,7 +245,8 @@ $shopee_hub = [
         'icon' => 'fa-table-cells-large',
         'color' => '#ffffff',
         'bg' => '#0d9488',
-        'link' => BASE_URL . '/search.php'
+        'link' => BASE_URL . '/search.php',
+        'modal_trigger' => true
     ]
 ];
 
@@ -436,9 +437,9 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- 2. Deretan 10 Ikon Menu & Program Unggulan Ala Shopee Quick Hub -->
+        <!-- 2. Deretan Ikon Menu & Program Unggulan Ala Shopee Quick Hub -->
         <div class="shopee-hub-card">
-            <div class="shopee-hub-grid" id="shopeeHubGrid">
+            <div class="shopee-hub-grid" id="shopeeHubGrid" style="--hub-cols: <?= count($shopee_hub) ?>;">
                 <?php foreach ($shopee_hub as $sh): ?>
                     <?php if (!empty($sh['modal_trigger'])): ?>
                         <a href="javascript:void(0)" class="shopee-hub-item" data-bs-toggle="modal" data-bs-target="#allCategoriesModal">

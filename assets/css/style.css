@@ -2334,7 +2334,7 @@ body.modal-open .mobile-bottom-nav {
 @media (min-width: 992px) {
     .shopee-hub-grid {
         display: grid;
-        grid-template-columns: repeat(10, 1fr);
+        grid-template-columns: repeat(var(--hub-cols, 11), 1fr);
         gap: 8px;
         overflow-x: visible;
         padding-bottom: 0;
