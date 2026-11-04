@@ -660,12 +660,39 @@ require_once __DIR__ . '/includes/header.php';
                                     </div>
                                 <?php endif; ?>
 
+                                <?php if (!empty($rev['tags'])): ?>
+                                    <div class="d-flex flex-wrap gap-1.5 mb-2">
+                                        <?php foreach (explode(',', $rev['tags']) as $t): ?>
+                                            <span class="badge bg-light text-teal border border-teal-subtle py-0.5 px-2" style="font-size: 0.68rem;">
+                                                <i class="fa-solid fa-check me-1"></i> <?= e(trim($t)) ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+
                                 <?php if (!empty($rev['comment'])): ?>
-                                    <p class="text-dark mb-0 small" style="line-height: 1.55; white-space: pre-line;">
+                                    <p class="text-dark mb-2 small" style="line-height: 1.55; white-space: pre-line;">
                                         <?= e($rev['comment']) ?>
                                     </p>
                                 <?php else: ?>
-                                    <p class="text-muted small fst-italic mb-0">Pelanggan memberikan rating bintang tanpa ulasan tertulis.</p>
+                                    <p class="text-muted small fst-italic mb-2">Pelanggan memberikan rating bintang tanpa ulasan tertulis.</p>
+                                <?php endif; ?>
+
+                                <?php if (!empty($rev['photo_url'])): ?>
+                                    <div class="my-2 p-1.5 bg-light rounded-3 border d-inline-block">
+                                        <a href="<?= e(get_media_url($rev['photo_url'])) ?>" target="_blank" class="d-inline-block position-relative border rounded-2 overflow-hidden shadow-xs">
+                                            <img src="<?= e(get_media_url($rev['photo_url'])) ?>" alt="Hasil Pengerjaan" class="img-fluid rounded-2" style="max-height: 110px; max-width: 160px; object-fit: cover;">
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($rev['reply_text'])): ?>
+                                    <div class="mt-2 p-2.5 bg-teal-subtle bg-opacity-30 rounded-3 border-start border-3 border-teal">
+                                        <div class="fw-bold text-teal small mb-0.5" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-reply me-1"></i> Tanggapan Mitra:
+                                        </div>
+                                        <p class="small text-dark mb-0 fst-italic">"<?= e($rev['reply_text']) ?>"</p>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>

@@ -150,6 +150,21 @@ function format_order_id($id): string {
 }
 
 /**
+ * Mask nomor telepon / WhatsApp untuk privasi publik (misal: 0823-****-8052)
+ */
+function mask_phone_number(?string $phone): string {
+    if (empty($phone)) return '-';
+    $clean = preg_replace('/[^0-9]/', '', $phone);
+    $len = strlen($clean);
+    if ($len < 7) {
+        return substr($clean, 0, 2) . '****' . substr($clean, -2);
+    }
+    $prefix = substr($clean, 0, 4);
+    $suffix = substr($clean, -4);
+    return $prefix . '-****-' . $suffix;
+}
+
+/**
  * Set flash message
  */
 function set_flash(string $type, string $message): void {

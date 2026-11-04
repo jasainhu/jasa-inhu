@@ -350,7 +350,7 @@ CREATE TABLE `reviews` (
   `provider_id` int(11) NOT NULL,
   `rating` tinyint(4) NOT NULL,
   `comment` text,
-  `photo_url` varchar(255) default NULL,
+  `photo_url` mediumtext default NULL,
   `tags` text,
   `reply_text` text,
   `replied_at` timestamp NULL default NULL,

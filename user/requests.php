@@ -678,8 +678,8 @@ require_once __DIR__ . '/../includes/header.php';
                                             <span class="text-muted small d-block mb-1.5 fw-semibold" style="font-size: 0.72rem;">
                                                 <i class="fa-solid fa-camera text-teal me-1"></i> Foto Bukti Hasil Pengerjaan:
                                             </span>
-                                            <a href="<?= BASE_URL ?>/<?= e($existing_review['photo_url']) ?>" target="_blank" class="d-inline-block position-relative border rounded-3 overflow-hidden shadow-xs">
-                                                <img src="<?= BASE_URL ?>/<?= e($existing_review['photo_url']) ?>" alt="Bukti Hasil Kerja" class="img-fluid rounded-3" style="object-fit: cover; width: 140px; height: 95px;">
+                                            <a href="<?= e(get_media_url($existing_review['photo_url'])) ?>" target="_blank" class="d-inline-block position-relative border rounded-3 overflow-hidden shadow-xs">
+                                                <img src="<?= e(get_media_url($existing_review['photo_url'])) ?>" alt="Bukti Hasil Kerja" class="img-fluid rounded-3" style="object-fit: cover; width: 140px; height: 95px;">
                                                 <div class="position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-70 text-white text-center py-0.5" style="font-size: 0.65rem;">
                                                     <i class="fa-solid fa-magnifying-glass-plus me-1"></i> Perbesar
                                                 </div>
@@ -1040,27 +1040,63 @@ function toggleReviewTag(btn) {
     }
 }
 
-async function previewReviewPhoto(input) {
-    if (input.files && input.files[0]) {
-        let file = input.files[0];
-        if (window.compressImageFile) {
-            file = await window.compressImageFile(file, { maxWidth: 1400, maxHeight: 1400, quality: 0.82 });
-            if (window.DataTransfer) {
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                input.files = dt.files;
-            }
-        }
+let compressedUserReviewBase64 = null;
+
+function compressReviewImage(file, maxWidth = 900, maxHeight = 900, quality = 0.78) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('reviewPhotoPreviewImg').src = e.target.result;
-            document.getElementById('reviewPhotoPreviewBox').classList.remove('d-none');
+            const img = new Image();
+            img.onload = function() {
+                let w = img.width;
+                let h = img.height;
+                if (w > maxWidth || h > maxHeight) {
+                    if (w > h) {
+                        h = Math.round((h * maxWidth) / w);
+                        w = maxWidth;
+                    } else {
+                        w = Math.round((w * maxHeight) / h);
+                        h = maxHeight;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
         };
+        reader.onerror = reject;
         reader.readAsDataURL(file);
+    });
+}
+
+async function previewReviewPhoto(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        try {
+            compressedUserReviewBase64 = await compressReviewImage(file, 900, 900, 0.78);
+            document.getElementById('reviewPhotoPreviewImg').src = compressedUserReviewBase64;
+            document.getElementById('reviewPhotoPreviewBox').classList.remove('d-none');
+        } catch (err) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                compressedUserReviewBase64 = e.target.result;
+                document.getElementById('reviewPhotoPreviewImg').src = e.target.result;
+                document.getElementById('reviewPhotoPreviewBox').classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        }
     }
 }
 
 function removeReviewPhoto() {
+    compressedUserReviewBase64 = null;
     const input = document.getElementById('reviewPhotoInput');
     if (input) input.value = '';
     const box = document.getElementById('reviewPhotoPreviewBox');
@@ -1095,7 +1131,10 @@ function openReviewModal(requestId, providerName, initialRating = 5, initialComm
     // Reset / Set Foto
     removeReviewPhoto();
     if (initialPhoto) {
-        document.getElementById('reviewPhotoPreviewImg').src = '<?= BASE_URL ?>/' + initialPhoto;
+        const photoSrc = (initialPhoto.startsWith('data:') || initialPhoto.startsWith('http')) 
+            ? initialPhoto 
+            : '<?= BASE_URL ?>/' + initialPhoto.replace(/^\/+/, '');
+        document.getElementById('reviewPhotoPreviewImg').src = photoSrc;
         document.getElementById('reviewPhotoPreviewBox').classList.remove('d-none');
     }
 
@@ -1135,10 +1174,14 @@ function submitReview() {
     });
     activeTags.forEach(t => formData.append('tags[]', t));
 
-    // Ambil file foto jika diunggah
-    const photoInput = document.getElementById('reviewPhotoInput');
-    if (photoInput && photoInput.files && photoInput.files[0]) {
-        formData.append('photo', photoInput.files[0]);
+    // Kirim foto hasil kompresi Base64 atau file asli
+    if (compressedUserReviewBase64) {
+        formData.append('photo_base64', compressedUserReviewBase64);
+    } else {
+        const photoInput = document.getElementById('reviewPhotoInput');
+        if (photoInput && photoInput.files && photoInput.files[0]) {
+            formData.append('photo', photoInput.files[0]);
+        }
     }
 
     fetch('<?= BASE_URL ?>/api/submit_review.php', {
