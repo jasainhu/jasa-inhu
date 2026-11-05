@@ -1,0 +1,49 @@
+# =======================================================
+# JASA INHU - Web Server Configuration (.htaccess)
+# Optimal for cPanel / LiteSpeed / Apache Web Hosting
+# =======================================================
+
+RewriteEngine On
+RewriteBase /
+
+# 1. Lindungi file sensitif (.env, file konfigurasi, database dump)
+<FilesMatch "^\.env|\.git|\.user_uploaded|.*\.sql$|composer\.(json|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 2. Matikan Directory Browsing (Mencegah intip folder)
+Options -Indexes
+
+# 3. Paksa HTTPS jika hosting mendukung SSL
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 4. Routing URL Rapi tanpa ekstensi .php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+# 5. Routing Folder ke index.php otomatis
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_FILENAME}/index.php -f
+RewriteRule ^(.*)/?$ $1/index.php [L]
+
+# 6. Kompresi Gzip untuk Kecepatan Loading Maksimal
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+# 7. Browser Caching untuk Aset Statis
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+

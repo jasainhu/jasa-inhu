@@ -28,17 +28,10 @@ if ($path === '/favicon.ico') {
     exit;
 }
 
-// 1.0.1 Direct APK Download Handler
+// 1.0.1 Direct APK Download Handler (Dialihkan ke CDN GitHub agar 100% hemat kuota Vercel)
 if ($path === '/download/jasainhu.apk' || $path === '/jasainhu.apk') {
-    $apkPath = __DIR__ . '/../download/jasainhu.apk';
-    if (file_exists($apkPath)) {
-        header('Content-Type: application/vnd.android.package-archive');
-        header('Content-Disposition: attachment; filename="JasaInhu.apk"');
-        header('Content-Length: ' . filesize($apkPath));
-        header('Cache-Control: public, max-age=86400');
-        readfile($apkPath);
-        exit;
-    }
+    header('Location: https://raw.githubusercontent.com/jasainhu/jasa-inhu/main/download/jasainhu.apk', true, 302);
+    exit;
 }
 
 // 1.0.2 Digital Asset Links Handler (Hides URL bar in Android TWA APK)
